@@ -51,16 +51,17 @@ body {
 
 .content-editable {
   border: 0;
-  font-size: 15px;
+  font-size: 18px;
+  letter-spacing: 1px;
   display: block;
   position: relative;
   outline: 0;
   padding: 8px 28px 40px;
-  min-height: 150px;
+  min-height: 450px;
 }
 
 .editor-placeholder {
-  font-size: 15px;
+  font-size: 18px;
   color: #999;
   overflow: hidden;
   position: absolute;
@@ -78,7 +79,7 @@ body {
   margin: 10px 0;
 }
 
-.editor-paragraph > span {
+.editor-paragraph > span, .editor-paragraph > a {
   display: inline-grid;
   align-content: end;
   vertical-align: bottom;
@@ -90,7 +91,11 @@ body {
   padding: 0 4px;
 }
 
-.editor-pinyin-tag {
+.editor-green-tag {
+  margin-bottom: 4px;
+}
+
+.editor-tag {
   user-select: none;
 }
 

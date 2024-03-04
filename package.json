@@ -9,9 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@lexical/react": "^0.13.1",
     "@reduxjs/toolkit": "^2.2.1",
     "@types/pinyin": "^2.10.2",
     "antd": "^5.14.2",
+    "clsx": "^2.1.0",
+    "lexical": "^0.13.1",
     "next": "14.1.1",
     "pinyin-pro": "^3.19.6",
     "react": "^18",

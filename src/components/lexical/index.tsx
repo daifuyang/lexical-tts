@@ -9,18 +9,20 @@ import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import TreeViewPlugin from "./plugins/TreeViewPlugin";
 import ToolbarPlugin from "./plugins/ToolbarPlugin";
 import PinyinPlugin from "./plugins/PinyinPlugin";
+import NumberPlugin from "./plugins/NumberPlugin";
 import { PinyinNode } from "./nodes/PinyinNode";
+import { NumberNode } from "./nodes/NumberNode";
 import theme from "./theme";
 
 import "./index.css";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useDispatch } from "react-redux";
-import { setIsPinyinEdit } from "@/redux/slice/initialState";
+import { closeFloat, setFloatType } from "@/redux/slice/initialState";
 import Provider from "@/redux/provider";
 // import FloatingPinyinEditorPlugin from "./plugins/FloatingPinyinEditorPlugin";
 
-const FloatingPinyinEditorPlugin = dynamic(() => import("./plugins/FloatingPinyinEditorPlugin"), {
+const FloatingEditorPlugin = dynamic(() => import("./plugins/FloatingEditorPlugin"), {
   ssr: false
 });
 
@@ -30,7 +32,7 @@ function Placeholder() {
 
 const editorConfig = {
   namespace: "editor",
-  nodes: [PinyinNode],
+  nodes: [PinyinNode, NumberNode],
   // Handling of errors during update
   onError(error: Error) {
     throw error;
@@ -52,14 +54,17 @@ function EditorMain() {
   return (
     <div
       onClick={(e) => {
-        dispatch(setIsPinyinEdit(false));
+        dispatch(closeFloat());
       }}
     >
       <LexicalComposer initialConfig={editorConfig}>
         <ToolbarPlugin />
-        <div onClick={ (e) => {
+        <div
+          onClick={(e) => {
             e.stopPropagation();
-        } } className="editor-container">
+          }}
+          className="editor-container"
+        >
           <RichTextPlugin
             contentEditable={
               <div className="editor-scroller">
@@ -74,7 +79,8 @@ function EditorMain() {
           <HistoryPlugin />
           <AutoFocusPlugin />
           <PinyinPlugin />
-          <FloatingPinyinEditorPlugin anchorElem={floatingAnchorElem} />
+          <NumberPlugin />
+          <FloatingEditorPlugin anchorElem={floatingAnchorElem} />
           <TreeViewPlugin />
         </div>
       </LexicalComposer>
