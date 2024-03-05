@@ -12,7 +12,7 @@ import {
 } from "lexical";
 
 import { useEffect } from "react";
-import {  PinyinNode, togglePinYin } from "../nodes/PinyinNode";
+import {  PinyinNode, addPinYin } from "../nodes/PinyinNode";
 
 export const TOGGER_PINYIN_COMMAND: LexicalCommand<void> = createCommand('TOGGER_PINYIN_COMMAND');
 
@@ -25,7 +25,7 @@ export default function PinyinPlugin(props: any) {
     return editor.registerCommand(
       TOGGER_PINYIN_COMMAND,
       (payload: string) => {
-        togglePinYin(payload)
+        addPinYin(payload)
         return true;
       },
       COMMAND_PRIORITY_EDITOR

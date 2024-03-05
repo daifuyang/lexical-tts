@@ -16,16 +16,18 @@ export type FloatDomRect = {
 
 export interface InitialState {
   floatEditType: FloatEditType;
-  selectionText: string | undefined;
   floatDomRect: FloatDomRect | undefined;
+  selectionText: string | undefined;
   floatEditValue: string | undefined; // 当前类型操作的值
+  nodeKey: string | undefined;
 }
 
 const initialState: InitialState = {
   floatEditType: undefined,
-  selectionText: undefined,
   floatDomRect: undefined,
-  floatEditValue: undefined
+  selectionText: undefined,
+  floatEditValue: undefined,
+  nodeKey: undefined
 };
 
 export const initialStateSlice = createSlice({
@@ -37,6 +39,9 @@ export const initialStateSlice = createSlice({
     },
     setFloatEditValue: (state, action: PayloadAction<string>) => {
       state.floatEditValue = action.payload;
+    },
+    setNodeKey: (state, action: PayloadAction<string>) => {
+      state.nodeKey = action.payload;
     },
     setSelectionText: (state, action: PayloadAction<string>) => {
       state.selectionText = action.payload;
@@ -56,12 +61,14 @@ export const initialStateSlice = createSlice({
         selectionText?: string | undefined;
         domRect?: FloatDomRect | undefined;
         value?: string | undefined;
+        nodeKey?: string | undefined;
       }>
     ) => {
       state.floatEditType = action.payload.type;
       state.selectionText = action.payload.selectionText;
       state.floatDomRect = action.payload.domRect;
       state.floatEditValue = action.payload.value;
+      state.nodeKey = action.payload.nodeKey;
     }
   }
 });

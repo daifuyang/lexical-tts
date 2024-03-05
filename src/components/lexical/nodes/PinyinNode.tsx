@@ -8,13 +8,18 @@ import {
   $getSelection,
   $isRangeSelection,
   SerializedLexicalNode,
-  TextNode
+  TextNode,
+  $createNodeSelection,
+  $setSelection,
+  $getNodeByKey,
+  $createTextNode
 } from "lexical";
 
 import { addClassNamesToElement } from "@lexical/utils";
 import * as React from "react";
 
 import { Tag } from "antd";
+
 import clsx from "clsx";
 import { useDispatch } from "react-redux";
 import { setInitialState } from "@/redux/slice/initialState";
@@ -30,38 +35,51 @@ export type SerializedPinyinNode = Spread<
 >;
 
 const Component = (props: any) => {
-
   const dispatch = useDispatch();
-  const { pinyin, text } = props;
+  const { pinyin, text, that } = props;
   const ref = useRef<HTMLSpanElement>(null);
+
+  const [editor] = useLexicalComposerContext();
 
   return (
     <>
       <Tag
+        closeIcon
+        onClose={(e) => {
+          e.preventDefault();
+          editor.update(() => {
+            const key = that.getKey();
+            removePinYin(key)
+          });
+        }}
         onClick={(e) => {
-          const rect: DOMRect | undefined = ref?.current?.getBoundingClientRect();
-          if (rect) {
+          editor.update(() => {
+            const key = that.getKey();
 
-            const domRect = {
-              x: rect.x,
-              y: rect.y,
-              width: rect.width,
-              height: rect.height,
-              top: rect.top,
-              right: rect.right,
-              bottom: rect.bottom,
-              left: rect.left
-            };
+            const rect: DOMRect | undefined = ref?.current?.getBoundingClientRect();
+            if (rect) {
+              const domRect = {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+                top: rect.top,
+                right: rect.right,
+                bottom: rect.bottom,
+                left: rect.left
+              };
 
-            dispatch(
-              setInitialState({
-                type: "pinyin",
-                selectionText: text,
-                value: pinyin,
-                domRect
-              })
-            );
-          }
+              dispatch(
+                setInitialState({
+                  type: "pinyin",
+                  selectionText: text,
+                  value: pinyin,
+                  nodeKey: key,
+                  domRect
+                })
+              );
+            }
+          });
         }}
         className={clsx({
           "editor-tag": true,
@@ -89,6 +107,14 @@ export class PinyinNode extends DecoratorNode<JSX.Element> {
 
   static getType(): string {
     return "pinyin";
+  }
+
+  getPinyin() {
+    return this.__pinyin;
+  }
+
+  getText() {
+    return this.__text;
   }
 
   setPinyin(pinyin: string) {
@@ -130,7 +156,7 @@ export class PinyinNode extends DecoratorNode<JSX.Element> {
   }
 
   decorate(): JSX.Element {
-    return <Component pinyin={this.__pinyin} text={this.__text} />;
+    return <Component that={this} pinyin={this.__pinyin} text={this.__text} />;
   }
 }
 
@@ -144,31 +170,33 @@ export function $isPinyinNode(
   return node instanceof PinyinNode;
 }
 
-export function togglePinYin(pinyin: string): void {
+export function addPinYin(pinyin: string): void {
   const selection = $getSelection();
   if (!$isRangeSelection(selection)) {
     return;
   }
-
   const nodes = selection.extract();
   if (nodes.length > 0) {
     const node = nodes[0];
-
-    let pinyinNode = $getAncestor(node, $isPinyinNode)
-    if(pinyinNode) {
-      pinyinNode.setPinyin(pinyin)
-    }else {
-      pinyinNode = $createPinyinNode(pinyin, (node as TextNode).__text);
-      node.insertBefore(pinyinNode);
-      node.remove();
-    }
-
+    const pinyinNode = $createPinyinNode(pinyin, (node as TextNode).__text);
+    node.insertAfter(pinyinNode);
+    pinyinNode.selectEnd()
+    node.remove();
   }
+}
+
+export function removePinYin(nodekey: string) {
+  const pinyinNode = $getNodeByKey(nodekey);
+  pinyinNode?.selectEnd();
+  const selection = $getSelection();
+  const text = (pinyinNode as PinyinNode).getText();
+  selection?.insertText(text);
+  pinyinNode?.remove();
 }
 
 function $getAncestor<NodeType extends LexicalNode = LexicalNode>(
   node: LexicalNode,
-  predicate: (ancestor: LexicalNode) => ancestor is NodeType,
+  predicate: (ancestor: LexicalNode) => ancestor is NodeType
 ) {
   let parent = node;
   while (parent !== null && parent.getParent() !== null && !predicate(parent)) {

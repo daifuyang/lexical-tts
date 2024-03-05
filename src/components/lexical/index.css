@@ -89,6 +89,7 @@ body {
 .editor-pinyin {
   position: relative;
   padding: 0 4px;
+  user-select: none;
 }
 
 .editor-green-tag {

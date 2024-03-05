@@ -1,5 +1,11 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $getSelection, LexicalEditor } from "lexical";
+import {
+  $createNodeSelection,
+  $getNodeByKey,
+  $getSelection,
+  $setSelection,
+  LexicalEditor
+} from "lexical";
 import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -13,7 +19,7 @@ import { Menu, Radio } from "antd";
 
 import { pinyin, convert } from "pinyin-pro";
 import { TOGGER_NUMBER_COMMAND } from "../NumberPlugin";
-import { $isPinyinNode } from "../../nodes/PinyinNode";
+import { $isPinyinNode, PinyinNode } from "../../nodes/PinyinNode";
 import { getNumberOptions } from "../../utils/number";
 import { TOGGER_PINYIN_COMMAND } from "../PinyinPlugin";
 
@@ -26,7 +32,7 @@ function FloatingPinyinEditor({
 }): JSX.Element {
   const editorRef = useRef<HTMLDivElement | null>(null);
 
-  const { floatEditType, floatEditValue, selectionText, floatDomRect } = useSelector(
+  const { floatEditType, floatEditValue, nodeKey, selectionText, floatDomRect } = useSelector(
     (state: RootState) => state.initialState
   );
   const dispatch = useDispatch();
@@ -50,13 +56,11 @@ function FloatingPinyinEditor({
       let domRect: DOMRect | undefined = undefined;
 
       if (selectionText && floatDomRect) {
-
-        const _floatDomRect = {...floatDomRect}
+        const _floatDomRect = { ...floatDomRect };
         _floatDomRect.y += 40;
         _floatDomRect.top += 40;
         domRect = _floatDomRect as DOMRect;
-
-      } else if ( selection !== null && nativeSelection !== null) {
+      } else if (selection !== null && nativeSelection !== null) {
         domRect = nativeSelection?.getRangeAt(0).getBoundingClientRect();
         domRect.y += 40;
       }
@@ -115,7 +119,6 @@ function FloatingPinyinEditor({
   // 拼音
   const RenderPinyinRadio = () => {
     const [options, setOptions] = useState<string[]>([]);
-    const [value, setValue] = useState<string>("");
     useEffect(() => {
       const _text = selectionText;
       if (_text) {
@@ -132,22 +135,29 @@ function FloatingPinyinEditor({
       }
     }, [selectionText]);
 
-    // 读取历史选择的拼音
-    useEffect(() => {
-      if (floatEditValue) {
-        setValue(floatEditValue);
-      }
-    }, [floatEditValue]);
-
     return (
       <div>
         <Radio.Group
           onChange={(e) => {
             const { value } = e.target;
-            editor.dispatchCommand(TOGGER_PINYIN_COMMAND, value);
+
+            if (value) {
+              dispatch(setFloatEditValue(value));
+            }
+
+            if (nodeKey) {
+              editor.update(() => {
+                const editNode = $getNodeByKey(nodeKey);
+                if ($isPinyinNode(editNode)) {
+                  (editNode as PinyinNode).setPinyin(value);
+                }
+              });
+            } else {
+              editor.dispatchCommand(TOGGER_PINYIN_COMMAND, value);
+            }
           }}
           buttonStyle="solid"
-          value={value}
+          value={floatEditValue}
         >
           {options?.map((item) => {
             return (

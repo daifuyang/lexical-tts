@@ -61,9 +61,7 @@ export default function ToolbarPlugin(props: any) {
                   dispatch(closeFloat());
                   return;
                 }
-
                 dispatch(setInitialState({ type: "pinyin",selectionText: text, value: undefined }));
-
               }
             });
           }}
@@ -77,6 +75,7 @@ export default function ToolbarPlugin(props: any) {
             e.stopPropagation();
             editor.update(() => {
               const selection = $getSelection();
+              console.log('selection',selection)
               if (selection) {
                 const text = selection?.getTextContent();
                 if (!/^\d+(\.\d+)?$/.test(text)) {
