@@ -1,11 +1,5 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-  $createNodeSelection,
-  $getNodeByKey,
-  $getSelection,
-  $setSelection,
-  LexicalEditor
-} from "lexical";
+import { $getNodeByKey, $getSelection, LexicalEditor } from "lexical";
 import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -14,14 +8,16 @@ import { setFloatingElemPositionForPinyinEditor } from "../../utils/setFloatingE
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { setFloatEditValue, setFloatType } from "@/redux/slice/initialState";
+import { closeFloat, setFloatEditValue, setFloatType } from "@/redux/slice/initialState";
 import { Menu, Radio } from "antd";
 
-import { pinyin, convert } from "pinyin-pro";
-import { TOGGER_NUMBER_COMMAND } from "../NumberPlugin";
+import { pinyin } from "pinyin-pro";
+
 import { $isPinyinNode, PinyinNode } from "../../nodes/PinyinNode";
 import { getNumberOptions } from "../../utils/number";
-import { TOGGER_PINYIN_COMMAND } from "../PinyinPlugin";
+import { ADD_PINYIN_COMMAND } from "../PinyinPlugin";
+import { ADD_NUMBER_COMMAND } from "../NumberPlugin";
+import { $isNumberNode, NumberNode } from "../../nodes/NumberNode";
 
 function FloatingPinyinEditor({
   editor,
@@ -32,9 +28,9 @@ function FloatingPinyinEditor({
 }): JSX.Element {
   const editorRef = useRef<HTMLDivElement | null>(null);
 
-  const { floatEditType, floatEditValue, nodeKey, selectionText, floatDomRect } = useSelector(
-    (state: RootState) => state.initialState
-  );
+  const { floatEditType, floatEditValue, nodeKey, selectionText, floatDomRect } =
+    useSelector((state: RootState) => state.initialState);
+
   const dispatch = useDispatch();
 
   const updatePinyinEditor = useCallback(() => {
@@ -60,19 +56,19 @@ function FloatingPinyinEditor({
         _floatDomRect.y += 40;
         _floatDomRect.top += 40;
         domRect = _floatDomRect as DOMRect;
-      } else if (selection !== null && nativeSelection !== null) {
-        domRect = nativeSelection?.getRangeAt(0).getBoundingClientRect();
+      } else if (selection !== null && nativeSelection?.rangeCount > 0) {
+        domRect = nativeSelection?.getRangeAt?.(0).getBoundingClientRect();
         domRect.y += 40;
       }
 
       if (domRect) {
         setFloatingElemPositionForPinyinEditor(domRect, editorElem, anchorElem);
       }
-    } else if (!activeElement || activeElement.className !== "pinyin-editor") {
+    } else if (!activeElement || activeElement.className !== "float-editor") {
       if (rootElement !== null) {
         setFloatingElemPositionForPinyinEditor(null, editorElem, anchorElem);
       }
-      dispatch(setFloatType(undefined));
+      dispatch(closeFloat());
     }
 
     return true;
@@ -136,38 +132,36 @@ function FloatingPinyinEditor({
     }, [selectionText]);
 
     return (
-      <div>
-        <Radio.Group
-          onChange={(e) => {
-            const { value } = e.target;
+      <Radio.Group
+        onChange={(e) => {
+          const { value } = e.target;
 
-            if (value) {
-              dispatch(setFloatEditValue(value));
-            }
+          if (value) {
+            dispatch(setFloatEditValue(value));
+          }
 
-            if (nodeKey) {
-              editor.update(() => {
-                const editNode = $getNodeByKey(nodeKey);
-                if ($isPinyinNode(editNode)) {
-                  (editNode as PinyinNode).setPinyin(value);
-                }
-              });
-            } else {
-              editor.dispatchCommand(TOGGER_PINYIN_COMMAND, value);
-            }
-          }}
-          buttonStyle="solid"
-          value={floatEditValue}
-        >
-          {options?.map((item) => {
-            return (
-              <Radio.Button key={item} value={item}>
-                {item}
-              </Radio.Button>
-            );
-          })}
-        </Radio.Group>
-      </div>
+          if (nodeKey) {
+            editor.update(() => {
+              const editNode = $getNodeByKey(nodeKey);
+              if ($isPinyinNode(editNode)) {
+                (editNode as PinyinNode).setPinyin(value);
+              }
+            });
+          } else {
+            editor.dispatchCommand(ADD_PINYIN_COMMAND, value);
+          }
+        }}
+        buttonStyle="solid"
+        value={floatEditValue}
+      >
+        {options?.map((item) => {
+          return (
+            <Radio.Button key={item} value={item}>
+              {item}
+            </Radio.Button>
+          );
+        })}
+      </Radio.Group>
     );
   };
 
@@ -175,27 +169,36 @@ function FloatingPinyinEditor({
   const RenderSymbolRadio = () => {
     const [options, setOptions] = useState<string[]>([]);
     useEffect(() => {
-      editor.update(() => {
-        const selection = $getSelection();
-        if (selection) {
-          const _text: string = selection?.getTextContent();
-          if (_text) {
-            const _options = getNumberOptions(Number(_text));
-            setOptions(_options);
-          }
-        }
-      });
-    }, [editor]);
+      const _text = selectionText;
+      if (_text) {
+        const _options = getNumberOptions(Number(_text));
+        setOptions(_options);
+      }
+    }, [selectionText]);
 
     return (
-      <Menu style={{ border: "none" }}>
+      <Menu selectedKeys={[floatEditValue || ""]} style={{ border: "none" }}>
         {options?.map((item: any) => {
           return (
             <Menu.Item
               onClick={(e) => {
-                editor.dispatchCommand(TOGGER_NUMBER_COMMAND, {
-                  data: item
-                });
+                const { value, type } = item;
+                if (value) {
+                  dispatch(setFloatEditValue(value));
+                }
+                if (nodeKey) {
+                  editor.update(() => {
+                    const editNode = $getNodeByKey(nodeKey);
+                    if ($isNumberNode(editNode)) {
+                      (editNode as NumberNode).setValue(value);
+                      (editNode as NumberNode).setVType(type);
+                    }
+                  });
+                } else {
+                  editor.dispatchCommand(ADD_NUMBER_COMMAND, {
+                    data: item
+                  });
+                }
               }}
               key={item.value}
             >
@@ -217,7 +220,13 @@ function FloatingPinyinEditor({
   }
 
   return (
-    <div ref={editorRef} className="float-editor">
+    <div
+      ref={editorRef}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+      className="float-editor"
+    >
       {getContent()}
     </div>
   );

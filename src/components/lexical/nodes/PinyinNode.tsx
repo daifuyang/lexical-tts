@@ -12,19 +12,24 @@ import {
   $createNodeSelection,
   $setSelection,
   $getNodeByKey,
-  $createTextNode
+  $createTextNode,
+  CLICK_COMMAND,
+  COMMAND_PRIORITY_LOW
 } from "lexical";
 
 import { addClassNamesToElement } from "@lexical/utils";
 import * as React from "react";
 
 import { Tag } from "antd";
+import { CloseCircleOutlined } from "@ant-design/icons";
 
 import clsx from "clsx";
 import { useDispatch } from "react-redux";
 import { setInitialState } from "@/redux/slice/initialState";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { useRef } from "react";
+import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection";
+import { mergeRegister } from "@lexical/utils";
+import { useEffect, useRef } from "react";
 
 export type SerializedPinyinNode = Spread<
   {
@@ -36,26 +41,55 @@ export type SerializedPinyinNode = Spread<
 
 const Component = (props: any) => {
   const dispatch = useDispatch();
-  const { pinyin, text, that } = props;
+  const { pinyin, text, nodeKey } = props;
   const ref = useRef<HTMLSpanElement>(null);
 
+  const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey);
+
   const [editor] = useLexicalComposerContext();
+
+  useEffect(() => {
+    let isMounted = true;
+    const unregister = mergeRegister(
+      editor.registerCommand<MouseEvent>(
+        CLICK_COMMAND,
+        (event: MouseEvent) => {
+          const { nodekey: eventNodeKey } = event.target?.dataset || {};
+          if (eventNodeKey === nodeKey) {
+            if (event.shiftKey) {
+              setSelected(!isSelected);              
+            }else {
+              clearSelection();
+              setSelected(true);
+            }
+            return true;
+          }
+          return false;
+        },
+        COMMAND_PRIORITY_LOW
+      )
+    );
+
+    return () => {
+      isMounted = false;
+      unregister();
+    };
+  }, [clearSelection, isSelected, editor]);
 
   return (
     <>
       <Tag
-        closeIcon
+        bordered={false}
+        closeIcon={<CloseCircleOutlined style={{ color: "#389e0d", fontSize: 14 }} />}
         onClose={(e) => {
           e.preventDefault();
           editor.update(() => {
-            const key = that.getKey();
-            removePinYin(key)
+            removePinYin(nodeKey);
           });
         }}
         onClick={(e) => {
+          e.stopPropagation();
           editor.update(() => {
-            const key = that.getKey();
-
             const rect: DOMRect | undefined = ref?.current?.getBoundingClientRect();
             if (rect) {
               const domRect = {
@@ -74,7 +108,7 @@ const Component = (props: any) => {
                   type: "pinyin",
                   selectionText: text,
                   value: pinyin,
-                  nodeKey: key,
+                  nodeKey,
                   domRect
                 })
               );
@@ -90,7 +124,10 @@ const Component = (props: any) => {
       >
         {pinyin}
       </Tag>
-      <span ref={ref}>{text}</span>
+      <br />
+      <span data-nodekey={nodeKey} className={clsx({ text: true, selected: isSelected })} ref={ref}>
+        {text}
+      </span>
     </>
   );
 };
@@ -143,7 +180,7 @@ export class PinyinNode extends DecoratorNode<JSX.Element> {
 
   createDOM(config: EditorConfig): HTMLElement {
     const element = document.createElement("span");
-    addClassNamesToElement(element, config.theme.pinyin);
+    addClassNamesToElement(element, config.theme.pinyin, "editor-span");
     return element;
   }
 
@@ -156,7 +193,7 @@ export class PinyinNode extends DecoratorNode<JSX.Element> {
   }
 
   decorate(): JSX.Element {
-    return <Component that={this} pinyin={this.__pinyin} text={this.__text} />;
+    return <Component nodeKey={this.getKey()} pinyin={this.__pinyin} text={this.__text} />;
   }
 }
 
@@ -180,7 +217,7 @@ export function addPinYin(pinyin: string): void {
     const node = nodes[0];
     const pinyinNode = $createPinyinNode(pinyin, (node as TextNode).__text);
     node.insertAfter(pinyinNode);
-    pinyinNode.selectEnd()
+    pinyinNode.selectEnd();
     node.remove();
   }
 }
@@ -192,15 +229,4 @@ export function removePinYin(nodekey: string) {
   const text = (pinyinNode as PinyinNode).getText();
   selection?.insertText(text);
   pinyinNode?.remove();
-}
-
-function $getAncestor<NodeType extends LexicalNode = LexicalNode>(
-  node: LexicalNode,
-  predicate: (ancestor: LexicalNode) => ancestor is NodeType
-) {
-  let parent = node;
-  while (parent !== null && parent.getParent() !== null && !predicate(parent)) {
-    parent = parent.getParentOrThrow();
-  }
-  return predicate(parent) ? parent : null;
 }

@@ -2,17 +2,13 @@
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
-  $createParagraphNode,
-  $getSelection,
-  $insertNodes,
-  $isRootOrShadowRoot,
   COMMAND_PRIORITY_EDITOR,
   LexicalCommand,
   createCommand
 } from "lexical";
 
 import { useEffect } from "react";
-import { NumberNode, toggleNumber } from "../nodes/NumberNode";
+import { NumberNode, addNumber } from "../nodes/NumberNode";
 
 interface Payload {
   data: {
@@ -21,8 +17,8 @@ interface Payload {
   };
 }
 
-export const TOGGER_NUMBER_COMMAND: LexicalCommand<Payload> =
-  createCommand("TOGGER_NUMBER_COMMAND");
+export const ADD_NUMBER_COMMAND: LexicalCommand<Payload> =
+  createCommand("ADD_NUMBER_COMMAND");
 
 export default function NumberPlugin(props: any) {
   const [editor] = useLexicalComposerContext();
@@ -31,11 +27,10 @@ export default function NumberPlugin(props: any) {
       throw new Error("NumberPlugin: NumberNode not registered on editor (initialConfig.nodes)");
     }
     return editor.registerCommand(
-      TOGGER_NUMBER_COMMAND,
+      ADD_NUMBER_COMMAND,
       (payload: Payload) => {
-        console.log('payload',payload)
         const { data } = payload;
-        toggleNumber(data.value, data.type);
+        addNumber(data.value, data.type);
         return true;
       },
       COMMAND_PRIORITY_EDITOR

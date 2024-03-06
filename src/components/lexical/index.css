@@ -77,27 +77,59 @@ body {
 
 .editor-paragraph {
   margin: 10px 0;
+  user-select: none;
+  display: inline-block;
 }
 
-.editor-paragraph > span, .editor-paragraph > a {
+.editor-paragraph span {
+  display: inline-block;
+}
+
+/* .editor-paragraph > span, .editor-paragraph > a {
   display: inline-grid;
   align-content: end;
   vertical-align: bottom;
   text-align: center;
+} */
+
+
+.editor-span {
+  display: inline-block;
+  text-align: center;
 }
+
+
+.editor-span .selected{
+  outline: 2px solid rgb(60, 132, 244);
+}
+
+.editor-span .text {
+  user-select: text;
+}
+
 
 .editor-pinyin {
   position: relative;
   padding: 0 4px;
-  user-select: none;
 }
 
 .editor-green-tag {
+  display: inline-block;
+  width: fit-content;
+  max-width: 100px;
   margin-bottom: 4px;
 }
 
 .editor-tag {
+  position: relative;
   user-select: none;
+}
+
+.editor-tag .ant-tag-close-icon{
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
 }
 
 .toolbar {

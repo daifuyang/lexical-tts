@@ -27,7 +27,7 @@ const initialState: InitialState = {
   floatDomRect: undefined,
   selectionText: undefined,
   floatEditValue: undefined,
-  nodeKey: undefined
+  nodeKey: undefined,
 };
 
 export const initialStateSlice = createSlice({

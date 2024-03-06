@@ -14,7 +14,7 @@ import {
 import { useEffect } from "react";
 import {  PinyinNode, addPinYin } from "../nodes/PinyinNode";
 
-export const TOGGER_PINYIN_COMMAND: LexicalCommand<void> = createCommand('TOGGER_PINYIN_COMMAND');
+export const ADD_PINYIN_COMMAND: LexicalCommand<void> = createCommand('ADD_PINYIN_COMMAND');
 
 export default function PinyinPlugin(props: any) {
   const [editor] = useLexicalComposerContext();
@@ -23,7 +23,7 @@ export default function PinyinPlugin(props: any) {
       throw new Error("PinyinPlugin: PinyinNode not registered on editor (initialConfig.nodes)");
     }
     return editor.registerCommand(
-      TOGGER_PINYIN_COMMAND,
+      ADD_PINYIN_COMMAND,
       (payload: string) => {
         addPinYin(payload)
         return true;

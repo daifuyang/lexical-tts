@@ -6,6 +6,7 @@ import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import TreeViewPlugin from "./plugins/TreeViewPlugin";
 import ToolbarPlugin from "./plugins/ToolbarPlugin";
 import PinyinPlugin from "./plugins/PinyinPlugin";
@@ -59,12 +60,7 @@ function EditorMain() {
     >
       <LexicalComposer initialConfig={editorConfig}>
         <ToolbarPlugin />
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          className="editor-container"
-        >
+        <div className="editor-container">
           <RichTextPlugin
             contentEditable={
               <div className="editor-scroller">

@@ -8,16 +8,22 @@ import {
   $getSelection,
   $isRangeSelection,
   SerializedLexicalNode,
-  TextNode
+  TextNode,
+  $isTextNode
 } from "lexical";
 
 import { addClassNamesToElement } from "@lexical/utils";
 import * as React from "react";
 
 import { Tag } from "antd";
-import clsx from "clsx";
+import { CloseCircleOutlined } from "@ant-design/icons";
 
-export type SerializedPinyinNode = Spread<
+import clsx from "clsx";
+import { useDispatch } from "react-redux";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { setInitialState } from "@/redux/slice/initialState";
+
+export type SerializedNumberNode = Spread<
   {
     value: string;
     type: string;
@@ -26,15 +32,75 @@ export type SerializedPinyinNode = Spread<
   SerializedLexicalNode
 >;
 
+const Component = (props: any) => {
+  const dispatch = useDispatch();
+  const { value, vType, text, nodeKey } = props;
+  const ref = React.useRef<HTMLSpanElement>(null);
+  const [editor] = useLexicalComposerContext();
+
+  return (
+    <>
+      <Tag
+        bordered={false}
+        closeIcon={<CloseCircleOutlined style={{ color: "#389e0d", fontSize: 14 }} />}
+        onClose={(e) => {
+          e.preventDefault();
+          editor.update(() => {
+            // 删除
+          });
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          editor.update(() => {
+            const rect: DOMRect | undefined = ref?.current?.getBoundingClientRect();
+            if (rect) {
+              const domRect = {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+                top: rect.top,
+                right: rect.right,
+                bottom: rect.bottom,
+                left: rect.left
+              };
+
+              dispatch(
+                setInitialState({
+                  type: "symbol",
+                  selectionText: text,
+                  value,
+                  nodeKey,
+                  domRect
+                })
+              );
+            }
+          });
+        }}
+        className={clsx({
+          "editor-tag": true,
+          "editor-number-tag": true,
+          "editor-green-tag": true
+        })}
+        color="green"
+      >
+        {vType}
+      </Tag>
+      <br />
+      <span className="text" ref={ref}>{text}</span>
+    </>
+  );
+};
+
 export class NumberNode extends DecoratorNode<JSX.Element> {
   __value: string;
-  __vtype: string;
+  __vType: string;
   __text: string;
 
   constructor(value: string, type: string, text: string, key?: NodeKey) {
     super(key);
     this.__value = value;
-    this.__vtype = type;
+    this.__vType = type;
     this.__text = text;
   }
 
@@ -42,16 +108,38 @@ export class NumberNode extends DecoratorNode<JSX.Element> {
     return "number";
   }
 
-  static clone(node: NumberNode): NumberNode {
-    return new NumberNode(node.__value, node.__vtype, node.__text, node.__key);
+  getText() {
+    return this.__text;
   }
 
-  static importJSON(serializedNode: SerializedPinyinNode): NumberNode {
+  getValue() {
+    return this.__value;
+  }
+
+  setValue(value: string) {
+    const writable = this.getWritable();
+    writable.__value = value;
+  }
+
+  getVType() {
+    return this.__vType;
+  }
+
+  setVType(vType: string) {
+    const writable = this.getWritable();
+    writable.__vType = vType;
+  }
+
+  static clone(node: NumberNode): NumberNode {
+    return new NumberNode(node.__value, node.__vType, node.__text, node.__key);
+  }
+
+  static importJSON(serializedNode: SerializedNumberNode): NumberNode {
     const node = $createNumberNode(serializedNode.value, serializedNode.type, serializedNode.text);
     return node;
   }
 
-  exportJSON(): SerializedPinyinNode {
+  exportJSON(): SerializedNumberNode {
     return {
       ...super.exportJSON(),
       value: this.__value,
@@ -63,7 +151,7 @@ export class NumberNode extends DecoratorNode<JSX.Element> {
 
   createDOM(config: EditorConfig): HTMLElement {
     const element = document.createElement("span");
-    addClassNamesToElement(element, config.theme.number);
+    addClassNamesToElement(element, config.theme.number,"editor-span");
     return element;
   }
 
@@ -73,19 +161,12 @@ export class NumberNode extends DecoratorNode<JSX.Element> {
 
   decorate(): JSX.Element {
     return (
-      <>
-        <Tag
-          className={clsx({
-            "editor-tag": true,
-            "editor-number-tag": true,
-            "editor-green-tag": true
-          })}
-          color="green"
-        >
-          {this.__vtype}
-        </Tag>
-        <span>{this.__text}</span>
-      </>
+      <Component
+        nodeKey={this.getKey()}
+        text={this.getText()}
+        vType={this.getVType()}
+        value={this.getValue()}
+      />
     );
   }
 }
@@ -100,19 +181,19 @@ export function $isNumberNode(
   return node instanceof NumberNode;
 }
 
-export function toggleNumber(value: string, type: string): void {
-
+export function addNumber(value: string, type: string): void {
   const selection = $getSelection();
   if (!$isRangeSelection(selection)) {
     return;
   }
-
   const nodes = selection.extract();
   if (nodes.length > 0) {
     const node = nodes[0];
-    const numberNode = $createNumberNode(value, type, (node as TextNode).__text);
-    node.insertBefore(numberNode);
-    node.remove();
-    numberNode.selectEnd();
+    if ($isTextNode(node)) {
+      const numberNode = $createNumberNode(value, type, (node as TextNode).__text);
+      node.insertBefore(numberNode);
+      node.remove();
+      numberNode.selectEnd();
+    }
   }
 }
