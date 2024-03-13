@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.1.1",
     "@lexical/react": "^0.13.1",
     "@reduxjs/toolkit": "^2.2.1",
     "@types/pinyin": "^2.10.2",

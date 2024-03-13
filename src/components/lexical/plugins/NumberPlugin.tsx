@@ -8,7 +8,7 @@ import {
 } from "lexical";
 
 import { useEffect } from "react";
-import { NumberNode, addNumber } from "../nodes/NumberNode";
+import { NumberNode, $addNumber } from "../nodes/NumberNode";
 
 interface Payload {
   data: {
@@ -30,7 +30,7 @@ export default function NumberPlugin(props: any) {
       ADD_NUMBER_COMMAND,
       (payload: Payload) => {
         const { data } = payload;
-        addNumber(data.value, data.type);
+        $addNumber(data.value, data.type);
         return true;
       },
       COMMAND_PRIORITY_EDITOR

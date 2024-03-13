@@ -1,0 +1,204 @@
+import {
+  DecoratorNode,
+  EditorConfig,
+  LexicalEditor,
+  LexicalNode,
+  NodeKey,
+  Spread,
+  DOMExportOutput,
+  $applyNodeReplacement,
+  ElementNode,
+  SerializedElementNode,
+  $getSelection,
+  $isRangeSelection,
+  $isElementNode,
+  RangeSelection,
+  BaseSelection,
+  $isNodeSelection,
+  TextNode,
+  $createTextNode,
+  $createParagraphNode
+} from "lexical";
+
+import { addClassNamesToElement } from "@lexical/utils";
+
+import * as React from "react";
+
+import ReactDOM from "react-dom";
+import { Tag, message } from "antd";
+import clsx from "clsx";
+import { closeFloat, setInitialState } from "@/redux/slice/initialState";
+import { Dispatch } from "@reduxjs/toolkit";
+
+export type SerializedPinyinNode = Spread<
+  {
+    pinyin: string;
+  },
+  SerializedElementNode
+>;
+
+export class PinyinNode extends ElementNode {
+  __pinyin: string;
+
+  constructor(pinyin: string, key?: NodeKey) {
+    super(key);
+    this.__pinyin = pinyin;
+  }
+
+  static getType(): string {
+    return "pinyin";
+  }
+
+  static clone(node: PinyinNode): PinyinNode {
+    return new PinyinNode(node.__pinyin, node.__key);
+  }
+
+  static importJSON(serializedNode: SerializedPinyinNode): PinyinNode {
+    const node = $createPinyinNode(serializedNode.pinyin);
+    return node;
+  }
+
+  exportJSON(): SerializedPinyinNode {
+    return {
+      ...super.exportJSON(),
+      pinyin: this.__pinyin,
+      type: this.getType(),
+      version: 1
+    };
+  }
+
+  createDOM(config: EditorConfig): HTMLElement {
+    const element = document.createElement("span");
+    addClassNamesToElement(element, config.theme.pinyin);
+    const tag = document.createElement("span");
+    addClassNamesToElement(tag, "tag");
+    tag.style.width = "20px";
+    tag.style.height = "20px";
+    tag.style.background = "#ff0000";
+    element.appendChild(tag);
+    // element.appendChild(document.createElement("br"));
+    return element;
+  }
+
+  updateDOM(): false {
+    console.log("updateDOM");
+    return false;
+  }
+
+  insertNewAfter(_: RangeSelection, restoreSelection = true): null | ElementNode {
+    const pinyinNode = $createPinyinNode(this.__pinyin);
+    this.insertAfter(pinyinNode, restoreSelection);
+    return pinyinNode;
+  }
+
+  canInsertTextBefore(): false {
+    return false;
+  }
+
+  canInsertTextAfter(): false {
+    return false;
+  }
+
+  canBeEmpty(): false {
+    return false;
+  }
+
+  isInline(): true {
+    return true;
+  }
+
+  extractWithChild(
+    child: LexicalNode,
+    selection: BaseSelection,
+    destination: "clone" | "html"
+  ): boolean {
+    if (!$isRangeSelection(selection)) {
+      return false;
+    }
+
+    const anchorNode = selection.anchor.getNode();
+    const focusNode = selection.focus.getNode();
+
+    return (
+      this.isParentOf(anchorNode) &&
+      this.isParentOf(focusNode) &&
+      selection.getTextContent().length > 0
+    );
+  }
+}
+
+export function $createPinyinNode(pinyin: string): PinyinNode {
+  return $applyNodeReplacement(new PinyinNode(pinyin));
+}
+
+export function $isPinyinNode(
+  node: PinyinNode | LexicalNode | null | undefined
+): node is PinyinNode {
+  return node instanceof PinyinNode;
+}
+
+export function $togglePinYin(pinyin: string): void {
+  const selection = $getSelection();
+  if (!$isRangeSelection(selection)) {
+    return;
+  }
+
+  const nodes = selection.extract();
+
+  nodes.forEach((node) => {
+    const parent = node.getParent();
+
+    const pinyinNode = $createPinyinNode(pinyin)
+
+    node.insertBefore(pinyinNode)
+    
+   
+    pinyinNode.append(node)
+
+  });
+}
+
+export function $pinYinFloat(editor: LexicalEditor, dispatch: Dispatch<any>): void {
+  // 新增编辑逻辑合并，打开拼音选择弹窗
+
+  editor.update(() => {
+    const selection = $getSelection();
+    if (selection) {
+      if ($isNodeSelection(selection)) {
+        // 修改更新
+        const nodes = selection.extract();
+        if (nodes.length > 0) {
+        }
+
+        return;
+      }
+
+      const text = selection?.getTextContent();
+      if (!text) {
+        message.error("请先选中文字!");
+        dispatch(closeFloat());
+        return;
+      } else if (text.length > 1) {
+        message.error("请选择单个汉字!");
+        dispatch(closeFloat());
+        return;
+      } else if (!/^[\u4E00-\u9FFF]+$/.test(text)) {
+        message.error("请选择单个汉字!");
+        dispatch(closeFloat());
+        return;
+      }
+      dispatch(setInitialState({ type: "pinyin", selectionText: text, value: undefined }));
+    }
+  });
+}
+
+function $getAncestor<NodeType extends LexicalNode = LexicalNode>(
+  node: LexicalNode,
+  predicate: (ancestor: LexicalNode) => ancestor is NodeType
+) {
+  let parent = node;
+  while (parent !== null && parent.getParent() !== null && !predicate(parent)) {
+    parent = parent.getParentOrThrow();
+  }
+  return predicate(parent) ? parent : null;
+}

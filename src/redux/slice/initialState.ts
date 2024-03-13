@@ -39,6 +39,7 @@ export const initialStateSlice = createSlice({
     },
     setFloatEditValue: (state, action: PayloadAction<string>) => {
       state.floatEditValue = action.payload;
+      state.floatEditType = undefined // 设置完成值则关闭窗口
     },
     setNodeKey: (state, action: PayloadAction<string>) => {
       state.nodeKey = action.payload;

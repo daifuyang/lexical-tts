@@ -13,7 +13,6 @@ import { Menu, Radio } from "antd";
 
 import { pinyin } from "pinyin-pro";
 
-import { $isPinyinNode, PinyinNode } from "../../nodes/PinyinNode";
 import { getNumberOptions } from "../../utils/number";
 import { ADD_PINYIN_COMMAND } from "../PinyinPlugin";
 import { ADD_NUMBER_COMMAND } from "../NumberPlugin";
@@ -28,8 +27,9 @@ function FloatingPinyinEditor({
 }): JSX.Element {
   const editorRef = useRef<HTMLDivElement | null>(null);
 
-  const { floatEditType, floatEditValue, nodeKey, selectionText, floatDomRect } =
-    useSelector((state: RootState) => state.initialState);
+  const initialState = useSelector((state: RootState) => state.initialState);
+
+  const { floatEditType, floatEditValue, nodeKey, selectionText, floatDomRect } = initialState;
 
   const dispatch = useDispatch();
 
@@ -46,9 +46,6 @@ function FloatingPinyinEditor({
     const rootElement = editor.getRootElement();
 
     if (floatEditType && rootElement !== null && editor.isEditable()) {
-      //   const domRect: DOMRect | undefined =
-      //     nativeSelection.focusNode?.parentElement?.getBoundingClientRect();
-
       let domRect: DOMRect | undefined = undefined;
 
       if (selectionText && floatDomRect) {
@@ -56,7 +53,7 @@ function FloatingPinyinEditor({
         _floatDomRect.y += 40;
         _floatDomRect.top += 40;
         domRect = _floatDomRect as DOMRect;
-      } else if (selection !== null && nativeSelection?.rangeCount > 0) {
+      } else if (selection !== null && nativeSelection && nativeSelection?.rangeCount > 0) {
         domRect = nativeSelection?.getRangeAt?.(0).getBoundingClientRect();
         domRect.y += 40;
       }
@@ -64,15 +61,14 @@ function FloatingPinyinEditor({
       if (domRect) {
         setFloatingElemPositionForPinyinEditor(domRect, editorElem, anchorElem);
       }
-    } else if (!activeElement || activeElement.className !== "float-editor") {
+    } else {
       if (rootElement !== null) {
         setFloatingElemPositionForPinyinEditor(null, editorElem, anchorElem);
       }
-      dispatch(closeFloat());
     }
 
     return true;
-  }, [anchorElem, editor, floatEditType]);
+  }, [anchorElem, editor, initialState]);
 
   useEffect(() => {
     const scrollerElem = anchorElem.parentElement;
@@ -143,9 +139,7 @@ function FloatingPinyinEditor({
           if (nodeKey) {
             editor.update(() => {
               const editNode = $getNodeByKey(nodeKey);
-              if ($isPinyinNode(editNode)) {
-                (editNode as PinyinNode).setPinyin(value);
-              }
+             
             });
           } else {
             editor.dispatchCommand(ADD_PINYIN_COMMAND, value);

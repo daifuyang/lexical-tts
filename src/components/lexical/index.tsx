@@ -21,7 +21,7 @@ import dynamic from "next/dynamic";
 import { useDispatch } from "react-redux";
 import { closeFloat, setFloatType } from "@/redux/slice/initialState";
 import Provider from "@/redux/provider";
-// import FloatingPinyinEditorPlugin from "./plugins/FloatingPinyinEditorPlugin";
+import { SpeedNode } from "./nodes/SpeedNode";
 
 const FloatingEditorPlugin = dynamic(() => import("./plugins/FloatingEditorPlugin"), {
   ssr: false
@@ -33,7 +33,11 @@ function Placeholder() {
 
 const editorConfig = {
   namespace: "editor",
-  nodes: [PinyinNode, NumberNode],
+  nodes: [
+    PinyinNode,
+    NumberNode,
+    SpeedNode
+  ],
   // Handling of errors during update
   onError(error: Error) {
     throw error;

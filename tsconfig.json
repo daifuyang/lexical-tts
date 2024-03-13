@@ -21,6 +21,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/lexical/nodes/PinyinNode.tsx", "src/components/lexical/nodes/PinyinNode.tsx.bak"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/lexical/nodes/PinyinNode.tsx1", "src/components/lexical/nodes/PinyinNode.tsx.bak"],
   "exclude": ["node_modules"]
 }

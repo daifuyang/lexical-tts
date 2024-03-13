@@ -1,16 +1,23 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $getSelection,
-  $isNodeSelection,
+  $isRangeSelection,
   BaseSelection,
+  ElementNode,
+  LexicalNode,
   REDO_COMMAND,
   UNDO_COMMAND
 } from "lexical";
 import { useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import { closeFloat, setFloatType, setInitialState } from "@/redux/slice/initialState";
-import { message } from "antd";
-import { PinyinNode } from "../nodes/PinyinNode";
+
+import { $generateHtmlFromNodes } from "@lexical/html";
+
+import { $numberFloat } from "../nodes/NumberNode";
+import { $pinYinFloat } from "../nodes/PinyinNode";
+import { $createSpeedNode, $isSpeedNode, SpeedNode } from "../nodes/SpeedNode";
+
+import { ArrowUturnLeftIcon, ArrowUturnRightIcon } from "@heroicons/react/24/outline";
 
 function Divider() {
   return <div className="divider" />;
@@ -45,7 +52,7 @@ export default function ToolbarPlugin(props: any) {
           className="toolbar-item spaced"
           aria-label="Undo"
         >
-          撤回
+          <ArrowUturnLeftIcon className="h-4 w-4 text-black" />
         </button>
         <button
           disabled={!canRedo}
@@ -55,67 +62,91 @@ export default function ToolbarPlugin(props: any) {
           className="toolbar-item"
           aria-label="Redo"
         >
-          前进
+          <ArrowUturnRightIcon className="h-4 w-4 text-black" />
         </button>
         <Divider />
         <button
           onClick={(e) => {
             e.stopPropagation();
-            editor.update(() => {
-              const selection = $getSelection();
-              if (selection) {
-                if ($isNodeSelection(selection)) {
-                  // 修改更新
-                }
-
-                const text = selection?.getTextContent();
-                if (!text) {
-                  message.error("请先选中文字!");
-                  dispatch(closeFloat());
-                  return;
-                } else if (text.length > 1) {
-                  message.error("请选择单个汉字!");
-                  dispatch(closeFloat());
-                  return;
-                } else if (!/^[\u4E00-\u9FFF]+$/.test(text)) {
-                  message.error("请选择单个汉字!");
-                  dispatch(closeFloat());
-                  return;
-                }
-                dispatch(
-                  setInitialState({ type: "pinyin", selectionText: text, value: undefined })
-                );
-              }
-            });
+            $pinYinFloat(editor, dispatch);
           }}
           className="toolbar-item"
-          style={{ color: selection ? "" : "#999" }}
         >
-          多音字
+          拼音
         </button>
 
         <button
           onClick={(e) => {
             e.stopPropagation();
+            $numberFloat(editor, dispatch);
+          }}
+          className="toolbar-item"
+        >
+          数字
+        </button>
+        <Divider />
+        {/* <button
+          onClick={(e) => {
+            e.stopPropagation();
             editor.update(() => {
               const selection = $getSelection();
-              if (selection) {
-                const text = selection?.getTextContent();
-                if (!/^\d+(\.\d+)?$/.test(text)) {
-                  message.error("请选择连贯数字！");
-                  return;
-                }
-                dispatch(
-                  setInitialState({ type: "symbol", selectionText: text, value: undefined })
-                );
+              if (!$isRangeSelection(selection)) {
+                return;
               }
+              const nodes = selection.extract();
+
+              let prevParent: ElementNode | SpeedNode | null = null;
+
+              const speedNode = $createSpeedNode("0.95");
+
+              // 选择的内容都要加入到speedNode
+
+              nodes.forEach((node) => {
+                const parent = node.getParent();
+                if ($isSpeedNode(parent)) {
+                  console.log("parent", parent, node);
+                  return;
+                } else if ($isSpeedNode(node)) {
+                  console.log("node", parent, node);
+                  // 嵌套的node需要单独搞出来
+                  const children = node.getChildren();
+                  for (let i = 0; i < children.length; i++) {
+                    speedNode.append(children[i]);
+                  }
+                  node.remove();
+                } else {
+                  node.insertBefore(speedNode);
+                  speedNode.append(node);
+                }
+              });
             });
           }}
           style={{ color: selection ? "" : "#999" }}
         >
-          数字
+          测试
         </button>
+
+        <button
+          onClick={(e) => {
+            const htmlString = $generateHtmlFromNodes(editor, null);
+            console.log("htmlString", htmlString);
+          }}
+          style={{ color: selection ? "" : "#999" }}
+        >
+          导出
+        </button> */}
       </div>
     </div>
   );
+}
+
+function $getAncestor<NodeType extends LexicalNode = LexicalNode>(
+  node: LexicalNode,
+  predicate: (ancestor: LexicalNode) => ancestor is NodeType
+) {
+  let parent = node;
+  while (parent !== null && parent.getParent() !== null && !predicate(parent)) {
+    parent = parent.getParentOrThrow();
+  }
+  return predicate(parent) ? parent : null;
 }
