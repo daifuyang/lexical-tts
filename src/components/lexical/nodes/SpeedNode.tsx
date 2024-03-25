@@ -1,14 +1,20 @@
+import { setInitialState } from "@/redux/slice/initialState";
 import {
   $applyNodeReplacement,
+  $getSelection,
   $isRangeSelection,
   BaseSelection,
   ElementNode,
+  LexicalCommand,
+  LexicalEditor,
   LexicalNode,
   NodeKey,
   RangeSelection,
   SerializedElementNode,
-  Spread
+  Spread,
+  createCommand
 } from "lexical";
+import { Dispatch } from "react";
 
 export type SerializedSpeedNode = Spread<
   {
@@ -60,9 +66,9 @@ export class SpeedNode extends ElementNode {
   }
 
   insertNewAfter(_: RangeSelection, restoreSelection = true): null | ElementNode {
-    const speedNode = $createSpeedNode(this.__speed)
-    this.insertAfter(speedNode,restoreSelection)
-    return speedNode
+    const speedNode = $createSpeedNode(this.__speed);
+    this.insertAfter(speedNode, restoreSelection);
+    return speedNode;
   }
 
   canInsertTextBefore(): false {
@@ -84,7 +90,7 @@ export class SpeedNode extends ElementNode {
   extractWithChild(
     child: LexicalNode,
     selection: BaseSelection,
-    destination: 'clone' | 'html',
+    destination: "clone" | "html"
   ): boolean {
     if (!$isRangeSelection(selection)) {
       return false;
@@ -99,12 +105,21 @@ export class SpeedNode extends ElementNode {
       selection.getTextContent().length > 0
     );
   }
-
 }
 
 export function $createSpeedNode(speed: string): SpeedNode {
   return $applyNodeReplacement(new SpeedNode(speed));
 }
+
+export const TOGGER_SPEED_COMMAND: LexicalCommand<any> = createCommand("TOGGER_SPEED_COMMAND");
+
+export function $speedFloat(editor: LexicalEditor, dispatch: Dispatch<any>): void {
+  editor.update(() => {
+    dispatch(setInitialState({ type: "speed", selectionText: undefined, value: undefined }));
+  });
+}
+
+export function toggleSpeed() {}
 
 /**
  * Determines if node is a LinkNode.

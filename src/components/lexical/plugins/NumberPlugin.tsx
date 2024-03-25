@@ -2,13 +2,16 @@
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
+  $getSelection,
+  $isRangeSelection,
+  $isTextNode,
   COMMAND_PRIORITY_EDITOR,
   LexicalCommand,
   createCommand
 } from "lexical";
 
 import { useEffect } from "react";
-import { NumberNode, $addNumber } from "../nodes/NumberNode";
+import { $createNumberNode, NumberNode } from "../nodes/NumberNode";
 
 interface Payload {
   data: {
@@ -17,8 +20,7 @@ interface Payload {
   };
 }
 
-export const ADD_NUMBER_COMMAND: LexicalCommand<Payload> =
-  createCommand("ADD_NUMBER_COMMAND");
+export const ADD_NUMBER_COMMAND: LexicalCommand<Payload> = createCommand("ADD_NUMBER_COMMAND");
 
 export default function NumberPlugin(props: any) {
   const [editor] = useLexicalComposerContext();
@@ -30,7 +32,20 @@ export default function NumberPlugin(props: any) {
       ADD_NUMBER_COMMAND,
       (payload: Payload) => {
         const { data } = payload;
-        $addNumber(data.value, data.type);
+        console.log("data", data);
+        const selection = $getSelection();
+        if (!$isRangeSelection(selection)) {
+          return false;
+        }
+        const nodes = selection.extract();
+        nodes.forEach((node) => {
+          if ($isTextNode(node)) {
+            const number = $createNumberNode(data.value, data.type, node.__text);
+            node.insertBefore(number);
+            node.remove();
+          }
+        });
+
         return true;
       },
       COMMAND_PRIORITY_EDITOR

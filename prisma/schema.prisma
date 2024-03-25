@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// 后台管理员
+model umsAdmin {
+  id         Int       @id @default(autoincrement())
+  username   String?   @db.VarChar(64)
+  password   String?   @db.VarChar(64)
+  icon       String?   @db.VarChar(500) /// 头像
+  email      String?   @db.VarChar(100) // 邮箱
+  nickname   String?   @db.VarChar(200)
+  note       String?   @db.VarChar(500)
+  createTime DateTime  @default(now()) @map("create_time")
+  loginTime  DateTime? @updatedAt @map("login_time")
+  status     Boolean   @default(true)
+
+  @@map("ums_admin")
+}
+
+/// 前台用户表
+model umsMember {
+  id                    Int       @id @default(autoincrement())
+  username              String    @db.VarChar(64)
+  password              String    @db.VarChar(64)
+  salt                  String    @db.VarChar(64)
+  nickname              String?   @db.VarChar(64)
+  phone                 String?   @db.VarChar(64)
+  status                Boolean   @default(true)
+  createTime            DateTime  @default(now()) @map("create_time")
+  icon                  String?   @db.VarChar(500)
+  gender                Int       @default(1) @db.TinyInt
+  birthday              DateTime? @db.Date
+  city                  String?   @db.VarChar(64)
+  job                   String?   @db.VarChar(100)
+  personalizedSignature String?   @map("personalized_signature") @db.VarChar(200)
+  sourceType            Int?      @map("source_type") @db.Int
+
+  @@unique([username], name: "idx_username")
+  @@unique([phone], name: "idx_phone")
+  @@map("ums_member")
+}

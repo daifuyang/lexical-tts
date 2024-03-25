@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { closeFloat, setFloatEditValue, setFloatType } from "@/redux/slice/initialState";
-import { Menu, Radio } from "antd";
+import { Button, Menu, Radio, Slider } from "antd";
 
 import { pinyin } from "pinyin-pro";
 
@@ -136,14 +136,7 @@ function FloatingPinyinEditor({
             dispatch(setFloatEditValue(value));
           }
 
-          if (nodeKey) {
-            editor.update(() => {
-              const editNode = $getNodeByKey(nodeKey);
-             
-            });
-          } else {
-            editor.dispatchCommand(ADD_PINYIN_COMMAND, value);
-          }
+          editor.dispatchCommand(ADD_PINYIN_COMMAND, value);
         }}
         buttonStyle="solid"
         value={floatEditValue}
@@ -180,19 +173,9 @@ function FloatingPinyinEditor({
                 if (value) {
                   dispatch(setFloatEditValue(value));
                 }
-                if (nodeKey) {
-                  editor.update(() => {
-                    const editNode = $getNodeByKey(nodeKey);
-                    if ($isNumberNode(editNode)) {
-                      (editNode as NumberNode).setValue(value);
-                      (editNode as NumberNode).setVType(type);
-                    }
-                  });
-                } else {
-                  editor.dispatchCommand(ADD_NUMBER_COMMAND, {
-                    data: item
-                  });
-                }
+                editor.dispatchCommand(ADD_NUMBER_COMMAND, {
+                  data: item
+                });
               }}
               key={item.value}
             >
@@ -204,11 +187,29 @@ function FloatingPinyinEditor({
     );
   };
 
+  // 变速
+  const RenderSpeedSlider = () => {
+    return (
+      <div style={{ width: 300, display: "flex", alignItems: "center" }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+          <span style={{margin: '0 4px'}}>慢</span>
+          <div style={{ flex: 1 }}>
+            <Slider defaultValue={0} min={-10} max={10} step={1} tooltip={{ open: true }} />
+          </div>
+          <span style={{margin: '0 4px'}}>快</span>
+        </div>
+        <Button style={{marginLeft: 4}} type="primary">确定</Button>
+      </div>
+    );
+  };
+
   function getContent() {
     if (floatEditType === "pinyin") {
       return <RenderPinyinRadio />;
     } else if (floatEditType === "symbol") {
       return <RenderSymbolRadio />;
+    } else if (floatEditType === "speed") {
+      return <RenderSpeedSlider />;
     }
     return null;
   }

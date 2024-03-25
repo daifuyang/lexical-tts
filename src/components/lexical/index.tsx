@@ -11,17 +11,20 @@ import TreeViewPlugin from "./plugins/TreeViewPlugin";
 import ToolbarPlugin from "./plugins/ToolbarPlugin";
 import PinyinPlugin from "./plugins/PinyinPlugin";
 import NumberPlugin from "./plugins/NumberPlugin";
-import { PinyinNode } from "./nodes/PinyinNode";
-import { NumberNode } from "./nodes/NumberNode";
+
+
 import theme from "./theme";
 
 import "./index.css";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useDispatch } from "react-redux";
-import { closeFloat, setFloatType } from "@/redux/slice/initialState";
+import { closeFloat } from "@/redux/slice/initialState";
 import Provider from "@/redux/provider";
+import { PinyinNode } from "./nodes/PinyinNode";
 import { SpeedNode } from "./nodes/SpeedNode";
+import { NumberNode } from "./nodes/NumberNode";
+import { BreakNode } from "./nodes/BreakNode";
 
 const FloatingEditorPlugin = dynamic(() => import("./plugins/FloatingEditorPlugin"), {
   ssr: false
@@ -36,6 +39,7 @@ const editorConfig = {
   nodes: [
     PinyinNode,
     NumberNode,
+    BreakNode,
     SpeedNode
   ],
   // Handling of errors during update

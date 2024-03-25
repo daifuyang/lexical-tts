@@ -1,4 +1,5 @@
 import {
+  $applyNodeReplacement,
   $getSelection,
   $isNodeSelection,
   EditorConfig,
@@ -41,8 +42,8 @@ export class PinyinNode extends TextNode {
 
   createDOM(config: EditorConfig): HTMLElement {
     const element = super.createDOM(config);
-    addClassNamesToElement(element, "pinyin-node");
-    addTagToElement(element,this.__pinyin)
+    addClassNamesToElement(element, "editor-tag-node", "pinyin-node");
+    addTagToElement(element, this.__pinyin);
     return element;
   }
 
@@ -60,6 +61,10 @@ export class PinyinNode extends TextNode {
     };
   }
 
+  getTextContent(): string {
+    return this.__text;
+  }
+
   canInsertTextBefore(): false {
     return false;
   }
@@ -67,22 +72,11 @@ export class PinyinNode extends TextNode {
   canInsertTextAfter(): false {
     return false;
   }
-
-  canBeEmpty(): false {
-    return false;
-  }
-
-  isTextEntity(): true {
-    return true;
-  }
-
-  isInline(): true {
-    return true;
-  }
 }
 
 export function $createPinyinNode(text = "", pinyin: string): PinyinNode {
-  return new PinyinNode(text, pinyin);
+  const pinyinNode = new PinyinNode(text, pinyin);
+  return $applyNodeReplacement(pinyinNode);
 }
 
 export function $pinYinFloat(editor: LexicalEditor, dispatch: Dispatch<any>): void {
@@ -91,15 +85,6 @@ export function $pinYinFloat(editor: LexicalEditor, dispatch: Dispatch<any>): vo
   editor.update(() => {
     const selection = $getSelection();
     if (selection) {
-      if ($isNodeSelection(selection)) {
-        // 修改更新
-        const nodes = selection.extract();
-        if (nodes.length > 0) {
-        }
-
-        return;
-      }
-
       const text = selection?.getTextContent();
       if (!text) {
         message.error("请先选中文字!");

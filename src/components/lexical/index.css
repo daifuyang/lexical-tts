@@ -85,6 +85,14 @@ body {
 }
 
 /* 标签样式 */
+
+.editor-paragraph .editor-tag-node {
+  position: relative;
+  padding-top: 25px;
+  display: inline-block;
+  text-align: center;
+}
+
 .editor-paragraph .editor-tag {
   color: rgba(0, 0, 0, 0.88);
   background-color: #fafafa;
@@ -104,13 +112,7 @@ body {
 }
 
 .editor-paragraph .pinyin-node {
-  position: relative;
-  padding-top: 25px;
-  display: inline-block;
-  text-align: center;
-}
-
-.editor-paragraph .pinyin-tag {
+  
 }
 
 .toolbar {

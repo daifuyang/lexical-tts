@@ -1,6 +1,7 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $getSelection,
+  $insertNodes,
   $isRangeSelection,
   BaseSelection,
   ElementNode,
@@ -11,13 +12,12 @@ import {
 import { useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 
-import { $generateHtmlFromNodes } from "@lexical/html";
-
 import { $numberFloat } from "../nodes/NumberNode";
 import { $pinYinFloat } from "../nodes/PinyinNode";
-import { $createSpeedNode, $isSpeedNode, SpeedNode } from "../nodes/SpeedNode";
+import { $speedFloat } from "../nodes/SpeedNode";
 
 import { ArrowUturnLeftIcon, ArrowUturnRightIcon } from "@heroicons/react/24/outline";
+import { $createBreakNode } from "../nodes/BreakNode";
 
 function Divider() {
   return <div className="divider" />;
@@ -85,6 +85,106 @@ export default function ToolbarPlugin(props: any) {
           数字
         </button>
         <Divider />
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            $speedFloat(editor, dispatch);
+          }}
+          style={{ color: selection ? "" : "#999" }}
+          className="toolbar-item"
+        >
+          变速
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            $speedFloat(editor, dispatch);
+          }}
+          style={{ color: selection ? "" : "#999" }}
+          className="toolbar-item"
+        >
+          别名
+        </button>
+
+        <Divider />
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            editor.update(() => {
+              const breakNode = $createBreakNode();
+              $insertNodes([breakNode]);
+            });
+          }}
+          style={{ color: selection ? "" : "#999" }}
+          className="toolbar-item"
+        >
+          停顿
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            editor.update(() => {
+              const breakNode = $createBreakNode();
+              $insertNodes([breakNode]);
+            });
+          }}
+          style={{ color: selection ? "" : "#999" }}
+          className="toolbar-item"
+        >
+          静音
+        </button>
+
+        <Divider />
+
+        {/* <button
+          onClick={(e) => {
+            e.stopPropagation();
+            editor.update(() => {
+              const breakNode = $createBreakNode();
+              $insertNodes([breakNode]);
+            });
+          }}
+          style={{ color: selection ? "" : "#999" }}
+          className="toolbar-item"
+        >
+          符号静音
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            editor.update(() => {
+              const breakNode = $createBreakNode();
+              $insertNodes([breakNode]);
+            });
+          }}
+          style={{ color: selection ? "" : "#999" }}
+          className="toolbar-item"
+        >
+          段落静音
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            editor.update(() => {
+              const breakNode = $createBreakNode();
+              $insertNodes([breakNode]);
+            });
+          }}
+          style={{ color: selection ? "" : "#999" }}
+          className="toolbar-item"
+        >
+          解说模式
+        </button>
+
+        <Divider /> */}
+
+
         {/* <button
           onClick={(e) => {
             e.stopPropagation();
