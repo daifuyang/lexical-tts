@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import initialState from "./slice/initialState";
+import userState from "./slice/userState";
 
 export const store = configureStore({
   reducer: {
-    initialState
+    initialState,
+    userState
   }
 });
 

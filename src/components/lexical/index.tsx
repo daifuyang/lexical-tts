@@ -50,7 +50,7 @@ const editorConfig = {
   theme
 };
 
-function EditorMain() {
+export default function Editor() {
   const [floatingAnchorElem, setFloatingAnchorElem] = useState<HTMLDivElement>();
   const onRef = (_floatingAnchorElem: HTMLDivElement) => {
     if (_floatingAnchorElem !== null) {
@@ -89,13 +89,5 @@ function EditorMain() {
         </div>
       </LexicalComposer>
     </div>
-  );
-}
-
-export default function Editor() {
-  return (
-    <Provider>
-      <EditorMain />
-    </Provider>
   );
 }

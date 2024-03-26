@@ -13,12 +13,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// 后台管理员
+// 后台管理员
 model umsAdmin {
   id         Int       @id @default(autoincrement())
   username   String?   @db.VarChar(64)
   password   String?   @db.VarChar(64)
-  icon       String?   @db.VarChar(500) /// 头像
+  icon       String?   @db.VarChar(500) // 头像
   email      String?   @db.VarChar(100) // 邮箱
   nickname   String?   @db.VarChar(200)
   note       String?   @db.VarChar(500)
@@ -29,25 +29,50 @@ model umsAdmin {
   @@map("ums_admin")
 }
 
-/// 前台用户表
+// 前台用户表
 model umsMember {
-  id                    Int       @id @default(autoincrement())
-  username              String    @db.VarChar(64)
-  password              String    @db.VarChar(64)
-  salt                  String    @db.VarChar(64)
-  nickname              String?   @db.VarChar(64)
-  phone                 String?   @db.VarChar(64)
-  status                Boolean   @default(true)
-  createTime            DateTime  @default(now()) @map("create_time")
-  icon                  String?   @db.VarChar(500)
-  gender                Int       @default(1) @db.TinyInt
-  birthday              DateTime? @db.Date
-  city                  String?   @db.VarChar(64)
-  job                   String?   @db.VarChar(100)
-  personalizedSignature String?   @map("personalized_signature") @db.VarChar(200)
-  sourceType            Int?      @map("source_type") @db.Int
+  id                    Int        @id @default(autoincrement())
+  username              String     @db.VarChar(64)
+  realname              String?    @db.VarChar(50)
+  password              String     @db.VarChar(64)
+  salt                  String     @db.VarChar(64)
+  nickname              String?    @db.VarChar(64)
+  phone                 String?    @db.VarChar(64)
+  status                Boolean    @default(true)
+  createTime            DateTime   @default(now()) @map("create_time")
+  icon                  String?    @db.VarChar(500)
+  gender                Int        @default(1) @db.TinyInt
+  birthday              DateTime?  @db.Date
+  city                  String?    @db.VarChar(64)
+  job                   String?    @db.VarChar(100)
+  personalizedSignature String?    @map("personalized_signature") @db.VarChar(200)
+  sourceType            Int?       @map("source_type") @db.Int
+  umsToken              umsToken[]
 
   @@unique([username], name: "idx_username")
   @@unique([phone], name: "idx_phone")
   @@map("ums_member")
+}
+
+// 定义用户关联token表
+model umsToken {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  member       umsMember @relation(fields: [userId], references: [id])
+  accessToken  String    @db.VarChar(255)
+  refreshToken String    @db.VarChar(255)
+  expiry       DateTime
+  createdAt    DateTime  @default(now())
+
+  @@map("ums_token")
+}
+
+// tts项目相关
+model ttsProject {
+  id         Int      @id @default(autoincrement())
+  memberId   Int      @map("member_id") // 创建人id 
+  title      String   @db.VarChar(100) // 标题
+  content    String   @db.Text
+  createTime DateTime @default(now()) @map("create_time")
+  @@map("tts_project")
 }

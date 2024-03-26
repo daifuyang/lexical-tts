@@ -1,4 +1,4 @@
-// 工作台首页
+'use client'
 import { Avatar, Button, Input } from "antd";
 import {
   SearchOutlined,
@@ -9,12 +9,21 @@ import {
 } from "@ant-design/icons";
 import { FolderIcon, HomeIcon } from "@heroicons/react/24/solid";
 
+import List from "./components/table";
+
+import { useRouter } from 'next/navigation'
+import UserInfo from "@/components/header/userInfo";
+import Logo from "@/components/header/logo";
+
 export default function Desktop() {
+
+  const router = useRouter()
+
   return (
     <div className="flex h-screen">
       <div className="w-64 h-full border-r">
         {/* 标题 */}
-        <div className="p-4 text-3xl text-black">AI配音</div>
+        <Logo />
         {/* 搜索 */}
         <div className="px-4">
           <Input placeholder="搜索" prefix={<SearchOutlined />} />
@@ -35,22 +44,26 @@ export default function Desktop() {
           <div className="flex">
             {/* 新建 */}
             <div className="flex-1">
-              <Button icon={<PlusOutlined />} size="large" type="primary">
+              <Button onClick={ () => {
+                router.push('/editor')
+              } } icon={<PlusOutlined />} size="large" type="primary">
                 新建
               </Button>
             </div>
 
             {/* 个人中心 */}
-            <div className="flex items-center">
-              <div className="text-amber-400 mr-4">
-                <CrownOutlined className="text-xl" /> 会员中心
-              </div>
-              <div className="mr-4">
-                <BellOutlined className="text-xl" />
-              </div>
+            <UserInfo />
+          </div>
 
-              <Avatar className="text-xl" shape="square" icon={<UserOutlined />} />
-            </div>
+          <div className="tab">
+            <ul className="flex mt-6">
+              <li className="px-2 text-lg cursor-pointer">最近</li>
+              <li className="px-2 text-lg cursor-pointer">收藏</li>
+            </ul>
+          </div>
+
+          <div className="mt-6">
+            <List />
           </div>
         </div>
       </div>

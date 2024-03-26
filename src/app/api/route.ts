@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 // import tts from "@/utils/tts";
 import { existsSync, mkdirSync } from "fs";
-import api from "@/lib/rest";
+import api from "@/lib/response";
 
 const test = async function GET(request: Request) {
   const target = process.cwd() + "/output/";

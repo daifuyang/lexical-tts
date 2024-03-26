@@ -1,4 +1,4 @@
-import api from "@/lib/rest";
+import api from "@/lib/response";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
