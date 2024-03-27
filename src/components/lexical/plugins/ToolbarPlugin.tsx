@@ -22,11 +22,12 @@ import { $createBreakNode } from "../nodes/BreakNode";
 import { Button } from "antd";
 import { PlayCircleFilled, CustomerServiceOutlined, DownloadOutlined } from "@ant-design/icons";
 import _ from "lodash";
+import { tts } from "@/services/tts";
+import { convert } from "pinyin-pro";
 
 function Divider() {
   return <div className="divider" />;
 }
-
 
 export default function ToolbarPlugin(props: any) {
   const [editor] = useLexicalComposerContext();
@@ -56,27 +57,50 @@ export default function ToolbarPlugin(props: any) {
     loadContent();
   }, []);
 
-  function getSsml() {
-
+  async function getSsml() {
     const editorState = editor.getEditorState();
-    const state = JSON.stringify(editorState)
+    const state = JSON.stringify(editorState);
     const json = JSON.parse(state);
     console.log("json", json);
 
-    var compiled = _.template(`
-    <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">
-    <% _.forEach(root, function(paragraph) { %>
-      <p>
-        <% _.forEach(paragraph.children, function(node) { %>
-          <% console.log('node',node) %>
-            <%= node.text %>
-        <% }); %>
-      </p>
-    <% }); %>
-    </speak>
-    `);
+    let ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-cn">`;
 
-    console.log("compiled", compiled({ root: json.root.children }));
+    const paragraphs = json.root.children;
+    paragraphs.forEach((paragraph: any) => {
+      ssml += `<voice name="zh-cn-XiaomoNeural">`;
+      ssml += `<p><s>`;
+
+      const nodes = paragraph.children;
+      console.log("nodes", nodes);
+
+      nodes.forEach((node: any) => {
+        switch (node.type) {
+          case "pinyin":
+            let ph = convert(node.pinyin, { format: "symbolToNum" });
+            if (ph) {
+              ph = ph.slice(0, -1) + " " + ph.slice(-1);
+              ssml += `<phoneme alphabet="sapi" ph="${ph}">${node.text}</phoneme>`;
+            } else {
+              ssml += `${node.text}`;
+            }
+            break;
+          default:
+            ssml += `${node.text}`;
+
+            break;
+        }
+      });
+
+      ssml += `</s></p>`;
+      ssml += `</voice>`;
+    });
+
+    ssml += `</speak>`;
+
+    console.log("ssml", ssml);
+
+    const res = await tts({ ssml });
+    console.log("res", res);
   }
 
   const getContent = () => {

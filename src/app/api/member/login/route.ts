@@ -14,6 +14,10 @@ async function login(request: Request) {
     return api.error("密码不能为空");
   }
 
+  // const salt = bcrypt.genSaltSync(10)
+  // const hashedPassword = await bcrypt.hash(password, salt);
+  // console.log('hashedPassword',hashedPassword)
+
   const user = await prisma.umsMember.findFirst({
     where: {
       username: account

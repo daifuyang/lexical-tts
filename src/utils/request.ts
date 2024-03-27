@@ -4,7 +4,7 @@ import { getToken } from "@/lib/token";
 // 创建 Axios 实例
 const memberRequest: AxiosInstance = axios.create({
   baseURL: "/",
-  timeout: 5000 // 设置超时时间为 5 秒
+  timeout: 0 // 设置超时时间为 5 秒
 });
 
 // 添加请求拦截器

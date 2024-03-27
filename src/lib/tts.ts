@@ -15,7 +15,7 @@ class tts {
 
   async synthesizeText(text: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      this.synthesizer.speakTextAsync(
+      this.synthesizer.speakSsmlAsync(
         text,
         (result) => {
           if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
