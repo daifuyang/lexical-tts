@@ -20,13 +20,17 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useDispatch } from "react-redux";
 import { closeFloat } from "@/redux/slice/initialState";
-import Provider from "@/redux/provider";
+
 import { PinyinNode } from "./nodes/PinyinNode";
 import { SpeedNode } from "./nodes/SpeedNode";
 import { NumberNode } from "./nodes/NumberNode";
 import { BreakNode } from "./nodes/BreakNode";
 
 const FloatingEditorPlugin = dynamic(() => import("./plugins/FloatingEditorPlugin"), {
+  ssr: false
+});
+
+const FloatingVoicePlugin = dynamic(() => import("./plugins/FloatingVoicePlugin"), {
   ssr: false
 });
 
@@ -85,6 +89,8 @@ export default function Editor() {
           <PinyinPlugin />
           <NumberPlugin />
           <FloatingEditorPlugin anchorElem={floatingAnchorElem} />
+
+          <FloatingVoicePlugin />
           <TreeViewPlugin />
         </div>
       </LexicalComposer>

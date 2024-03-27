@@ -16,8 +16,8 @@ datasource db {
 // 后台管理员
 model umsAdmin {
   id         Int       @id @default(autoincrement())
-  username   String?   @db.VarChar(64)
-  password   String?   @db.VarChar(64)
+  username   String    @db.VarChar(64)
+  password   String    @db.VarChar(64)
   icon       String?   @db.VarChar(500) // 头像
   email      String?   @db.VarChar(100) // 邮箱
   nickname   String?   @db.VarChar(200)
@@ -31,23 +31,22 @@ model umsAdmin {
 
 // 前台用户表
 model umsMember {
-  id                    Int        @id @default(autoincrement())
-  username              String     @db.VarChar(64)
-  realname              String?    @db.VarChar(50)
-  password              String     @db.VarChar(64)
-  salt                  String     @db.VarChar(64)
-  nickname              String?    @db.VarChar(64)
-  phone                 String?    @db.VarChar(64)
-  status                Boolean    @default(true)
-  createTime            DateTime   @default(now()) @map("create_time")
-  icon                  String?    @db.VarChar(500)
-  gender                Int        @default(1) @db.TinyInt
-  birthday              DateTime?  @db.Date
-  city                  String?    @db.VarChar(64)
-  job                   String?    @db.VarChar(100)
-  personalizedSignature String?    @map("personalized_signature") @db.VarChar(200)
-  sourceType            Int?       @map("source_type") @db.Int
-  umsToken              umsToken[]
+  id                    Int       @id @default(autoincrement())
+  username              String    @db.VarChar(64)
+  realname              String?   @db.VarChar(50)
+  password              String    @db.VarChar(64)
+  salt                  String    @db.VarChar(64)
+  nickname              String?   @db.VarChar(64)
+  phone                 String?   @db.VarChar(64)
+  status                Boolean   @default(true)
+  createTime            DateTime  @default(now()) @map("create_time")
+  icon                  String?   @db.VarChar(500)
+  gender                Int       @default(1) @db.TinyInt
+  birthday              DateTime? @db.Date
+  city                  String?   @db.VarChar(64)
+  job                   String?   @db.VarChar(100)
+  personalizedSignature String?   @map("personalized_signature") @db.VarChar(200)
+  sourceType            Int?      @map("source_type") @db.Int
 
   @@unique([username], name: "idx_username")
   @@unique([phone], name: "idx_phone")
@@ -56,13 +55,13 @@ model umsMember {
 
 // 定义用户关联token表
 model umsToken {
-  id           Int       @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   userId       Int
-  member       umsMember @relation(fields: [userId], references: [id])
-  accessToken  String    @db.VarChar(255)
-  refreshToken String    @db.VarChar(255)
+  userType     Int?     @db.TinyInt
+  accessToken  String   @db.VarChar(255)
+  refreshToken String   @db.VarChar(255)
   expiry       DateTime
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime @default(now())
 
   @@map("ums_token")
 }
@@ -74,5 +73,32 @@ model ttsProject {
   title      String   @db.VarChar(100) // 标题
   content    String   @db.Text
   createTime DateTime @default(now()) @map("create_time")
+
   @@map("tts_project")
+}
+
+// tts主播
+model ttsVoice {
+  id              Int     @id @default(autoincrement())
+  name            String  @db.VarChar(100) // 名称
+  Gender          Int     @db.TinyInt
+  locale          String  @db.VarChar(20)
+  style           String  @db.VarChar(255)
+  ShortName       String  @db.VarChar(255)
+  sampleRateHertz Int     @map("sample_rate_hertz") @db.Int
+  voiceType       String  @db.VarChar(20)
+  status          Boolean @default(true)
+  wordsPerMinute  Int     @map("words_per_minute") @db.Int
+
+  @@map("tts_voice")
+}
+
+model ttsVoiceStyle {
+  id     Int     @id @default(autoincrement())
+  style  String  @db.VarChar(150)
+  name   String  @db.VarChar(100)
+  desc   String  @db.VarChar(255)
+  status Boolean @default(true)
+
+  @@map("tts_voice_style")
 }
