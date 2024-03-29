@@ -81,14 +81,13 @@ model ttsProject {
 model ttsVoice {
   id              Int     @id @default(autoincrement())
   name            String  @db.VarChar(100) // 名称
-  Gender          Int     @db.TinyInt
+  gender          Int     @db.TinyInt
   locale          String  @db.VarChar(20)
-  style           String  @db.VarChar(255)
-  ShortName       String  @db.VarChar(255)
-  sampleRateHertz Int     @map("sample_rate_hertz") @db.Int
+  shortName       String  @db.VarChar(255)
+  sampleRateHertz Int?    @map("sample_rate_hertz") @db.Int
   voiceType       String  @db.VarChar(20)
   status          Boolean @default(true)
-  wordsPerMinute  Int     @map("words_per_minute") @db.Int
+  wordsPerMinute  Int?    @map("words_per_minute") @db.Int
 
   @@map("tts_voice")
 }
