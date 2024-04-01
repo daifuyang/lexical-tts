@@ -1,5 +1,5 @@
-import request from "@/utils/request";
+import {memberRequest} from "@/utils/request";
 
 export function tts(data: { ssml: string; name?: string }) {
-  return request.post("/api/tts", data);
+  return memberRequest.post("/api/tts", data);
 }

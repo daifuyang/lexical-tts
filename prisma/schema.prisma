@@ -24,7 +24,7 @@ model umsAdmin {
   note       String?   @db.VarChar(500)
   createTime DateTime  @default(now()) @map("create_time")
   loginTime  DateTime? @updatedAt @map("login_time")
-  status     Boolean   @default(true)
+  status     Int       @default(1) @db.TinyInt
 
   @@map("ums_admin")
 }
@@ -38,7 +38,7 @@ model umsMember {
   salt                  String    @db.VarChar(64)
   nickname              String?   @db.VarChar(64)
   phone                 String?   @db.VarChar(64)
-  status                Boolean   @default(true)
+  status                Int       @default(1) @db.TinyInt
   createTime            DateTime  @default(now()) @map("create_time")
   icon                  String?   @db.VarChar(500)
   gender                Int       @default(1) @db.TinyInt
@@ -79,25 +79,25 @@ model ttsProject {
 
 // tts主播
 model ttsVoice {
-  id              Int     @id @default(autoincrement())
-  name            String  @db.VarChar(100) // 名称
-  gender          Int     @db.TinyInt
-  locale          String  @db.VarChar(20)
-  shortName       String  @db.VarChar(255)
-  sampleRateHertz Int?    @map("sample_rate_hertz") @db.Int
-  voiceType       String  @db.VarChar(20)
-  status          Boolean @default(true)
-  wordsPerMinute  Int?    @map("words_per_minute") @db.Int
+  id              Int    @id @default(autoincrement())
+  name            String @db.VarChar(100) // 名称
+  gender          Int    @db.TinyInt
+  locale          String @db.VarChar(20)
+  shortName       String @db.VarChar(255)
+  sampleRateHertz Int?   @map("sample_rate_hertz") @db.Int
+  voiceType       String @db.VarChar(20)
+  status          Int    @default(1) @db.TinyInt
+  wordsPerMinute  Int?   @map("words_per_minute") @db.Int
 
   @@map("tts_voice")
 }
 
 model ttsVoiceStyle {
-  id     Int     @id @default(autoincrement())
-  style  String  @db.VarChar(150)
-  name   String  @db.VarChar(100)
-  desc   String  @db.VarChar(255)
-  status Boolean @default(true)
+  id     Int    @id @default(autoincrement())
+  style  String @db.VarChar(150)
+  name   String @db.VarChar(100)
+  desc   String @db.VarChar(255)
+  status Int    @default(1) @db.TinyInt
 
   @@map("tts_voice_style")
 }

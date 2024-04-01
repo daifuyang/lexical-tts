@@ -1,10 +1,10 @@
-import {voiceStyleList, createVoice} from "@/services/voice";
+import { voiceStyleList, createVoice } from "@/services/voice";
 import { ModalForm, ProFormRadio, ProFormSelect, ProFormText } from "@ant-design/pro-components";
 import { message } from "antd";
 import { useEffect, useState } from "react";
 
 export default function Save(props: any) {
-  const { open, setOpen, type } = props;
+  const { open, setOpen, formData, type, onCancel } = props;
 
   const [styleList, setStyleList] = useState<any>([]);
 
@@ -33,6 +33,9 @@ export default function Save(props: any) {
         destroyOnClose: true,
         onCancel: () => {
           setOpen(false);
+          if(onCancel) {
+            onCancel()
+          }
         }
       }}
       labelCol={{
@@ -43,12 +46,13 @@ export default function Save(props: any) {
       }}
       layout="horizontal"
       onFinish={async (values: any) => {
-        let res = null
-        if(type === 'create') {
-          res = await createVoice(values)
+        let res = null;
+        if (type === "create") {
+          res = await createVoice(values);
         }
-        console.log('values', values,res)
+        console.log("values", values, res);
       }}
+      initialValues={formData}
     >
       <ProFormText name="name" label="主播名称" placeholder="请输入主播名称" />
 
