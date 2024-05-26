@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "turbo": "next dev --turbo",
     "lint": "next lint",
     "init": "dotenv -e .env.local node scripts/init.mjs",
     "migrate": "dotenv -e .env.local npx prisma migrate dev --name init"
@@ -18,7 +19,7 @@
     "@prisma/client": "5.11.0",
     "@reduxjs/toolkit": "^2.2.1",
     "@types/pinyin": "^2.10.2",
-    "antd": "^5.14.2",
+    "antd": "^5.17.3",
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
     "clsx": "^2.1.0",
@@ -26,7 +27,7 @@
     "lexical": "^0.13.1",
     "lodash": "^4.17.21",
     "microsoft-cognitiveservices-speech-sdk": "^1.36.0",
-    "next": "14.1.1",
+    "next": "^14.2.3",
     "pinyin-pro": "^3.19.6",
     "react": "^18",
     "react-dom": "^18",
@@ -44,6 +45,7 @@
     "eslint-config-next": "14.1.1",
     "postcss": "^8",
     "prisma": "^5.11.0",
+    "sass": "^1.76.0",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
   }

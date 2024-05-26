@@ -3,7 +3,7 @@ import _ from "lodash";
 import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
-async function list(request: NextRequest) {
+export async function GET(request: NextRequest) {
   // 查询条件
   const { searchParams } = request.nextUrl;
 
@@ -55,7 +55,7 @@ async function list(request: NextRequest) {
   });
 }
 
-async function create(request: Request) {
+export async function POST(request: Request) {
   const json = await request.json();
   const { name, shortName, locale, gender, source, style } = json;
 
@@ -81,8 +81,3 @@ async function create(request: Request) {
 
   return api.success("新增成功！", res);
 }
-
-module.exports = {
-  GET: list,
-  POST: create
-};

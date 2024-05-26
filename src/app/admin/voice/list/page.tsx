@@ -2,11 +2,11 @@
 import { PageContainer } from "@ant-design/pro-components";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
-import { ProTable, TableDropdown } from "@ant-design/pro-components";
+import { ProTable } from "@ant-design/pro-components";
 import { Button, Divider, Space, message } from "antd";
 import { useRef, useState } from "react";
 import SaveModal from "./save";
-import { voiceList } from "@/services/voice";
+import { voiceList } from "@/services/admin/voice";
 
 type STATUS = "all" | "enable" | "disabled";
 
@@ -99,27 +99,6 @@ export default function Page() {
       width: 150,
       align: "center"
     },
-    // {
-    //   title: "语音风格",
-    //   dataIndex: "style",
-    //   key: "style",
-    //   width: 150,
-    //   align: "center"
-    // },
-    // {
-    //   title: "采样率",
-    //   dataIndex: "sampleRateHertz",
-    //   key: "sampleRateHertz",
-    //   width: 150,
-    //   align: "center"
-    // },
-    // {
-    //   title: "语音类型",
-    //   dataIndex: "voiceType",
-    //   key: "voiceType",
-    //   width: 150,
-    //   align: "center"
-    // },
     {
       title: "状态",
       dataIndex: "status",
@@ -131,13 +110,6 @@ export default function Page() {
         disabled: { text: "禁用" }
       }
     },
-    // {
-    //   title: "朗读速度",
-    //   dataIndex: "wordsPerMinute",
-    //   key: "wordsPerMinute",
-    //   width: 150,
-    //   align: "center"
-    // },
     {
       title: "操作",
       valueType: "option",

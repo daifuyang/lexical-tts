@@ -1,4 +1,4 @@
-import { voiceStyleList, createVoice } from "@/services/voice";
+import { voiceStyleList, createVoice } from "@/services/admin/voice";
 import { ModalForm, ProFormRadio, ProFormSelect, ProFormText } from "@ant-design/pro-components";
 import { message } from "antd";
 import { useEffect, useState } from "react";

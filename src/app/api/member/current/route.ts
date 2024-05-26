@@ -1,7 +1,7 @@
 import api from "@/lib/response";
 import prisma from "@/lib/prisma";
 
-async function currerUser(request: Request) {
+export async function GET(request: Request) {
   const authHeader = request.headers.get("Authorization");
   const accessToken = authHeader && authHeader.split(" ")[1];
   if (!accessToken) {
@@ -30,7 +30,3 @@ async function currerUser(request: Request) {
   }
   return api.error("用户不存在！");
 }
-
-module.exports = {
-  GET: currerUser
-};

@@ -92,6 +92,7 @@ model ttsVoice {
   @@map("tts_voice")
 }
 
+// 主播风格
 model ttsVoiceStyle {
   id     Int    @id @default(autoincrement())
   style  String @db.VarChar(150)
@@ -100,4 +101,15 @@ model ttsVoiceStyle {
   status Int    @default(1) @db.TinyInt
 
   @@map("tts_voice_style")
+}
+
+// 主播分类
+model ttsVoiceCategory {
+  id         Int    @id @default(autoincrement())
+  name       String @db.VarChar(100)
+  desc       String @db.VarChar(255)
+  sort_order Int?   @map("sort_order") @db.Int
+  status     Int    @default(1) @db.TinyInt
+
+  @@map("tts_voice_category")
 }
