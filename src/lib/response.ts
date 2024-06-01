@@ -18,7 +18,22 @@ function error(msg: string, data: any = null) {
   return Response.json(json);
 }
 
+function errorWithCode(code: number,msg: string, data: any = null) {
+  json.code = code;
+  json.msg = msg;
+  json.data = data;
+  return Response.json(json);
+}
+
+export type Pagination<T> = {
+  total: number;
+  data: T[];
+  current: number;
+  pageSize: number;
+};
+
 export default {
   success,
-  error
+  error,
+  errorWithCode,
 };

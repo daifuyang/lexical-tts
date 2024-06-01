@@ -46,13 +46,19 @@ export class NumberNode extends TextNode {
   createDOM(config: EditorConfig): HTMLElement {
     const element = super.createDOM(config);
     addClassNamesToElement(element, "editor-tag-node", "number-node");
-    addTagToElement(element, this.__vtype);
+    addTagToElement(element, this.__vtype, "pinyin-tag");
     return element;
   }
 
   updateDOM(prevNode: NumberNode, dom: HTMLElement, config: EditorConfig): boolean {
     const isUpdated = super.updateDOM(prevNode, dom, config);
     return isUpdated;
+  }
+
+  static importJSON(serializedNode: SerializedNumberNode): NumberNode {
+    const node = $createNumberNode(serializedNode.value, serializedNode.vtype, serializedNode.text);
+    node.setFormat(serializedNode.format);
+    return node;
   }
 
   exportJSON(): SerializedNumberNode {

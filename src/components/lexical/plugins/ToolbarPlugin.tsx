@@ -1,13 +1,11 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $generateHtmlFromNodes } from "@lexical/html";
 import {
   $getSelection,
   $insertNodes,
-  $isRangeSelection,
   BaseSelection,
-  ElementNode,
   LexicalNode,
   REDO_COMMAND,
+  TextNode,
   UNDO_COMMAND
 } from "lexical";
 import { useEffect, useRef, useState } from "react";
@@ -15,19 +13,57 @@ import { useDispatch } from "react-redux";
 
 import { $numberFloat } from "../nodes/NumberNode";
 import { $pinYinFloat } from "../nodes/PinyinNode";
-import { $speedFloat } from "../nodes/SpeedNode";
+import { $speedFloat, SpeedNode } from "../nodes/SpeedNode";
 
 import { ArrowUturnLeftIcon, ArrowUturnRightIcon } from "@heroicons/react/24/outline";
 import { $createBreakNode } from "../nodes/BreakNode";
 import { Button } from "antd";
 import { PlayCircleFilled, CustomerServiceOutlined, DownloadOutlined } from "@ant-design/icons";
 import _ from "lodash";
-import { tts } from "@/services/tts";
 import { convert } from "pinyin-pro";
+import VoiceModal from "./FloatingVoicePlugin/modal";
+import { ADD_VOICE_COMMAND } from "./VoicePlugin";
+import { $aliasFloat } from "../nodes/AliasNode";
 
-function Divider() {
-  return <div className="divider" />;
+function Divider(props: any) {
+
+  return <div className="divider" {...props} />;
 }
+
+const parseSSMLNode = (nodes = []) => {
+  let ssml = "";
+  nodes.forEach((node: any) => {
+    switch (node.type) {
+      case "voice":
+        let childrenSsml = parseSSMLNode(node.children);
+        let voice = `<voice name="zh-CN-YunxiNeural">
+        ${childrenSsml}
+    </voice>`;
+        if (childrenSsml) {
+          ssml += voice;
+        }
+        break;
+      case "pinyin":
+        let ph = convert(node.pinyin, { format: "symbolToNum" });
+        if (ph) {
+          ph = ph.slice(0, -1) + " " + ph.slice(-1);
+          ssml += `<phoneme alphabet="sapi" ph="${ph}">${node.text}</phoneme>`;
+        } else {
+          ssml += `${node.text}`;
+        }
+        break;
+      case "speed":
+        const speedNodes = node.children
+        const text = speedNodes?.map( (item: any) => item.text )?.join('')
+        ssml += `<prosody rate="${node.speed}0%">${text}</p>rosody>`
+        break
+      default:
+        ssml += `${node.text}`;
+        break;
+    }
+  });
+  return ssml;
+};
 
 export default function ToolbarPlugin(props: any) {
   const [editor] = useLexicalComposerContext();
@@ -35,6 +71,11 @@ export default function ToolbarPlugin(props: any) {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [selection, setSelection] = useState<BaseSelection | null>(null);
+
+  const [voiceModal, setVoiceModal] = useState({
+    open: false,
+    title: ""
+  });
 
   editor.registerUpdateListener(({ editorState }) => {
     editorState.read(() => {
@@ -54,53 +95,33 @@ export default function ToolbarPlugin(props: any) {
   };
 
   useEffect(() => {
-    loadContent();
+    // loadContent();
   }, []);
 
   async function getSsml() {
     const editorState = editor.getEditorState();
     const state = JSON.stringify(editorState);
     const json = JSON.parse(state);
-    console.log("json", json);
 
     let ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-cn">`;
 
     const paragraphs = json.root.children;
     paragraphs.forEach((paragraph: any) => {
-      ssml += `<voice name="zh-cn-XiaomoNeural">`;
+      ssml += `<voice name="zh-CN-XiaoxiaoNeural">`;
       ssml += `<p><s>`;
-
       const nodes = paragraph.children;
-      console.log("nodes", nodes);
-
-      nodes.forEach((node: any) => {
-        switch (node.type) {
-          case "pinyin":
-            let ph = convert(node.pinyin, { format: "symbolToNum" });
-            if (ph) {
-              ph = ph.slice(0, -1) + " " + ph.slice(-1);
-              ssml += `<phoneme alphabet="sapi" ph="${ph}">${node.text}</phoneme>`;
-            } else {
-              ssml += `${node.text}`;
-            }
-            break;
-          default:
-            ssml += `${node.text}`;
-
-            break;
-        }
-      });
-
+      const content = parseSSMLNode(nodes);
+      console.log('content',content)
+      if (content) {
+        ssml += content;
+      }
       ssml += `</s></p>`;
       ssml += `</voice>`;
     });
-
     ssml += `</speak>`;
-
     console.log("ssml", ssml);
-
-    const res = await tts({ ssml });
-    console.log("res", res);
+    // const res = await tts({ ssml });
+    // console.log("res", res);
   }
 
   const getContent = () => {
@@ -112,106 +133,137 @@ export default function ToolbarPlugin(props: any) {
   };
 
   return (
-    <div className="toolbar" ref={toolbarRef}>
-      <div className="container">
-        <div className="flex flex-1">
-          <button
-            disabled={!canUndo}
-            onClick={() => {
-              editor.dispatchCommand(UNDO_COMMAND, undefined);
-            }}
-            className="toolbar-item spaced"
-            aria-label="Undo"
-          >
-            <ArrowUturnLeftIcon className="h-4 w-4 text-black" />
-          </button>
-          <button
-            disabled={!canRedo}
-            onClick={() => {
-              editor.dispatchCommand(REDO_COMMAND, undefined);
-            }}
-            className="toolbar-item"
-            aria-label="Redo"
-          >
-            <ArrowUturnRightIcon className="h-4 w-4 text-black" />
-          </button>
-          <Divider />
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              $pinYinFloat(editor, dispatch);
-            }}
-            className="toolbar-item"
-          >
-            拼音
-          </button>
+    <>
+      <VoiceModal
+        title="选择主播"
+        open={voiceModal.open}
+        onOk={() => {
+          editor.dispatchCommand(ADD_VOICE_COMMAND, undefined);
+          setVoiceModal((prev) => ({ ...prev, open: false }));
+        }}
+        onCancel={() => {
+          setVoiceModal((prev) => ({ ...prev, open: false }));
+        }}
+      />
+      <div className="toolbar" ref={toolbarRef}>
+        <div className="container">
+          <div className="flex flex-1">
+            <button
+              disabled={!canUndo}
+              onClick={() => {
+                editor.dispatchCommand(UNDO_COMMAND, undefined);
+              }}
+              className="toolbar-item spaced"
+              aria-label="Undo"
+            >
+              <ArrowUturnLeftIcon className="h-4 w-4 text-black" />
+            </button>
+            <button
+              disabled={!canRedo}
+              onClick={() => {
+                editor.dispatchCommand(REDO_COMMAND, undefined);
+              }}
+              className="toolbar-item"
+              aria-label="Redo"
+            >
+              <ArrowUturnRightIcon className="h-4 w-4 text-black" />
+            </button>
+            <Divider style={{backgroundColor:'#f97316'}} />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                $pinYinFloat(editor, dispatch);
+              }}
+              className="toolbar-item"
+            >
+              拼音
+            </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              $numberFloat(editor, dispatch);
-            }}
-            className="toolbar-item"
-          >
-            数字
-          </button>
-          <Divider />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                $numberFloat(editor, dispatch);
+              }}
+              className="toolbar-item"
+            >
+              数字
+            </button>
+            <Divider style={{backgroundColor:'#10b981'}} />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                $speedFloat(editor, dispatch);
+              }}
+              style={{ color: selection ? "" : "#999" }}
+              className="toolbar-item"
+            >
+              变速
+            </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              $speedFloat(editor, dispatch);
-            }}
-            style={{ color: selection ? "" : "#999" }}
-            className="toolbar-item"
-          >
-            变速
-          </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                $aliasFloat(editor, dispatch);
+              }}
+              style={{ color: selection ? "" : "#999" }}
+              className="toolbar-item"
+            >
+              别名
+            </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              $speedFloat(editor, dispatch);
-            }}
-            style={{ color: selection ? "" : "#999" }}
-            className="toolbar-item"
-          >
-            别名
-          </button>
+            <Divider style={{backgroundColor: '#84cc16'}}/>
 
-          <Divider />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                editor.update(() => {
+                  const breakNode = $createBreakNode();
+                  $insertNodes([breakNode]);
+                });
+              }}
+              style={{ color: selection ? "" : "#999" }}
+              className="toolbar-item"
+            >
+              停顿
+            </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              editor.update(() => {
-                const breakNode = $createBreakNode();
-                $insertNodes([breakNode]);
-              });
-            }}
-            style={{ color: selection ? "" : "#999" }}
-            className="toolbar-item"
-          >
-            停顿
-          </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                editor.update(() => {
+                  const breakNode = $createBreakNode();
+                  $insertNodes([breakNode]);
+                });
+              }}
+              style={{ color: selection ? "" : "#999" }}
+              className="toolbar-item"
+            >
+              静音
+            </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              editor.update(() => {
-                const breakNode = $createBreakNode();
-                $insertNodes([breakNode]);
-              });
-            }}
-            style={{ color: selection ? "" : "#999" }}
-            className="toolbar-item"
-          >
-            静音
-          </button>
+            <Divider style={{backgroundColor: '#0ea5e9'}} />
 
-          <Divider />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setVoiceModal((prev) => {
+                  return {
+                    ...prev,
+                    open: true
+                  };
+                });
+                // editor.update(() => {
+                //   const breakNode = $createBreakNode();
+                //   $insertNodes([breakNode]);
+                // });
+              }}
+              style={{ color: selection ? "" : "#999" }}
+              className="toolbar-item"
+            >
+              主播
+            </button>
 
-          {/* <button
+            {/* <button
           onClick={(e) => {
             e.stopPropagation();
             editor.update(() => {
@@ -255,7 +307,7 @@ export default function ToolbarPlugin(props: any) {
 
         <Divider /> */}
 
-          {/* <button
+            {/* <button
           onClick={(e) => {
             e.stopPropagation();
             editor.update(() => {
@@ -305,31 +357,43 @@ export default function ToolbarPlugin(props: any) {
         >
           导出
         </button> */}
-        </div>
+          </div>
 
-        {/*  */}
-        <div className="flex space-x-4  items-center">
-          <Button
-            onClick={(e) => {
-              e.preventDefault();
-              getContent();
-              getSsml();
-            }}
-            type="primary"
-            shape="round"
-            icon={<PlayCircleFilled />}
-          >
-            试听
-          </Button>
-          <Button type="primary" ghost shape="round" icon={<CustomerServiceOutlined />}>
-            合成
-          </Button>
-          <Button shape="round" icon={<DownloadOutlined />}>
-            下载
-          </Button>
+          {/*  */}
+          <div className="flex space-x-4  items-center">
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                getContent();
+                getSsml();
+              }}
+              type="primary"
+              shape="round"
+              icon={<PlayCircleFilled />}
+            >
+              试听
+            </Button>
+            <Button
+              onClick={(e) => {
+                const editorState = editor.getEditorState();
+                const state = JSON.stringify(editorState);
+                const json = JSON.parse(state);
+                console.log("state", state, json);
+              }}
+              type="primary"
+              ghost
+              shape="round"
+              icon={<CustomerServiceOutlined />}
+            >
+              合成
+            </Button>
+            <Button shape="round" icon={<DownloadOutlined />}>
+              下载
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -32,7 +32,6 @@ export default function NumberPlugin(props: any) {
       ADD_NUMBER_COMMAND,
       (payload: Payload) => {
         const { data } = payload;
-        console.log("data", data);
         const selection = $getSelection();
         if (!$isRangeSelection(selection)) {
           return false;

@@ -81,14 +81,18 @@ body {
 }
 
 .editor-paragraph {
-  line-height: 2;
+  line-height: 3;
+}
+
+.editor-paragraph * {
+  line-height: 1.5;
 }
 
 /* 标签样式 */
 
 .editor-paragraph .editor-tag-node {
   position: relative;
-  padding-top: 25px;
+  /* margin-top: 25px; */
   display: inline-block;
   text-align: center;
 }
@@ -104,15 +108,77 @@ body {
   margin-inline-end: 8px;
   padding-inline: 7px;
   position: absolute;
+  z-index: 1;
   top: 0;
   left: 0;
+  transform: translateY(-100%);
   display: block;
   user-select: none;
   white-space: nowrap;
+  max-width: 35px;
+  overflow: hidden;
+}
+
+.editor-paragraph .editor-tag:hover {
+  z-index: 9;
+  max-width: unset;
+}
+
+.editor-paragraph .pinyin-tag {
+  color: #fff;
+  background-color: #f97316;
+}
+
+.editor-paragraph .speed-tag {
+  color: #fff;
+  background-color: #10b981;
+}
+
+.editor-paragraph .voice-tag {
+  left: -10px;
+  color: #fff;
+  background-color: #0ea5e9;
 }
 
 .editor-paragraph .pinyin-node {
-  
+}
+
+.editor-paragraph .speed-node::before {
+  content: " << ";
+  color: #10b981;
+}
+
+.editor-paragraph .speed-node::after {
+  content: " >> ";
+  color: #10b981;
+}
+
+.editor-paragraph .voice-node::before {
+  content: "“";
+  color: #0ea5e9;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.editor-paragraph .voice-node::after {
+  content: "”";
+  color: #0ea5e9;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.editor-paragraph .break-node {
+  color: #84cc16;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.editor-paragraph .editor-break::before{
+  content: " ";
+}
+
+.editor-paragraph .editor-break::after{
+  content: " ";
 }
 
 .toolbar {

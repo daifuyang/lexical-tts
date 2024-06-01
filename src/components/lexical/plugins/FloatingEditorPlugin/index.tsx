@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { closeFloat, setFloatEditValue, setFloatType } from "@/redux/slice/initialState";
-import { Button, Menu, Radio, Slider } from "antd";
+import { Button, Input, Menu, Radio, Slider } from "antd";
 
 import { pinyin } from "pinyin-pro";
 
@@ -17,6 +17,8 @@ import { getNumberOptions } from "../../utils/number";
 import { ADD_PINYIN_COMMAND } from "../PinyinPlugin";
 import { ADD_NUMBER_COMMAND } from "../NumberPlugin";
 import { $isNumberNode, NumberNode } from "../../nodes/NumberNode";
+import { TOGGER_SPEED_COMMAND } from "../../nodes/SpeedNode";
+import { TOGGER_ALIAS_COMMAND } from "../../nodes/AliasNode";
 
 function FloatingPinyinEditor({
   editor,
@@ -131,11 +133,9 @@ function FloatingPinyinEditor({
       <Radio.Group
         onChange={(e) => {
           const { value } = e.target;
-
           if (value) {
             dispatch(setFloatEditValue(value));
           }
-
           editor.dispatchCommand(ADD_PINYIN_COMMAND, value);
         }}
         buttonStyle="solid"
@@ -189,16 +189,66 @@ function FloatingPinyinEditor({
 
   // 变速
   const RenderSpeedSlider = () => {
+    const [sliderValue, setSliderValue] = useState<number>(0);
+
     return (
       <div style={{ width: 300, display: "flex", alignItems: "center" }}>
         <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
-          <span style={{margin: '0 4px'}}>慢</span>
+          <span style={{ margin: "0 4px" }}>慢</span>
           <div style={{ flex: 1 }}>
-            <Slider defaultValue={0} min={-10} max={10} step={1} tooltip={{ open: true }} />
+            <Slider
+              onChange={(value) => {
+                setSliderValue(value);
+              }}
+              defaultValue={0}
+              min={-10}
+              max={10}
+              step={1}
+              tooltip={{ open: true }}
+            />
           </div>
-          <span style={{margin: '0 4px'}}>快</span>
+          <span style={{ margin: "0 4px" }}>快</span>
         </div>
-        <Button style={{marginLeft: 4}} type="primary">确定</Button>
+        <Button
+          onClick={(e) => {
+            e.stopPropagation();
+            dispatch(setFloatEditValue(`${sliderValue}`));
+            editor.dispatchCommand(TOGGER_SPEED_COMMAND, {
+              data: sliderValue
+            });
+          }}
+          style={{ marginLeft: 4 }}
+          type="primary"
+        >
+          确定
+        </Button>
+      </div>
+    );
+  };
+
+  // alias
+  const RenderAliasInput = () => {
+    const [alias, setAlias] = useState("");
+    return (
+      <div style={{ width: 300, display: "flex", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", flex: 1, marginRight: 16 }}>
+          <span>别名：</span>
+          <Input
+            onChange={(e) => {
+              const { value = "" } = e.target;
+              setAlias(value);
+            }}
+            style={{ flex: 1 }}
+          />
+        </div>
+        <div>
+          <Button onClick={ () => {
+            if (alias) {
+              dispatch(setFloatEditValue(alias));
+            }
+            editor.dispatchCommand(TOGGER_ALIAS_COMMAND, alias);
+          } }>确定</Button>
+        </div>
       </div>
     );
   };
@@ -210,6 +260,8 @@ function FloatingPinyinEditor({
       return <RenderSymbolRadio />;
     } else if (floatEditType === "speed") {
       return <RenderSpeedSlider />;
+    } else if (floatEditType === "alias") {
+      return <RenderAliasInput />;
     }
     return null;
   }

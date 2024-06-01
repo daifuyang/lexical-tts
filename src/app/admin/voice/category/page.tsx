@@ -1,9 +1,9 @@
 "use client";
 
-import { Button, message } from "antd";
+import { Button, Divider, Space, message } from "antd";
 import { ActionType, PageContainer, ProColumns, ProTable } from "@ant-design/pro-components";
 import { PlusOutlined } from "@ant-design/icons";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import SaveModal from "./save";
 import { voiceCategoryList } from "@/services/voice";
 
@@ -48,14 +48,25 @@ export default function Category() {
         true: { text: "已启用", status: "Success" },
         false: { text: "未启用", status: "Error" }
       }
+    },
+    {
+      title: "操作",
+      valueType: "option",
+      key: "option",
+      width: 160,
+      render: (text, record, _, action) => [
+        <Space split={<Divider type="vertical" />}>
+          <a
+            onClick={() => {
+              edit(record);
+            }}
+          >
+            编辑
+          </a>
+          <a style={{ color: "#ff4d44" }}>删除</a>
+        </Space>
+      ]
     }
-  ];
-
-  // 模拟数据
-  const data: Anchor[] = [
-    { name: "主播1", description: "这是主播1的描述", status: true },
-    { name: "主播2", description: "这是主播2的描述", status: false }
-    // 可以添加更多数据
   ];
 
   return (

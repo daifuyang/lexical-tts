@@ -43,13 +43,19 @@ export class PinyinNode extends TextNode {
   createDOM(config: EditorConfig): HTMLElement {
     const element = super.createDOM(config);
     addClassNamesToElement(element, "editor-tag-node", "pinyin-node");
-    addTagToElement(element, this.__pinyin);
+    addTagToElement(element, this.__pinyin, "pinyin-tag");
     return element;
   }
 
   updateDOM(prevNode: PinyinNode, dom: HTMLElement, config: EditorConfig): boolean {
     const isUpdated = super.updateDOM(prevNode, dom, config);
     return isUpdated;
+  }
+
+  static importJSON(serializedNode: SerializedPinyinNode): PinyinNode {
+    const node = $createPinyinNode(serializedNode.text, serializedNode.pinyin);
+    node.setFormat(serializedNode.format);
+    return node;
   }
 
   exportJSON(): SerializedPinyinNode {
@@ -59,10 +65,6 @@ export class PinyinNode extends TextNode {
       type: this.getType(),
       version: 1
     };
-  }
-
-  getTextContent(): string {
-    return this.__text;
   }
 
   canInsertTextBefore(): false {

@@ -16,15 +16,18 @@ import {
 } from "lexical";
 import { Dispatch } from "react";
 
+import { addClassNamesToElement } from "@lexical/utils";
+import { addTagToElement } from "./util";
+
 export type SerializedSpeedNode = Spread<
   {
-    speed: string;
+    speed: number;
   },
   SerializedElementNode
 >;
 
 export class SpeedNode extends ElementNode {
-  __speed: string;
+  __speed: number;
 
   static getType(): string {
     return "speed";
@@ -34,7 +37,7 @@ export class SpeedNode extends ElementNode {
     return new SpeedNode(node.__speed, node.__key);
   }
 
-  constructor(speed: string, key?: NodeKey) {
+  constructor(speed: number, key?: NodeKey) {
     super(key);
     this.__speed = speed;
   }
@@ -42,7 +45,8 @@ export class SpeedNode extends ElementNode {
   createDOM(): HTMLElement {
     // Define the DOM element here
     const dom = document.createElement("span");
-    dom.style.backgroundColor = "#ff0000";
+    addClassNamesToElement(dom, "editor-tag-node", "speed-node");
+    addTagToElement(dom, `变速：${this.__speed}`, 'speed-tag');
     return dom;
   }
 
@@ -50,6 +54,12 @@ export class SpeedNode extends ElementNode {
     // Returning false tells Lexical that this node does not need its
     // DOM element replacing with a new copy from createDOM.
     return false;
+  }
+
+  static importJSON(serializedNode: SerializedSpeedNode): SpeedNode {
+    const node = $createSpeedNode(serializedNode.speed);
+    node.setFormat(serializedNode.format);
+    return node;
   }
 
   exportJSON(): SerializedSpeedNode {
@@ -61,7 +71,7 @@ export class SpeedNode extends ElementNode {
     };
   }
 
-  getSpeed(): string {
+  getSpeed(): number {
     return this.__speed;
   }
 
@@ -107,7 +117,7 @@ export class SpeedNode extends ElementNode {
   }
 }
 
-export function $createSpeedNode(speed: string): SpeedNode {
+export function $createSpeedNode(speed: number): SpeedNode {
   return $applyNodeReplacement(new SpeedNode(speed));
 }
 

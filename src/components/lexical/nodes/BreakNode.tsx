@@ -8,7 +8,10 @@ import {
   TextModeType,
   TextNode
 } from "lexical";
-import { SerializedTextNode, TextDetailType } from "lexical/nodes/LexicalTextNode";
+import { SerializedTextNode } from "lexical/nodes/LexicalTextNode";
+
+import { addClassNamesToElement } from "@lexical/utils";
+import { addTagToElement } from "./util";
 
 export type SerializedBreakNode = Spread<{}, SerializedTextNode>;
 
@@ -27,17 +30,14 @@ export class BreakNode extends TextNode {
   }
 
   constructor(key?: NodeKey) {
-    super("", key);
+    super("‖", key);
   }
 
   createDOM(config: EditorConfig): HTMLElement {
     const element = super.createDOM(config);
     element.className = "editor-break";
-
-    const breakElem = document.createElement("span");
-    breakElem.textContent = "‖";
-    element.appendChild(breakElem);
-
+    addClassNamesToElement(element, "editor-tag-node", "break-node");
+    addTagToElement(element, "300ms", "break-tag");
     return element;
   }
 

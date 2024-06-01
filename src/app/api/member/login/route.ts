@@ -4,8 +4,8 @@ import dayjs from "dayjs";
 import bcrypt from "bcrypt";
 import api from "@/lib/response";
 import prisma from "@/lib/prisma";
-
-async function login(request: Request) {
+ 
+export async function POST(request: Request) {
   const data = await request.json();
   const { account, password } = data;
   if (!_.trim(account)) {
@@ -62,6 +62,3 @@ async function login(request: Request) {
   }
 }
 
-module.exports = {
-  POST: login
-};

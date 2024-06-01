@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-type FloatEditType = "pinyin" | "symbol" | "speed" | undefined;
+type FloatEditType = "pinyin" | "symbol" | "speed" | "alias" | undefined;
 
 export type FloatDomRect = {
   x: number;
