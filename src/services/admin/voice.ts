@@ -16,3 +16,8 @@ export function voiceStyleList() {
 export function createVoice(data: any) {
   return adminRequest.post("/api/admin/voice", data);
 }
+
+// 更新单个主播
+export function updateVoice(id: number, data: any) {
+  return adminRequest.put(`/api/admin/voice/${id}`, data);
+}

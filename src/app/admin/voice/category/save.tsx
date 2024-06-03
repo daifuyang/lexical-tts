@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import { createVoiceCategory } from "@/services/admin/voiceCategory";
-import { ModalForm, ProFormRadio, ProFormSelect, ProFormText } from "@ant-design/pro-components";
+import { createVoiceCategory, updateVoiceCategory } from "@/services/admin/voiceCategory";
+import { ModalForm, ProFormSelect, ProFormText } from "@ant-design/pro-components";
 import { message } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function Save(props: any) {
-  const { open, setOpen, formData, type, onCancel } = props;
+  const { open, setOpen, formData, type, onFinish, onCancel } = props;
 
   useEffect(() => {
     if (open) {
@@ -21,7 +21,6 @@ export default function Save(props: any) {
       modalProps={{
         destroyOnClose: true,
         onCancel: () => {
-          setOpen(false);
           if (onCancel) {
             onCancel();
           }
@@ -35,14 +34,25 @@ export default function Save(props: any) {
       }}
       layout="horizontal"
       onFinish={async (values: any) => {
-        let res = null;
-        if (type === "create") {
-          res = await createVoiceCategory(values)
+        let res: any = null;
+        const { id } = values;
+        if (id) {
+          res = await updateVoiceCategory(id, values);
+        } else {
+          res = await createVoiceCategory(values);
         }
-        console.log("values", values, res);
+        if (res.code === 1) {
+          message.success(res.msg);
+          if(onFinish) {
+            onFinish(true)
+          }
+        }else {
+          message.error(res.msg);
+        }
       }}
       initialValues={formData}
     >
+      <ProFormText name="id" label="分类ID" hidden={true} />
       <ProFormText name="name" label="分类名称" placeholder="请输入分类名称" />
       <ProFormText name="desc" label="分类描述" placeholder="请输入主播分类描述" />
       <ProFormSelect

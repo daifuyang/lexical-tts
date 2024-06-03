@@ -4,13 +4,28 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon } from "@heroicons/react/24/solid";
 import { Avatar, Col, Input, Row, Slider } from "antd";
 import VoiceModal from "./modal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Category from "@/components/category";
+import { setVoice,setList } from "@/redux/slice/voiceState";
+import { voiceCategoryList, voiceList } from "@/services/voice";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import VoiceCard from '@/components/voiceCard';
 
 function FloatingVoice() {
   const [windowState, setWindowState] = useState("normal");
   const [voiceListState, setvoiceListState] = useState(false);
+  const [voiceCategory, setVoiceCategory] = useState([]);
+
+  const [defaultVoice, setDefaultVoice] = useState(null);
+
+  const [voiceCurrent, setVoiceCurrent] = useState(1);
+  const [voicePageSize, setVoicePageSize] = useState(10);
+
+  const voices = useAppSelector( (state) => state.voiceState.list )
+  const currentVoice = useAppSelector( (state) => state.voiceState.voice )
+
+  const dispatch = useAppDispatch();
 
   const maximizeWindow = () => {
     setWindowState("maximized");
@@ -27,6 +42,29 @@ function FloatingVoice() {
   const toggerVoiceListState = () => {
     setvoiceListState(!voiceListState);
   };
+
+  useEffect(() => {
+    const fetchCategory = async () => {
+      const res: any = await voiceCategoryList({ pageSize: 0 });
+      if (res.code === 1) {
+        setVoiceCategory(res.data);
+      }
+    };
+    fetchCategory();
+
+    const fetchVoice = async () => {
+      const res: any = await voiceList();
+      if (res.code === 1) {
+        if(!defaultVoice) {
+          dispatch(setVoice(res.data.data[0]));
+        }
+        dispatch(setList(res.data.data));
+        setVoiceCurrent(res.data.current);
+        setVoicePageSize(res.data.pageSize);
+      }
+    };
+    fetchVoice();
+  }, []);
 
   // 最小样式展示
   if (windowState === "minimized") {
@@ -76,24 +114,22 @@ function FloatingVoice() {
 
         <div className="flex flex-1">
           {voiceListState && (
-            <div className="w-96 p-2 border-r">
+            <div className="w-[25rem] p-2 border-r">
               <Input.Search />
 
-                <Category />
-                <Category />
-                <Category />
+              <Category title="分类" data={voiceCategory} />
+              <Category />
+              <Category />
 
               {/* 主播列表 */}
               <div className="">
-                <Row gutter={16}>
-                  {new Array(10).fill(0).map(() => {
+                <section className="grid grid-cols-3 gap-3">
+                  {voices.map((item: any) => {
                     return (
-                      <Col span={8}>
-                        <div>111</div>
-                      </Col>
+                      <VoiceCard data={item} />
                     );
                   })}
-                </Row>
+                </section>
               </div>
             </div>
           )}
@@ -103,7 +139,7 @@ function FloatingVoice() {
               <Avatar size="large" />
               <div className="flex-1 flex flex-col px-4">
                 <div className="flex">
-                  <div className="text-lg mb-2">月月新</div>
+                  <div className="text-lg mb-2">{currentVoice?.name}</div>
                 </div>
                 <div className="text-base text-gray-400">主播详情</div>
               </div>

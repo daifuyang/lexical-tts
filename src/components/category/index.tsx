@@ -1,10 +1,13 @@
-export default function Category() {
+export default function Category(props: any) {
+  const { title = "", data = [] } = props;
   return (
-    <div className="flex mt-2">
-      <div className="w-12">类型</div>
+    <div className="flex justify-between mt-2 py-2">
+      <div className="font-medium text-sm">{title}</div>
       <ul className="flex flex-wrap flex-1">
-        {new Array(10).fill(0).map((_, index) => (
-          <li className="pr-2 pb-2">类型</li>
+        {data?.map((item: any) => (
+          <li key={item.id} className="text-sm cursor-pointer text-blue-600 pl-3 pb-2">
+            {item.name}
+          </li>
         ))}
       </ul>
     </div>

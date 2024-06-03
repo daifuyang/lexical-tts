@@ -12,23 +12,3 @@ export async function GET(request: NextRequest) {
   const cagetories = await getCategories(current, pageSize);
   return api.success("获取成功！", cagetories);
 }
-
-// 新增一条
-export async function POST(request: NextRequest) {
-  const json = await request.json();
-
-  let status = 1;
-  if (json.status) {
-    status = Number(json.status);
-  }
-
-  const voiceCategory = await prisma.ttsVoiceCategory.create({
-    data: {
-      name: json.name,
-      desc: json.desc,
-      status
-    }
-  });
-
-  return api.success("新增成功", voiceCategory);
-}

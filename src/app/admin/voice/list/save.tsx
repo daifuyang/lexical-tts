@@ -1,10 +1,10 @@
-import { voiceStyleList, createVoice } from "@/services/admin/voice";
+import { voiceStyleList, createVoice, updateVoice } from "@/services/admin/voice";
 import { ModalForm, ProFormRadio, ProFormSelect, ProFormText } from "@ant-design/pro-components";
 import { message } from "antd";
 import { useEffect, useState } from "react";
 
 export default function Save(props: any) {
-  const { open, setOpen, formData, type, onCancel } = props;
+  const { open, formData, type, onFinish, onCancel } = props;
 
   const [styleList, setStyleList] = useState<any>([]);
 
@@ -26,15 +26,14 @@ export default function Save(props: any) {
 
   return (
     <ModalForm
-      title={type === "create" ? "新增" : "编辑"}
+      title={formData?.id ? "编辑" : "新增"}
       open={open}
       width={520}
       modalProps={{
         destroyOnClose: true,
         onCancel: () => {
-          setOpen(false);
-          if(onCancel) {
-            onCancel()
+          if (onCancel) {
+            onCancel();
           }
         }
       }}
@@ -46,14 +45,23 @@ export default function Save(props: any) {
       }}
       layout="horizontal"
       onFinish={async (values: any) => {
-        let res = null;
-        if (type === "create") {
+        let res: any = null;
+        const { id } = values;
+        if (id) {
+          res = await updateVoice(id, values);
+        } else {
           res = await createVoice(values);
         }
-        console.log("values", values, res);
+
+        if (res.code === 1) {
+          onFinish?.();
+        }
       }}
       initialValues={formData}
     >
+
+      <ProFormText name="id" label="主播ID" hidden={true} />
+
       <ProFormText name="name" label="主播名称" placeholder="请输入主播名称" />
 
       <ProFormRadio.Group

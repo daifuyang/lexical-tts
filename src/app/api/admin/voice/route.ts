@@ -2,12 +2,13 @@ import api from "@/lib/response";
 import _ from "lodash";
 import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
+import { getVoiceLst, getVoiceTotal } from "@/model/ttsVoice";
 
 export async function GET(request: NextRequest) {
   // 查询条件
   const { searchParams } = request.nextUrl;
 
-  const curent = parseInt(searchParams.get("curent") || "1");
+  const current = parseInt(searchParams.get("current") || "1");
   const pageSize = parseInt(searchParams.get("pageSize") || "10");
 
   const where: any = {};
@@ -30,27 +31,14 @@ export async function GET(request: NextRequest) {
     where["status"] = parseInt(status);
   }
 
-  const total = await prisma.ttsVoice.count({
-    skip: (curent - 1) * pageSize,
-    take: pageSize,
-    orderBy: {
-      id: "desc"
-    }
-  });
+  const total = await getVoiceTotal()
 
-  const res = await prisma.ttsVoice.findMany({
-    skip: (curent - 1) * pageSize,
-    take: pageSize,
-    where,
-    orderBy: {
-      id: "desc"
-    }
-  });
+  const res = await getVoiceLst(current, pageSize, where);
 
   return api.success("获取成功！", {
     total,
     data: res,
-    curent,
+    current,
     pageSize
   });
 }
@@ -63,6 +51,8 @@ export async function POST(request: Request) {
     return api.error("主播名称不能为空！");
   } else if (!_.trim(shortName)) {
     return api.error("主播标识不能为空！");
+  } else if (!_.trim(locale)) {
+    return api.error("语言环境不能为空！");
   }
 
   const res = await prisma.ttsVoice.create({

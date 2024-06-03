@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { Pagination } from "@/lib/response";
 import { Prisma, ttsVoiceCategory } from "@prisma/client";
+import { PrismaClient } from "@prisma/client/extension";
 
 // 获取列表
 export const getCategories = async (
@@ -35,3 +36,11 @@ export const getCategories = async (
   }
   return result;
 };
+
+// 更新分类
+export async function updateCategory(id: number, data: Prisma.ttsVoiceCategoryUpdateInput, tx: PrismaClient = prisma) {
+  return tx.ttsVoiceCategory.update({
+    where: { id },
+    data
+  });
+}

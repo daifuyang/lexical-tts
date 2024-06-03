@@ -24,12 +24,12 @@ interface TtsVoice {
 
 const valueEnum = {
   0: "disabled",
-  1: "enable"
+  1: "enabled"
 };
 
-const statusEnum = {
+const statusEnum: any = {
   all: "",
-  enable: 1,
+  enabled: 1,
   disabled: 0
 };
 
@@ -42,12 +42,10 @@ export default function Page() {
 
   const add = () => {
     setOpen(true);
-    setType("create");
   };
 
   const edit = (record: any) => {
     setOpen(true);
-    setType("update");
     setFormData(record);
   };
 
@@ -62,6 +60,7 @@ export default function Page() {
     {
       title: "主播名称",
       dataIndex: "name",
+      width: 200,
       key: "name",
       align: "center"
     },
@@ -77,7 +76,7 @@ export default function Page() {
       title: "主播标识",
       dataIndex: "shortName",
       key: "shortName",
-      width: 150,
+      width: 200,
       align: "center"
     },
     {
@@ -102,11 +101,12 @@ export default function Page() {
     {
       title: "状态",
       dataIndex: "status",
+      width: 100,
       key: "status",
       align: "center",
       valueEnum: {
         all: { text: "全部" },
-        enable: { text: "启用" },
+        enabled: { text: "启用" },
         disabled: { text: "禁用" }
       }
     },
@@ -114,12 +114,13 @@ export default function Page() {
       title: "操作",
       valueType: "option",
       key: "option",
-      width: 180,
-      render: (text, record, _, action) => [
+      width: 120,
+      render: (text, record: any, _, action) => [
         <Space split={<Divider type="vertical" />}>
           <a
             onClick={() => {
-              edit(record);
+              const status = statusEnum[record.status];
+              edit({ ...record, status });
             }}
           >
             编辑
@@ -134,12 +135,15 @@ export default function Page() {
   return (
     <PageContainer>
       <SaveModal
-        type={type}
         open={open}
         formData={formData}
-        setOpen={setOpen}
+        onFinish={() => {
+          setOpen(false);
+          actionRef.current?.reload();
+        }}
         onCancel={() => {
           setFormData({});
+          setOpen(false);
         }}
       />
       <ProTable<any>
@@ -165,6 +169,18 @@ export default function Page() {
           return {
             success: false
           };
+        }}
+        pagination={{
+          pageSize: 10
+        }}
+        rowKey="id"
+        search={{
+          labelWidth: "auto"
+        }}
+        options={{
+          setting: {
+            listsHeight: 400
+          }
         }}
         editable={{
           type: "multiple"

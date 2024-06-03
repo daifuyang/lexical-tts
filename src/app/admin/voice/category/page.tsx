@@ -13,21 +13,23 @@ interface Anchor {
   status: boolean;
 }
 
+const statusEnum = {
+  1: "enabled",
+  0: "disabled"
+};
+
 export default function Category() {
   const actionRef = useRef<ActionType>();
 
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<any>({});
-  const [type, setType] = useState<"create" | "update">("create");
 
   const add = () => {
     setOpen(true);
-    setType("create");
   };
 
   const edit = (record: any) => {
     setOpen(true);
-    setType("update");
     setFormData(record);
   };
 
@@ -43,10 +45,9 @@ export default function Category() {
     {
       title: "启用状态",
       dataIndex: "status",
-      valueType: "select",
       valueEnum: {
-        true: { text: "已启用", status: "Success" },
-        false: { text: "未启用", status: "Error" }
+        enabled: { text: "启用", status: "Success" },
+        disabled: { text: "禁用", status: "Error" }
       }
     },
     {
@@ -54,11 +55,12 @@ export default function Category() {
       valueType: "option",
       key: "option",
       width: 160,
-      render: (text, record, _, action) => [
+      render: (text, record: any, _, action) => [
         <Space split={<Divider type="vertical" />}>
           <a
             onClick={() => {
-              edit(record);
+              const status = record.status  === "enabled" ? "1" : "0"
+              edit({...record,status});
             }}
           >
             编辑
@@ -72,16 +74,20 @@ export default function Category() {
   return (
     <PageContainer>
       <SaveModal
-        type={type}
         open={open}
         formData={formData}
-        setOpen={setOpen}
+        onFinish={() => {
+          setOpen(false);
+          actionRef.current?.reload();
+        }}
         onCancel={() => {
           setFormData({});
+          setOpen(false);
         }}
       />
       <ProTable<Anchor>
         columns={columns}
+        actionRef={actionRef}
         cardBordered={true}
         rowKey="id"
         headerTitle="分类列表"
@@ -91,7 +97,8 @@ export default function Category() {
             return {
               success: true,
               data: res.data.data?.map((item: { status: 0 | 1 }) => ({
-                ...item
+                ...item,
+                status: statusEnum[item.status]
               })),
               total: res.data.total
             };

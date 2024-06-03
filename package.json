@@ -12,10 +12,12 @@
     "migrate": "dotenv -e .env.local npx prisma migrate dev --name init"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.3.7",
     "@ant-design/nextjs-registry": "^1.0.0",
     "@ant-design/pro-components": "^2.6.52",
     "@heroicons/react": "^2.1.1",
     "@lexical/react": "^0.13.1",
+    "@lexical/utils": "^0.15.0",
     "@prisma/client": "5.11.0",
     "@reduxjs/toolkit": "^2.2.1",
     "@types/pinyin": "^2.10.2",
@@ -23,6 +25,7 @@
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
     "clsx": "^2.1.0",
+    "dayjs": "^1.11.11",
     "jsonwebtoken": "^9.0.2",
     "lexical": "^0.13.1",
     "lodash": "^4.17.21",

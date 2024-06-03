@@ -1,11 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import initialState from "./slice/initialState";
 import userState from "./slice/userState";
+import voiceState from "./slice/voiceState";
 
 export const store = configureStore({
   reducer: {
     initialState,
-    userState
+    userState,
+    voiceState
   }
 });
 
