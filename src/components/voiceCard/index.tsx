@@ -2,10 +2,10 @@ import { Avatar } from "antd";
 
 export default function VoiceCard (props: any) {
 
-    const { data } = props
+    const { data,onClick } = props
 
     return (
-        <div className="relative group overflow-hidden  border border-gray-200 rounded-lg shadow hover:bg-gray-100">
+        <div onClick={ onClick } className="relative group overflow-hidden  border border-gray-200 rounded-lg shadow hover:bg-gray-100">
         <div className="flex items-center gap-2 p-4">
           <Avatar>U</Avatar>
           <div className="flex-1 grid gap-1">

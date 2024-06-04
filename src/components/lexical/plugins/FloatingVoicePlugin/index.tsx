@@ -7,33 +7,38 @@ import VoiceModal from "./modal";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Category from "@/components/category";
-import { setVoice,setList } from "@/redux/slice/voiceState";
+import { setVoice, setList, fetchVocieCategory } from "@/redux/slice/voiceState";
 import { voiceCategoryList, voiceList } from "@/services/voice";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
-import VoiceCard from '@/components/voiceCard';
+import VoiceCard from "@/components/voiceCard";
 
 function FloatingVoice() {
   const [windowState, setWindowState] = useState("normal");
   const [voiceListState, setvoiceListState] = useState(false);
-  const [voiceCategory, setVoiceCategory] = useState([]);
 
   const [defaultVoice, setDefaultVoice] = useState(null);
+  const [voices, setVoices] = useState([]);
 
   const [voiceCurrent, setVoiceCurrent] = useState(1);
   const [voicePageSize, setVoicePageSize] = useState(10);
 
-  const voices = useAppSelector( (state) => state.voiceState.list )
-  const currentVoice = useAppSelector( (state) => state.voiceState.voice )
+  const currentVoice = useAppSelector((state) => state.voiceState.voice);
+  const voiceCategory = useAppSelector((state) => state.voiceState.category);
+
+  // const voiceCategoryStatus = useAppSelector((state) => state.voiceState.categoryStatus);
+  // const voiceCategoryError = useAppSelector((state) => state.voiceState.categoryError);
 
   const dispatch = useAppDispatch();
 
-  const maximizeWindow = () => {
+  const maximizeWindow = (e) => {
+    e.preventDefault();
     setWindowState("maximized");
     // 实际操作可根据具体需求实现
     // 例如，使用 Electron 的 API 实现最大化窗口
   };
 
-  const minimizeWindow = () => {
+  const minimizeWindow = (e) => {
+    e.preventDefault();
     setWindowState("minimized");
     // 实际操作可根据具体需求实现
     // 例如，使用 Electron 的 API 实现最小化窗口
@@ -44,21 +49,19 @@ function FloatingVoice() {
   };
 
   useEffect(() => {
-    const fetchCategory = async () => {
-      const res: any = await voiceCategoryList({ pageSize: 0 });
-      if (res.code === 1) {
-        setVoiceCategory(res.data);
-      }
-    };
-    fetchCategory();
+    if(voiceCategory.length === 0) {
+    dispatch(fetchVocieCategory({pageSize: 0}));
+  }
+  }, [dispatch]);
 
+  useEffect(() => {
     const fetchVoice = async () => {
       const res: any = await voiceList();
       if (res.code === 1) {
-        if(!defaultVoice) {
+        if (!defaultVoice) {
           dispatch(setVoice(res.data.data[0]));
         }
-        dispatch(setList(res.data.data));
+        setVoices(res.data.data);
         setVoiceCurrent(res.data.current);
         setVoicePageSize(res.data.pageSize);
       }
@@ -95,7 +98,8 @@ function FloatingVoice() {
         <div className="flex w-full items-center px-4 py-3 text-lg border-b">
           <div
             className="flex w-full items-center cursor-pointer"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               toggerVoiceListState();
             }}
           >
@@ -118,16 +122,14 @@ function FloatingVoice() {
               <Input.Search />
 
               <Category title="分类" data={voiceCategory} />
-              <Category />
-              <Category />
+              {/* <Category />
+              <Category /> */}
 
               {/* 主播列表 */}
               <div className="">
                 <section className="grid grid-cols-3 gap-3">
                   {voices.map((item: any) => {
-                    return (
-                      <VoiceCard data={item} />
-                    );
+                    return <VoiceCard data={item} />;
                   })}
                 </section>
               </div>

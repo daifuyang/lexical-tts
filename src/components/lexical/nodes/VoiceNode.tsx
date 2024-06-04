@@ -1,23 +1,43 @@
-import { ElementNode, LexicalNode, RangeSelection, SerializedElementNode, Spread } from "lexical";
+import { ElementNode, LexicalNode, NodeKey, RangeSelection, SerializedElementNode, Spread } from "lexical";
 import { addClassNamesToElement } from "@lexical/utils";
 import { addTagToElement } from "./util";
 
-export type SerializedVoiceNode = Spread<{}, SerializedElementNode>;
+export type SerializedVoiceNode = Spread<{
+  voice: string
+}, SerializedElementNode>;
 
 export class VoiceNode extends ElementNode {
+
+  __voice: string
+
+  constructor(voice: string, key?: NodeKey) {
+    super(key);
+    this.__voice = voice;
+  }
+
   static getType(): string {
     return "voice";
   }
 
   static clone(node: VoiceNode): VoiceNode {
-    return new VoiceNode(node.__key);
+    return new VoiceNode(node.__voice,node.__key);
+  }
+
+  setVoice(voice: string) {
+    const self = this.getWritable();
+    self.__voice = voice;
+  }
+
+  getVoice(): string {
+    const self = this.getLatest();
+    return self.__voice;
   }
 
   createDOM(): HTMLElement {
     // Define the DOM element here
     const element = document.createElement("span");
     addClassNamesToElement(element, "editor-tag-node", "voice-node");
-    addTagToElement(element, "晓晓", "voice-tag");
+    addTagToElement(element, this.getVoice(), "voice-tag");
     return element;
   }
 
@@ -28,7 +48,7 @@ export class VoiceNode extends ElementNode {
   }
 
   static importJSON(serializedNode: SerializedVoiceNode): VoiceNode {
-    const node = $createVoiceNode();
+    const node = $createVoiceNode(serializedNode.voice);
     return node;
   }
 
@@ -36,14 +56,9 @@ export class VoiceNode extends ElementNode {
     return {
       ...super.exportJSON(),
       type: this.getType(),
+      voice: this.getVoice(),
       version: 1
     };
-  }
-
-  insertNewAfter(_: RangeSelection, restoreSelection = true): null | ElementNode {
-    const voiceNode = $createVoiceNode();
-    this.insertAfter(voiceNode, restoreSelection);
-    return voiceNode;
   }
 
   canInsertTextBefore(): boolean {
@@ -64,9 +79,9 @@ export class VoiceNode extends ElementNode {
 
 }
 
-export function $createVoiceNode(): VoiceNode {
-  console.log("voiceNode");
-  return new VoiceNode();
+export function $createVoiceNode(voice: string): VoiceNode {
+  console.log('voice',voice)
+  return new VoiceNode(voice);
 }
 
 export function $isVoiceNode(node: LexicalNode | null | undefined): node is VoiceNode {

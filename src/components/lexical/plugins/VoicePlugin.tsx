@@ -18,8 +18,7 @@ import { $createVoiceNode, $isVoiceNode, VoiceNode, $getAncestor } from "../node
 
 interface Payload {
   data: {
-    value: string;
-    type: string;
+    voice: string;
   };
 }
 
@@ -34,10 +33,12 @@ export default function VoicePlugin(props: any) {
     return editor.registerCommand(
       ADD_VOICE_COMMAND,
       (payload: Payload) => {
-        
+
+        const voice = payload.data
+
         const selection = $getSelection();
         if (!$isRangeSelection(selection)) {
-          return;
+          return false;
         }
 
         const nodes = selection.extract();
@@ -59,8 +60,7 @@ export default function VoicePlugin(props: any) {
           // 如果第一个节点是voice或者父节点是voice,那我们就更新他
           const voiceNode = $getAncestor(firstNode, $isVoiceNode);
           if (voiceNode) {
-            console.log("存在voiceNode", voiceNode);
-            return;
+            return false;
           }
         }
 
@@ -74,19 +74,18 @@ export default function VoicePlugin(props: any) {
             parent === null ||
             ($isElementNode(node) && !node.isInline())
           ) {
-            return;
+            return false;
           }
 
           if ($isVoiceNode(parent)) {
             // 修改父元素
             voiceNode = parent;
-            return;
+            return false;
           }
 
           if (!parent.is(prevParent)) {
             prevParent = parent;
-            voiceNode = $createVoiceNode();
-
+            voiceNode = $createVoiceNode(voice);
             if ($isVoiceNode(parent)) {
               if (node.getPreviousSibling() === null) {
                 parent.insertBefore(voiceNode);
@@ -100,7 +99,7 @@ export default function VoicePlugin(props: any) {
 
           if ($isVoiceNode(node)) {
             if (node.is(voiceNode)) {
-              return;
+              return false;
             }
             if (voiceNode !== null) {
               const children = node.getChildren();
@@ -109,13 +108,16 @@ export default function VoicePlugin(props: any) {
               }
             }
             node.remove();
-            return;
+            return false;
           }
 
           if (voiceNode !== null) {
             voiceNode.append(node);
           }
         });
+
+
+        return true;
       },
       COMMAND_PRIORITY_EDITOR
     );

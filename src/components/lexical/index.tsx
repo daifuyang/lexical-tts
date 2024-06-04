@@ -91,7 +91,6 @@ export default function Editor() {
           <AliasPlugin />
           <VoicePlugin />
           <FloatingEditorPlugin anchorElem={floatingAnchorElem} />
-
           <FloatingVoicePlugin />
           <TreeViewPlugin />
         </div>

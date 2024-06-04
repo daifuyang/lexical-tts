@@ -22,7 +22,6 @@ import { PlayCircleFilled, CustomerServiceOutlined, DownloadOutlined } from "@an
 import _ from "lodash";
 import { convert } from "pinyin-pro";
 import VoiceModal from "./FloatingVoicePlugin/modal";
-import { ADD_VOICE_COMMAND } from "./VoicePlugin";
 import { $aliasFloat } from "../nodes/AliasNode";
 
 function Divider(props: any) {
@@ -138,7 +137,6 @@ export default function ToolbarPlugin(props: any) {
         title="选择主播"
         open={voiceModal.open}
         onOk={() => {
-          editor.dispatchCommand(ADD_VOICE_COMMAND, undefined);
           setVoiceModal((prev) => ({ ...prev, open: false }));
         }}
         onCancel={() => {
