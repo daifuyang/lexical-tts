@@ -93,7 +93,7 @@ function FloatingVoice() {
 
   return (
     <>
-      <div className="h-4/5 flex flex-col fixed top-16 right-8 bg-white border rounded-xl overflow-hidden">
+      <div className="h-4/5 flex flex-col fixed z-50 top-16 right-8 bg-white border rounded-xl overflow-hidden">
         {/* 标题头 */}
         <div className="flex w-full items-center px-4 py-3 text-lg border-b">
           <div

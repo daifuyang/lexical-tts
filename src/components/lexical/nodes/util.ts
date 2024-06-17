@@ -8,5 +8,11 @@ export function addTagToElement(
   addClassNamesToElement(tag, "editor-tag", ...classNames);
   tag.contentEditable = "false";
   tag.textContent = text;
+
+  // Add the close to the tag
+  const close = document.createElement("span");
+  addClassNamesToElement(close, "editor-tag-close");
+  tag.appendChild(close);
+
   element.appendChild(tag);
 }

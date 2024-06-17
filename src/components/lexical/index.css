@@ -98,6 +98,7 @@ body {
 }
 
 .editor-paragraph .editor-tag {
+  position: relative;
   color: rgba(0, 0, 0, 0.88);
   background-color: #fafafa;
   border: 1px solid #d9d9d9;
@@ -116,12 +117,23 @@ body {
   user-select: none;
   white-space: nowrap;
   max-width: 35px;
-  overflow: hidden;
 }
 
 .editor-paragraph .editor-tag:hover {
   z-index: 9;
   max-width: unset;
+}
+
+.editor-paragraph .editor-tag-close {
+  position:absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+  z-index: 21;
+  width: 20px;
+  height: 20px;
+  background: #ff0000;
+  border-radius: 50%;
 }
 
 .editor-paragraph .pinyin-tag {
