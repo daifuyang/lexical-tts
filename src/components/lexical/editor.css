@@ -1,0 +1,43 @@
+@import url("./plugins/toolbar.css");
+@import url("./plugins/treeView.css");
+@import url("./nodes/pinyin.css");
+
+.tts-editor-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-container {
+  flex: 1;
+  height: 0;
+  overflow-y: auto;
+}
+
+.editor-container > .editor-inner {
+  position: relative;
+  padding: 20px 36px;
+  height: 100%;
+}
+
+.editor-container > .editor-inner > .editor-input {
+  height: 100%;
+  resize: none;
+  position: relative;
+  tab-size: 1;
+  outline: 0;
+  overflow-y: auto;
+  outline: none;
+}
+
+.editor-placeholder {
+  color: #999;
+  position: absolute;
+  top: 35px;
+  left: 36px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  user-select: none;
+  display: inline-block;
+  pointer-events: none;
+}

@@ -1,0 +1,10 @@
+.editor-pinyin {
+    display: inline-block;
+    text-align: center;
+    color: #369eff;
+}
+
+.editor-pinyin::after {
+    display: inline-block;
+    content: attr(data-pinyin);
+}

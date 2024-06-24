@@ -1,0 +1,39 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  height: 78px;
+  background: #f9fafc;
+  border-bottom: 1px solid #f1f2f4;
+}
+
+.toolbar .toolbar-item {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #7f8792;
+  padding: 0 11px;
+  gap: 4px;
+  height: 62px;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.toolbar .toolbar-play {
+  width: 77px;
+}
+
+.toolbar .toolbar-item img {
+  width: 24px;
+}
+
+.toolbar .divider {
+  width: 1px;
+  min-width: 1px;
+  height: 30px;
+  background-color: #e4e9ed;
+  margin: 0px 10px;
+}
