@@ -21,7 +21,7 @@ import {
   UNDO_COMMAND,
 } from "lexical";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { INSERT_PINYIN_COMMAND } from "../plugins/pinyinPlugin";
+import { INSERT_PINYIN_COMMAND } from "./pinyinPlugin";
 import { TOGGER_SPEED_COMMAND } from "../nodes/speedNode";
 const LowPriority = 1;
 

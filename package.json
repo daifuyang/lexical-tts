@@ -16,7 +16,7 @@
     "@ant-design/nextjs-registry": "^1.0.0",
     "@ant-design/pro-components": "^2.6.52",
     "@heroicons/react": "^2.1.1",
-    "@lexical/react": "^0.16.0",
+    "@lexical/react": "0.13.1",
     "@lexical/utils": "^0.15.0",
     "@prisma/client": "5.11.0",
     "@reduxjs/toolkit": "^2.2.1",
@@ -50,6 +50,7 @@
     "prisma": "^5.11.0",
     "sass": "^1.76.0",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "dotenv-cli": "^7.4.2"
   }
 }

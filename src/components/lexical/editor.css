@@ -1,3 +1,4 @@
+@import url("./plugins/popup.css");
 @import url("./plugins/toolbar.css");
 @import url("./plugins/treeView.css");
 @import url("./nodes/pinyin.css");
@@ -11,6 +12,7 @@
 .editor-container {
   flex: 1;
   height: 0;
+  line-height: 1.7;
   overflow-y: auto;
 }
 
