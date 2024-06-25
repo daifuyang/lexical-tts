@@ -24,7 +24,7 @@ export default function PinyinPlugin(): JSX.Element | null {
     return editor.registerCommand<string>(
       INSERT_PINYIN_COMMAND,
       (payload) => {
-        $insertPinyin();
+        // $insertPinyin();
         return true;
       },
       COMMAND_PRIORITY_EDITOR,

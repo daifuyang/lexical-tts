@@ -1,5 +1,3 @@
-"use client"
-
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
@@ -22,7 +20,9 @@ import {
 } from "lexical";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { INSERT_PINYIN_COMMAND } from "./pinyinPlugin";
+import { $pinYinFloat } from "../nodes/pinyinNode";
 import { TOGGER_SPEED_COMMAND } from "../nodes/speedNode";
+import { useAppDispatch } from "@/redux/hook";
 const LowPriority = 1;
 
 function Divider() {
@@ -31,6 +31,9 @@ function Divider() {
 
 export default function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext();
+
+  const dispatch = useAppDispatch();
+
   const toolbarRef = useRef(null);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -89,7 +92,6 @@ export default function ToolbarPlugin() {
       <div
         onClick={() => {
           const state = editor.getEditorState();
-          console.log("state", JSON.stringify(state));
         }}
         className="toolbar-item toolbar-play"
       >
@@ -107,8 +109,9 @@ export default function ToolbarPlugin() {
       </div>
       <Divider />
       <div
-        onClick={() => {
-          editor.dispatchCommand(INSERT_PINYIN_COMMAND, undefined);
+        onMouseDown={(e) => {
+          e.preventDefault();
+          $pinYinFloat(editor, dispatch);
         }}
         className="toolbar-item"
       >

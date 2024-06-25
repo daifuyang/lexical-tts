@@ -16,6 +16,8 @@ import { SpeedNode } from "./nodes/speedNode";
 import SpeedPlugin from "./plugins/speedPlugin";
 import PopupPlugin from "./plugins/popupPlugin";
 import { useState } from "react";
+import { useAppSelector } from "@/redux/hook";
+import InitPlugin from "./plugins/initPlugin";
 
 function Placeholder() {
     return (
@@ -43,14 +45,18 @@ function App() {
 
     const [floatingAnchorElem, setFloatingAnchorElem] = useState<HTMLDivElement | null>(null);
 
+    const type = useAppSelector(state => state.initialState.floatEditType);
+
     const onRef = (_floatingAnchorElem: HTMLDivElement) => {
         if (_floatingAnchorElem !== null) {
             setFloatingAnchorElem(_floatingAnchorElem);
         }
     };
 
+    console.log('type',type);
+
     return (
-        <div className="tts-editor-root">
+        <>
             <LexicalComposer initialConfig={editorConfig}>
                 <ToolbarPlugin />
                 <div className="editor-container">
@@ -64,12 +70,13 @@ function App() {
                         <AutoFocusPlugin />
                         <PinyinPlugin />
                         <SpeedPlugin />
-                        {floatingAnchorElem && <PopupPlugin anchorElem={floatingAnchorElem} />}
+                        <InitPlugin />
+                        {type && floatingAnchorElem && <PopupPlugin anchorElem={floatingAnchorElem} />}
                         {/* <TreeViewPlugin /> */}
                     </div>
                 </div>
             </LexicalComposer>
-        </div>
+        </>
     );
 }
 

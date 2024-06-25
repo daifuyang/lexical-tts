@@ -27,7 +27,12 @@
 }
 
 .toolbar .toolbar-item img {
+  user-select: none;
   width: 24px;
+}
+
+.toolbar .toolbar-item span {
+  user-select: none;
 }
 
 .toolbar .divider {

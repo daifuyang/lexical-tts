@@ -1,4 +1,6 @@
+import { closeFloat, setInitialState } from "@/redux/slice/initialState";
 import { addClassNamesToElement } from "@lexical/utils";
+import { message } from "antd";
 import {
   ElementNode,
   $applyNodeReplacement,
@@ -6,8 +8,10 @@ import {
   $getSelection,
   $isRangeSelection,
   $isElementNode,
-  EditorConfig
+  EditorConfig,
+  LexicalEditor
 } from "lexical";
+import { Dispatch } from "react";
 
 export class PinyinNode extends ElementNode {
   static getType(): string {
@@ -121,6 +125,31 @@ export function $insertPinyin() {
 
     if (pinyinNode !== null) {
       pinyinNode.append(node);
+    }
+  });
+}
+
+export function $pinYinFloat(editor: LexicalEditor, dispatch: Dispatch<any>): void {
+  // 新增编辑逻辑合并，打开拼音选择弹窗
+
+  editor.update(() => {
+    const selection = $getSelection();
+    if (selection) {
+      const text = selection?.getTextContent();
+      if (!text) {
+        message.error("请先选中文字!");
+        dispatch(closeFloat());
+        return;
+      } else if (text.length > 1) {
+        message.error("请选择单个汉字!");
+        dispatch(closeFloat());
+        return;
+      } else if (!/^[\u4E00-\u9FFF]+$/.test(text)) {
+        message.error("请选择单个汉字!");
+        dispatch(closeFloat());
+        return;
+      }
+      dispatch(setInitialState({ type: "pinyin", selectionText: text, value: undefined }));
     }
   });
 }
