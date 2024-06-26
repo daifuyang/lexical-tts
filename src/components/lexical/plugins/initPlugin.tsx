@@ -21,15 +21,12 @@ export default function InitPlugin(): JSX.Element | null {
             const selection = $getSelection();
             const nativeSelection = window.getSelection();
             if(nativeSelection == null || selection == null) {
-                console.log('close')
                 dispatch(closeFloat());
                 return;
             }
             
             const rawTextContent = selection?.getTextContent().replace(/\n/g, '');
-            console.log('rawTextContent',rawTextContent)
             if (!rawTextContent) {
-                console.log('close')
                 dispatch(closeFloat());
                 return;
             }

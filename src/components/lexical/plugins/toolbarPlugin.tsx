@@ -19,10 +19,9 @@ import {
   UNDO_COMMAND,
 } from "lexical";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { INSERT_PINYIN_COMMAND } from "./pinyinPlugin";
-import { $pinYinFloat } from "../nodes/pinyinNode";
 import { TOGGER_SPEED_COMMAND } from "../nodes/speedNode";
 import { useAppDispatch } from "@/redux/hook";
+import { OPEN_PINYIN_POPUP_COMMAND } from "./pinyinPlugin";
 const LowPriority = 1;
 
 function Divider() {
@@ -92,6 +91,7 @@ export default function ToolbarPlugin() {
       <div
         onClick={() => {
           const state = editor.getEditorState();
+          console.log('state', JSON.stringify(state))
         }}
         className="toolbar-item toolbar-play"
       >
@@ -111,7 +111,7 @@ export default function ToolbarPlugin() {
       <div
         onMouseDown={(e) => {
           e.preventDefault();
-          $pinYinFloat(editor, dispatch);
+          editor.dispatchCommand(OPEN_PINYIN_POPUP_COMMAND, '');
         }}
         className="toolbar-item"
       >
