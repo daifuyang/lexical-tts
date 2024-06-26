@@ -152,7 +152,7 @@ export function $insertPinyin(pinyin: string) {
   }
 }
 
-export function $openPinYinPopup(dispatch: Dispatch<any>, edit: string): void {
+export function $openPinyinPopup(dispatch: Dispatch<any>, edit: string): void {
   // 新增编辑逻辑合并，打开拼音选择弹窗
   let text = edit;
   if (!text) {

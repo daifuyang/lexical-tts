@@ -5,7 +5,7 @@ import {
   COMMAND_PRIORITY_EDITOR
 } from "lexical";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $insertPinyin, $openPinYinPopup, PinyinNode } from "../nodes/pinyinNode";
+import { $insertPinyin, $openPinyinPopup, PinyinNode } from "../nodes/pinyinNode";
 import { mergeRegister } from "@lexical/utils";
 import { useAppDispatch } from "@/redux/hook";
 
@@ -28,7 +28,7 @@ export default function PinyinPlugin(): JSX.Element | null {
       editor.registerCommand<string>(
         OPEN_PINYIN_POPUP_COMMAND,
         (payload) => {
-          $openPinYinPopup(dispatch, payload)
+          $openPinyinPopup(dispatch, payload)
           return true;
         },
         COMMAND_PRIORITY_EDITOR,

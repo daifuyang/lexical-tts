@@ -22,6 +22,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { TOGGER_SPEED_COMMAND } from "../nodes/speedNode";
 import { useAppDispatch } from "@/redux/hook";
 import { OPEN_PINYIN_POPUP_COMMAND } from "./pinyinPlugin";
+import { OPEN_SYMBOL_POPUP_COMMAND } from "./symbolPlugin";
 const LowPriority = 1;
 
 function Divider() {
@@ -36,37 +37,9 @@ export default function ToolbarPlugin() {
   const toolbarRef = useRef(null);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
-  const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [isUnderline, setIsUnderline] = useState(false);
-  const [isStrikethrough, setIsStrikethrough] = useState(false);
-
-  const $updateToolbar = useCallback(() => {
-    const selection = $getSelection();
-    if ($isRangeSelection(selection)) {
-      // Update text format
-      setIsBold(selection.hasFormat("bold"));
-      setIsItalic(selection.hasFormat("italic"));
-      setIsUnderline(selection.hasFormat("underline"));
-      setIsStrikethrough(selection.hasFormat("strikethrough"));
-    }
-  }, []);
 
   useEffect(() => {
     return mergeRegister(
-      editor.registerUpdateListener(({ editorState }) => {
-        editorState.read(() => {
-          $updateToolbar();
-        });
-      }),
-      editor.registerCommand(
-        SELECTION_CHANGE_COMMAND,
-        (_payload, _newEditor) => {
-          $updateToolbar();
-          return false;
-        },
-        LowPriority,
-      ),
       editor.registerCommand(
         CAN_UNDO_COMMAND,
         (payload) => {
@@ -84,7 +57,7 @@ export default function ToolbarPlugin() {
         LowPriority,
       ),
     );
-  }, [editor, $updateToolbar]);
+  }, [editor]);
 
   return (
     <div className="toolbar" ref={toolbarRef}>
@@ -118,8 +91,9 @@ export default function ToolbarPlugin() {
         <img src="/assets/toolbar/pinyin.svg" />
         <span>多音字</span>
       </div>
-      <div onClick={() => {
-        editor.dispatchCommand(TOGGER_SPEED_COMMAND, undefined);
+      <div onClick={(e) => {
+         e.preventDefault();
+          editor.dispatchCommand(OPEN_SYMBOL_POPUP_COMMAND, '');
       }} className="toolbar-item">
         <img src="/assets/toolbar/number.svg" />
         <span>数字</span>
