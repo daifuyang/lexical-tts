@@ -1,6 +1,9 @@
+import { setInitialState } from "@/redux/slice/initialState";
 import { addClassNamesToElement } from "@lexical/utils";
+import { message } from "antd";
 import {
   $applyNodeReplacement,
+  $getSelection,
   EditorConfig,
   ElementNode,
   LexicalEditor,
@@ -56,8 +59,30 @@ export function $createSymbolNode(value: string): SymbolNode {
 
 export function $insertSymbol(value: string) {}
 
-export function $openSymbolPopup(dispatch: Dispatch<any>) {
+function checkStringType(str: string) {
+  const digitRegex = /^[0-9]+$/; // 检查是否为阿拉伯数字
+  const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/; // 检查是否包含特殊符号
 
+  if (digitRegex.test(str)) {
+      return "number";
+  } else if (specialCharRegex.test(str)) {
+      return "symbol";
+  } else {
+      return null;
+  }
+}
+
+export function $openSymbolPopup(dispatch: Dispatch<any>, edit = '') {
+  const selection = $getSelection();
+  if (selection) {
+    const text = selection?.getTextContent();
+    const check = checkStringType(text)
+    if(!check) {
+      message.error("请选择数字或符号！")
+      return
+    }
+    dispatch(setInitialState({ type: "symbol", selectionText: text, value: undefined }));    
+  }
 }
 
 export function $isSymbolNode(node: LexicalNode | null): node is SymbolNode {

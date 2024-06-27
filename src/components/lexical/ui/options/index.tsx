@@ -1,5 +1,6 @@
 import { useAppSelector } from "@/redux/hook";
 import PinyinRadio from "./pinyinRadio";
+import SymbolOption from "./symbolOption";
 
 export default function Options() {
     const initialState = useAppSelector((state) => state.initialState);
@@ -7,8 +8,10 @@ export default function Options() {
     function getContent() {
         if (floatEditType === "pinyin") {
             return <PinyinRadio />;
-          } 
-          return null;
+        }else if(floatEditType === "symbol") {
+            return <SymbolOption />;
+        }
+        return null;
     }
 
     return getContent();

@@ -91,12 +91,12 @@ export default function ToolbarPlugin() {
         <img src="/assets/toolbar/pinyin.svg" />
         <span>多音字</span>
       </div>
-      <div onClick={(e) => {
+      <div onMouseDown={(e) => {
          e.preventDefault();
           editor.dispatchCommand(OPEN_SYMBOL_POPUP_COMMAND, '');
       }} className="toolbar-item">
         <img src="/assets/toolbar/number.svg" />
-        <span>数字</span>
+        <span>数字/符号</span>
       </div>
       <Divider />
       <div className="toolbar-item">
