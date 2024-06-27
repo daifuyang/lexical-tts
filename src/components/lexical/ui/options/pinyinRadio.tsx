@@ -40,8 +40,8 @@ export default function PinyinRadio() {
           }
           if (value) {
             dispatch(setFloatEditValue(value));
+            editor.dispatchCommand(INSERT_PINYIN_COMMAND, value)
           }
-          editor.dispatchCommand(INSERT_PINYIN_COMMAND, value)
         }}
         buttonStyle="solid"
         value={floatEditValue}

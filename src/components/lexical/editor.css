@@ -2,6 +2,7 @@
 @import url("./plugins/toolbar.css");
 @import url("./plugins/treeView.css");
 @import url("./nodes/pinyin.css");
+@import url("./nodes/symbol.css");
 
 .tts-editor-root {
   height: 100vh;

@@ -4,6 +4,7 @@ import { setFloatEditValue } from "@/redux/slice/initialState";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { Menu } from "antd";
 import { useEffect, useState } from "react";
+import { INSERT_SYMBOL_COMMAND, OPEN_SYMBOL_POPUP_COMMAND } from "../../plugins/symbolPlugin";
 
 export default function SymbolOption() {
 
@@ -22,19 +23,23 @@ export default function SymbolOption() {
         }
     }, [selectionText]);
 
-    const items = options?.map((item: any) => {
-        return {
-            key: item.value,
-            label: item.label,
-        }
-    })
-
     return (
-        <Menu items={items} onClick={({item}: any) => {
-            const { value } = item;
-            if (value) {
-                dispatch(setFloatEditValue(value));
-            }
-        }} selectedKeys={[floatEditValue || ""]} style={{ border: "none" }} />
-    );
+        <div>
+            <ul className="rounded-xl bg-white overflow-hidden border">
+                {options?.map((item: any) => {
+                    const {value} = item
+                    return (
+                        <li className="py-2 px-3 cursor-pointer hover:bg-gray-100" key={value}>
+                            <span className="inline-block w-full" onMouseDown={(e) => {
+                                e.preventDefault();
+                                dispatch(setFloatEditValue(value));
+                                editor.dispatchCommand(INSERT_SYMBOL_COMMAND, item)
+                            }}>{item.label}</span>
+                        </li>
+                    )
+                })
+                }
+            </ul>
+        </div>
+    )
 };

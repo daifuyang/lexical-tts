@@ -9,7 +9,13 @@ import { mergeRegister } from "@lexical/utils";
 import { useAppDispatch } from "@/redux/hook";
 import { $insertSymbol, $openSymbolPopup, SymbolNode } from "../nodes/symbolNode";
 
-export const INSERT_SYMBOL_COMMAND: LexicalCommand<string> = createCommand("INSERT_SYMBOL_COMMAND");
+export interface SymbolItem {
+  label?: string;
+  value: string;
+  type: string;
+} 
+
+export const INSERT_SYMBOL_COMMAND: LexicalCommand<SymbolItem> = createCommand("INSERT_SYMBOL_COMMAND");
 export const OPEN_SYMBOL_POPUP_COMMAND: LexicalCommand<string> = createCommand("OPEN_SYMBOL_POPUP_COMMAND");
 
 export default function SymbolPlugin(): JSX.Element | null {
@@ -33,7 +39,7 @@ export default function SymbolPlugin(): JSX.Element | null {
         },
         COMMAND_PRIORITY_EDITOR,
       ),
-      editor.registerCommand<string>(
+      editor.registerCommand<SymbolItem>(
         INSERT_SYMBOL_COMMAND,
         (payload) => {
           $insertSymbol(payload);

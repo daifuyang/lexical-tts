@@ -1,0 +1,29 @@
+.editor-symbol {
+    cursor: pointer;
+    display: inline-block;
+    text-align: center;
+    color: #f6a64e;
+}
+
+.editor-symbol > .symbol-tag {
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+    background-color: #f6a64e;
+    color: #fff;
+    border-radius: 6px;
+    padding: 2px 4px;
+    margin-left: 4px;
+
+}
+
+.editor-symbol > span[data-lexical-text="true"]::before {
+    display: inline-block;
+    content: '「';
+}
+
+
+.editor-symbol > span[data-lexical-text="true"]::after {
+    display: inline-block;
+    content: '」';
+}

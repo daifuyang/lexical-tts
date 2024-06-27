@@ -4,27 +4,42 @@ import { message } from "antd";
 import {
   $applyNodeReplacement,
   $getSelection,
+  $isRangeSelection,
+  $isTextNode,
   EditorConfig,
   ElementNode,
   LexicalEditor,
-  LexicalNode
+  LexicalNode,
+  SerializedElementNode,
+  Spread
 } from "lexical";
 import { Dispatch } from "react";
+import { SymbolItem } from "../plugins/symbolPlugin";
+
+export type SerializedSymbolNode = Spread<
+  {
+    value: string;
+    readType: string;
+  },
+  SerializedElementNode
+>;
 
 export class SymbolNode extends ElementNode {
+  __readType: string; //读法类型
   __value: string; //读法
 
   static getType(): string {
-    return "symbol-node";
+    return "symbolNode";
   }
 
   static clone(node: SymbolNode): SymbolNode {
-    return new SymbolNode(node.__value, node.__key);
+    return new SymbolNode(node.__value, node.__readType, node.__key);
   }
 
-  constructor(value: string, key?: string) {
+  constructor(value: string, readType: string, key?: string) {
     super(key);
     this.__value = value;
+    this.__readType = readType;
   }
 
   createDOM(config: EditorConfig, editor: LexicalEditor): HTMLElement {
@@ -42,46 +57,146 @@ export class SymbolNode extends ElementNode {
       selection?.addRange(range); // 添加新的选区
     });
     element.contentEditable = "false";
+    element.dataset.symbol = `[${this.getReadType()}]`;
     addClassNamesToElement(element, config.theme.symbol);
+
+    const tag = document.createElement("span");
+    tag.className = "symbol-tag";
+
+    const tagText = document.createElement("span");
+    tagText.className = "text-sm"
+    tagText.innerText = this.getReadType();
+
+    const closeSvg = `<svg xmlns="http://www.w3.org/2000/svg" fill="#000" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 inline-block">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+</svg>
+`
+    const close = new DOMParser().parseFromString(closeSvg, "image/svg+xml").documentElement;
+
+    tag.appendChild(tagText);
+    tag.appendChild(close);
+
+    element.appendChild(tag);
     return element;
   }
 
   updateDOM(prevNode: SymbolNode, dom: HTMLElement): boolean {
     // Returning false tells Lexical that this node does not need its
     // DOM element replacing with a new copy from createDOM.
+    dom.dataset.symbol = `[${this.getReadType()}]`;
+    return true;
+  }
+
+  static importJSON(serializedNode: SerializedSymbolNode): SymbolNode {
+    const node = $createSymbolNode({
+      value: serializedNode.value,
+      type: serializedNode.readType
+    });
+    return node;
+  }
+
+  exportJSON(): SerializedSymbolNode {
+    return {
+      ...super.exportJSON(),
+      value: this.getValue(),
+      readType: this.getReadType(),
+      type: this.getType(),
+      version: 1
+    };
+  }
+
+  isInline(): true {
+    return true;
+  }
+
+  canBeEmpty(): false {
     return false;
   }
+
+  canInsertTextBefore(): false {
+    return false;
+  }
+
+  canInsertTextAfter(): false {
+    return false;
+  }
+
+  setValue(value: string): void {
+    const self = this.getWritable();
+    self.__value = value;
+  }
+
+  getValue(): string {
+    const self = this.getLatest();
+    return self.__value;
+  }
+
+  setReadType(readType: string): void {
+    const self = this.getWritable();
+    self.__readType = readType;
+  }
+
+  getReadType(): string {
+    const self = this.getLatest();
+    return self.__readType;
+  }
+
 }
 
-export function $createSymbolNode(value: string): SymbolNode {
-  return $applyNodeReplacement(new SymbolNode(value));
+export function $createSymbolNode(item: SymbolItem): SymbolNode {
+  return $applyNodeReplacement(new SymbolNode(item.value, item.type));
 }
 
-export function $insertSymbol(value: string) {}
+export function $insertSymbol(item: SymbolItem) {
+  const selection = $getSelection();
+  if (!$isRangeSelection(selection)) {
+    return;
+  }
+
+  const selText = selection.getTextContent();
+  const nodes = selection.extract();
+
+  for (let index = 0; index < nodes.length; index++) {
+    const node = nodes[index];
+    const parent = node.getParent();
+    if ($isTextNode(node) && node.getTextContent() == selText) {
+      if ($isSymbolNode(parent)) {
+        parent.setValue(item.value);
+        parent.setReadType(item.type);
+        return;
+      } else {
+        const symbolNode = $createSymbolNode(item);
+        node.insertBefore(symbolNode);
+        symbolNode.append(node);
+        return;
+      }
+    }
+  }
+}
 
 function checkStringType(str: string) {
   const digitRegex = /^[0-9]+$/; // 检查是否为阿拉伯数字
   const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/; // 检查是否包含特殊符号
 
   if (digitRegex.test(str)) {
-      return "number";
+    return "number";
   } else if (specialCharRegex.test(str)) {
-      return "symbol";
+    return "symbol";
   } else {
-      return null;
+    return null;
   }
 }
 
-export function $openSymbolPopup(dispatch: Dispatch<any>, edit = '') {
+export function $openSymbolPopup(dispatch: Dispatch<any>, edit = "") {
   const selection = $getSelection();
   if (selection) {
     const text = selection?.getTextContent();
-    const check = checkStringType(text)
-    if(!check) {
-      message.error("请选择数字或符号！")
-      return
+    const check = checkStringType(text);
+    if (!check) {
+      message.error("请选择数字或符号！");
+      return;
     }
-    dispatch(setInitialState({ type: "symbol", selectionText: text, value: undefined }));    
+    dispatch(setInitialState({ type: "symbol", selectionText: text, value: undefined }));
   }
 }
 
