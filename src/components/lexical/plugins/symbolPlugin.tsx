@@ -7,20 +7,16 @@ import {
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
 import { useAppDispatch } from "@/redux/hook";
-import { $insertSymbol, $openSymbolPopup, SymbolNode } from "../nodes/symbolNode";
+import { $openSymbolPopup, $insertSymbol, SymbolNode, $removeSymbol } from "../nodes/symbolNode";
+import { InsertSymbolPayload, RemoveSymbolPayload, SymbolPopupPayload } from "../typings/symbol";
 
-export interface SymbolItem {
-  label?: string;
-  value: string;
-  type: string;
-} 
+export const INSERT_SYMBOL_COMMAND: LexicalCommand<InsertSymbolPayload> = createCommand("INSERT_SYMBOL_COMMAND");
+export const REMOVE_SYMBOL_COMMAND: LexicalCommand<RemoveSymbolPayload> = createCommand("REMOVE_SYMBOL_COMMAND");
 
-export const INSERT_SYMBOL_COMMAND: LexicalCommand<SymbolItem> = createCommand("INSERT_SYMBOL_COMMAND");
-export const OPEN_SYMBOL_POPUP_COMMAND: LexicalCommand<string> = createCommand("OPEN_SYMBOL_POPUP_COMMAND");
+export const OPEN_SYMBOL_POPUP_COMMAND: LexicalCommand<SymbolPopupPayload> = createCommand("OPEN_SYMBOL_POPUP_COMMAND");
 
 export default function SymbolPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
-
   const dispatch = useAppDispatch()
 
   useEffect(() => {
@@ -31,7 +27,7 @@ export default function SymbolPlugin(): JSX.Element | null {
     }
 
     const unregister = mergeRegister(
-      editor.registerCommand<string>(
+      editor.registerCommand<SymbolPopupPayload>(
         OPEN_SYMBOL_POPUP_COMMAND,
         (payload) => {
           $openSymbolPopup(dispatch, payload)
@@ -39,14 +35,22 @@ export default function SymbolPlugin(): JSX.Element | null {
         },
         COMMAND_PRIORITY_EDITOR,
       ),
-      editor.registerCommand<SymbolItem>(
+      editor.registerCommand<InsertSymbolPayload>(
         INSERT_SYMBOL_COMMAND,
         (payload) => {
           $insertSymbol(payload);
           return true;
         },
         COMMAND_PRIORITY_EDITOR,
-      )
+      ),
+      editor.registerCommand<RemoveSymbolPayload>(
+        REMOVE_SYMBOL_COMMAND,
+        (payload) => {
+          $removeSymbol(payload);
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR,
+      ),
     )
 
     return () => {

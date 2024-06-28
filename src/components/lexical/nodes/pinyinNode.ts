@@ -11,10 +11,12 @@ import {
   LexicalEditor,
   Spread,
   SerializedElementNode,
-  $isTextNode
+  $isTextNode,
+  $getNodeByKey
 } from "lexical";
 import { Dispatch } from "react";
 import { OPEN_PINYIN_POPUP_COMMAND } from "../plugins/pinyinPlugin";
+import { PinyinPopupPayload, RemovePinyinPayload } from "../typings/pinyin";
 
 export type SerializedPinyinNode = Spread<
   {
@@ -42,6 +44,7 @@ export class PinyinNode extends ElementNode {
     // Define the DOM element here
     const element = document.createElement("span");
     const text = this.getTextContent();
+    const pinyin = this.getPinyin();
     element.addEventListener("click", () => {
       // 创建一个新的 Range 对象
       const range = document.createRange();
@@ -52,7 +55,10 @@ export class PinyinNode extends ElementNode {
       selection?.removeAllRanges(); // 清除任何已有的选区
       selection?.addRange(range); // 添加新的选区
 
-      editor.dispatchCommand(OPEN_PINYIN_POPUP_COMMAND, text);
+      editor.dispatchCommand(OPEN_PINYIN_POPUP_COMMAND, {
+        text,
+        pinyin,
+      });
     });
     element.contentEditable = "false";
     element.dataset.pinyin = `[${this.getPinyin()}]`;
@@ -152,9 +158,28 @@ export function $insertPinyin(pinyin: string) {
   }
 }
 
-export function $openPinyinPopup(dispatch: Dispatch<any>, edit: string): void {
+export function $removePinyin( payload: RemovePinyinPayload ) {
+  const { key } = payload;
+  const symbolNode = $getNodeByKey(key);
+  if ($isPinyinNode(symbolNode)) {
+    const nodes = (symbolNode as PinyinNode).getChildren();
+    // Remove symbolNodes
+    nodes.forEach((node) => {
+      const parent = node.getParent();
+      if ($isPinyinNode(parent)) {
+        const children = parent.getChildren();
+        for (let i = 0; i < children.length; i++) {
+          parent.insertBefore(children[i]);
+        }
+        parent.remove();
+      }
+    });
+  }
+
+}
+export function $openPinyinPopup(dispatch: Dispatch<any>, payload: PinyinPopupPayload): void {
   // 新增编辑逻辑合并，打开拼音选择弹窗
-  let text = edit;
+  let {text, pinyin} = payload;
   if (!text) {
     const selection = $getSelection();
     if (selection) {
@@ -174,7 +199,7 @@ export function $openPinyinPopup(dispatch: Dispatch<any>, edit: string): void {
       }
     }
   }
-  dispatch(setInitialState({ type: "pinyin", selectionText: text, value: undefined }));
+  dispatch(setInitialState({ type: "pinyin", selectionText: text, value: pinyin }));
 }
 
 export function $isPinyinNode(node: LexicalNode | null | undefined): node is PinyinNode {

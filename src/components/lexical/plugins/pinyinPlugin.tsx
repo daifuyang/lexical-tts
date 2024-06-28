@@ -5,18 +5,18 @@ import {
   COMMAND_PRIORITY_EDITOR
 } from "lexical";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $insertPinyin, $openPinyinPopup, PinyinNode } from "../nodes/pinyinNode";
 import { mergeRegister } from "@lexical/utils";
 import { useAppDispatch } from "@/redux/hook";
+import { $insertPinyin, $openPinyinPopup, $removePinyin, PinyinNode } from "../nodes/pinyinNode";
+import { PinyinPopupPayload, RemovePinyinPayload } from "../typings/pinyin";
 
 export const INSERT_PINYIN_COMMAND: LexicalCommand<string> = createCommand("INSERT_PINYIN_COMMAND");
-export const OPEN_PINYIN_POPUP_COMMAND: LexicalCommand<string> = createCommand("OPEN_PINYIN_POPUP_COMMAND");
+export const REMOVE_PINYIN_COMMAND: LexicalCommand<RemovePinyinPayload> = createCommand("REMOVE_PINYIN_COMMAND");
+export const OPEN_PINYIN_POPUP_COMMAND: LexicalCommand<PinyinPopupPayload> = createCommand("OPEN_PINYIN_POPUP_COMMAND");
 
 export default function PinyinPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
-
   const dispatch = useAppDispatch()
-
   useEffect(() => {
     if (!editor.hasNodes([PinyinNode])) {
       throw new Error(
@@ -25,7 +25,7 @@ export default function PinyinPlugin(): JSX.Element | null {
     }
 
     const unregister = mergeRegister(
-      editor.registerCommand<string>(
+      editor.registerCommand<PinyinPopupPayload>(
         OPEN_PINYIN_POPUP_COMMAND,
         (payload) => {
           $openPinyinPopup(dispatch, payload)
@@ -37,6 +37,14 @@ export default function PinyinPlugin(): JSX.Element | null {
         INSERT_PINYIN_COMMAND,
         (payload) => {
           $insertPinyin(payload);
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR,
+      ),
+      editor.registerCommand<RemovePinyinPayload>(
+        REMOVE_PINYIN_COMMAND,
+        (payload) => {
+          $removePinyin(payload);
           return true;
         },
         COMMAND_PRIORITY_EDITOR,

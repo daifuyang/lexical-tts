@@ -1,10 +1,12 @@
-import { getNumberOptions } from "@/components/lexical.bak/utils/number";
+import { getNumberOptions } from "@/components/lexical/utils/number";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { setFloatEditValue } from "@/redux/slice/initialState";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { Menu } from "antd";
 import { useEffect, useState } from "react";
-import { INSERT_SYMBOL_COMMAND, OPEN_SYMBOL_POPUP_COMMAND } from "../../plugins/symbolPlugin";
+
+import classNames from "classnames";
+
+import { INSERT_SYMBOL_COMMAND } from "../../plugins/symbolPlugin";
 
 export default function SymbolOption() {
 
@@ -27,9 +29,12 @@ export default function SymbolOption() {
         <div>
             <ul className="rounded-xl bg-white overflow-hidden border">
                 {options?.map((item: any) => {
-                    const {value} = item
+                    const { value } = item
                     return (
-                        <li className="py-2 px-3 cursor-pointer hover:bg-gray-100" key={value}>
+                        <li style={{ backgroundColor: floatEditValue === value ? '#369eff' : '' }} className={classNames({
+                            'text-white': floatEditValue === value,
+                            [`py-2 px-3 cursor-pointer hover:bg-gray-100`]: true
+                        })} key={value}>
                             <span className="inline-block w-full" onMouseDown={(e) => {
                                 e.preventDefault();
                                 dispatch(setFloatEditValue(value));

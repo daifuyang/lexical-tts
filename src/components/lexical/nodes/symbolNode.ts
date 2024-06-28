@@ -3,6 +3,7 @@ import { addClassNamesToElement } from "@lexical/utils";
 import { message } from "antd";
 import {
   $applyNodeReplacement,
+  $getNodeByKey,
   $getSelection,
   $isRangeSelection,
   $isTextNode,
@@ -14,7 +15,12 @@ import {
   Spread
 } from "lexical";
 import { Dispatch } from "react";
-import { SymbolItem } from "../plugins/symbolPlugin";
+import {
+  INSERT_SYMBOL_COMMAND,
+  OPEN_SYMBOL_POPUP_COMMAND,
+  REMOVE_SYMBOL_COMMAND
+} from "../plugins/symbolPlugin";
+import { InsertSymbolPayload, RemoveSymbolPayload, SymbolPopupPayload } from "../typings/symbol";
 
 export type SerializedSymbolNode = Spread<
   {
@@ -46,6 +52,8 @@ export class SymbolNode extends ElementNode {
     // Define the DOM element here
     const element = document.createElement("span");
     const text = this.getTextContent();
+    const value = this.getValue();
+    const key = this.getKey();
     element.addEventListener("click", () => {
       // 创建一个新的 Range 对象
       const range = document.createRange();
@@ -55,6 +63,11 @@ export class SymbolNode extends ElementNode {
       const selection = window.getSelection();
       selection?.removeAllRanges(); // 清除任何已有的选区
       selection?.addRange(range); // 添加新的选区
+
+      editor.dispatchCommand(OPEN_SYMBOL_POPUP_COMMAND, {
+        text,
+        value
+      });
     });
     element.contentEditable = "false";
     element.dataset.symbol = `[${this.getReadType()}]`;
@@ -64,14 +77,18 @@ export class SymbolNode extends ElementNode {
     tag.className = "symbol-tag";
 
     const tagText = document.createElement("span");
-    tagText.className = "text-sm"
+    tagText.className = "text-sm";
     tagText.innerText = this.getReadType();
 
     const closeSvg = `<svg xmlns="http://www.w3.org/2000/svg" fill="#000" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 inline-block">
   <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
 </svg>
-`
+`;
     const close = new DOMParser().parseFromString(closeSvg, "image/svg+xml").documentElement;
+    close.addEventListener("click", (e) => {
+      e.stopPropagation();
+      editor.dispatchCommand(REMOVE_SYMBOL_COMMAND, { key });
+    });
 
     tag.appendChild(tagText);
     tag.appendChild(close);
@@ -140,29 +157,26 @@ export class SymbolNode extends ElementNode {
     const self = this.getLatest();
     return self.__readType;
   }
-
 }
 
-export function $createSymbolNode(item: SymbolItem): SymbolNode {
-  return $applyNodeReplacement(new SymbolNode(item.value, item.type));
+export function $createSymbolNode(item: InsertSymbolPayload): SymbolNode {
+  return $applyNodeReplacement(new SymbolNode(item?.value || "", item?.type || ""));
 }
 
-export function $insertSymbol(item: SymbolItem) {
+export function $insertSymbol(item: InsertSymbolPayload) {
   const selection = $getSelection();
   if (!$isRangeSelection(selection)) {
     return;
   }
-
-  const selText = selection.getTextContent();
   const nodes = selection.extract();
-
+  const selText = selection.getTextContent();
   for (let index = 0; index < nodes.length; index++) {
     const node = nodes[index];
     const parent = node.getParent();
     if ($isTextNode(node) && node.getTextContent() == selText) {
       if ($isSymbolNode(parent)) {
-        parent.setValue(item.value);
-        parent.setReadType(item.type);
+        parent.setValue(item?.value || "");
+        parent.setReadType(item?.type || "");
         return;
       } else {
         const symbolNode = $createSymbolNode(item);
@@ -171,6 +185,25 @@ export function $insertSymbol(item: SymbolItem) {
         return;
       }
     }
+  }
+}
+
+export function $removeSymbol(payload: RemoveSymbolPayload) {
+  const { key } = payload;
+  const symbolNode = $getNodeByKey(key);
+  if ($isSymbolNode(symbolNode)) {
+    const nodes = (symbolNode as SymbolNode).getChildren();
+    // Remove symbolNodes
+    nodes.forEach((node) => {
+      const parent = node.getParent();
+      if ($isSymbolNode(parent)) {
+        const children = parent.getChildren();
+        for (let i = 0; i < children.length; i++) {
+          parent.insertBefore(children[i]);
+        }
+        parent.remove();
+      }
+    });
   }
 }
 
@@ -187,17 +220,20 @@ function checkStringType(str: string) {
   }
 }
 
-export function $openSymbolPopup(dispatch: Dispatch<any>, edit = "") {
-  const selection = $getSelection();
-  if (selection) {
-    const text = selection?.getTextContent();
-    const check = checkStringType(text);
-    if (!check) {
-      message.error("请选择数字或符号！");
-      return;
+export function $openSymbolPopup(dispatch: Dispatch<any>, payload: SymbolPopupPayload) {
+  let { text, value } = payload;
+  if (!text) {
+    const selection = $getSelection();
+    if (selection) {
+      text = selection?.getTextContent();
+      const check = checkStringType(text);
+      if (!check) {
+        message.error("请选择数字或符号！");
+        return;
+      }
     }
-    dispatch(setInitialState({ type: "symbol", selectionText: text, value: undefined }));
   }
+  dispatch(setInitialState({ type: "symbol", selectionText: text, value }));
 }
 
 export function $isSymbolNode(node: LexicalNode | null): node is SymbolNode {
