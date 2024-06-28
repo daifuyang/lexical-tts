@@ -69,7 +69,6 @@ export class PinyinNode extends ElementNode {
   updateDOM(prevNode: PinyinNode, dom: HTMLElement): boolean {
     // Returning false tells Lexical that this node does not need its
     // DOM element replacing with a new copy from createDOM.
-    dom.dataset.pinyin = `[${this.getPinyin()}]`;
     return true;
   }
 
@@ -177,7 +176,8 @@ export function $removePinyin( payload: RemovePinyinPayload ) {
   }
 
 }
-export function $openPinyinPopup(dispatch: Dispatch<any>, payload: PinyinPopupPayload): void {
+
+export function $openPinyinPopup(dispatch: Dispatch<any>, payload: PinyinPopupPayload = {text: '', pinyin: ''}): void {
   // 新增编辑逻辑合并，打开拼音选择弹窗
   let {text, pinyin} = payload;
   if (!text) {

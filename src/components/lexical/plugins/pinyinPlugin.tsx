@@ -12,7 +12,7 @@ import { PinyinPopupPayload, RemovePinyinPayload } from "../typings/pinyin";
 
 export const INSERT_PINYIN_COMMAND: LexicalCommand<string> = createCommand("INSERT_PINYIN_COMMAND");
 export const REMOVE_PINYIN_COMMAND: LexicalCommand<RemovePinyinPayload> = createCommand("REMOVE_PINYIN_COMMAND");
-export const OPEN_PINYIN_POPUP_COMMAND: LexicalCommand<PinyinPopupPayload> = createCommand("OPEN_PINYIN_POPUP_COMMAND");
+export const OPEN_PINYIN_POPUP_COMMAND: LexicalCommand<PinyinPopupPayload | undefined> = createCommand("OPEN_PINYIN_POPUP_COMMAND");
 
 export default function PinyinPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();

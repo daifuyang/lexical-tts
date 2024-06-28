@@ -6,81 +6,82 @@ import {
   $isElementNode,
   $isRangeSelection,
   COMMAND_PRIORITY_EDITOR,
-  ElementNode
+  createCommand,
+  ElementNode,
+  LexicalCommand
 } from "lexical";
 
 import { useEffect } from "react";
 import {
-  $createSpeedNode,
+  $insertSpeed,
   $isSpeedNode,
+  $removeSpeed,
+  $openSpeedPopup,
   SpeedNode,
-  TOGGER_SPEED_COMMAND
 } from "../nodes/speedNode";
+import { mergeRegister } from "@lexical/utils";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { SpeedPopupPayload } from "../typings/speed";
+import { $getNodeByKey } from 'lexical';
 
-interface Payload {
-  data: string | number;
-}
+export const INSERT_SPEED_COMMAND: LexicalCommand<string> = createCommand("INSERT_SPEED_COMMAND");
+export const UPDATE_SPEED_COMMAND: LexicalCommand<SpeedPopupPayload | undefined> = createCommand("UPDATE_SPEED_COMMAND");
+export const REMOVE_SPEED_COMMAND: LexicalCommand<string | undefined> = createCommand("REMOVE_SPEED_COMMAND");
+export const OPEN_SPEED_POPUP_COMMAND: LexicalCommand<SpeedPopupPayload | undefined> = createCommand("OPEN_SPEED_POPUP_COMMAND");
 
 export default function SpeedPlugin(props: any) {
   const [editor] = useLexicalComposerContext();
+  const dispatch = useAppDispatch()
   useEffect(() => {
     if (!editor.hasNodes([SpeedNode])) {
       throw new Error("SpeedPlugin: SpeedNode not registered on editor (initialConfig.nodes)");
     }
-    return editor.registerCommand(
-      TOGGER_SPEED_COMMAND,
-      (payload: Payload) => {
-        const selection = $getSelection();
-        if (!$isRangeSelection(selection)) {
-          return false;
-        }
 
-        const nodes = selection.extract();
+    const unregister = mergeRegister(
+      editor.registerCommand(
+        INSERT_SPEED_COMMAND,
+        (payload: string) => {
+          $insertSpeed(payload);
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand(
+        UPDATE_SPEED_COMMAND,
+        (payload: SpeedPopupPayload) => {
 
-        // 先删除旧的
-        nodes.forEach((node) => {
-          const parent = node.getParent();
-          if ($isSpeedNode(parent)) {
-            const children = parent.getChildren();
-            for (let i = 0; i < children.length; i++) {
-              parent.insertBefore(children[i]);
-            }
-            parent.remove();
-          }
-        });
-
-        // 在追加当前组件
-        let prevParent: ElementNode | SpeedNode | null = null;
-
-        const speedNumber = payload?.data || 0;
-
-        const speedNode = $createSpeedNode(Number(speedNumber));
-        nodes.forEach((node) => {
-          const parent = node.getParent();
-          // 如果父元素都是voiceNode,则将节点安全的插入到speedNode下
-          if (
-            parent === speedNode ||
-            parent === null ||
-            ($isElementNode(node) && !node.isInline())
-          ) {
-            return false;
+          const { key, speed } = payload
+          const node = $getNodeByKey(key)
+          if ($isSpeedNode(node)) {
+            node.setSpeed(Number(speed))
           }
 
-          if (!parent.is(prevParent)) {
-            prevParent = parent;
-            node.insertBefore(speedNode);
-          }
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand(
+        REMOVE_SPEED_COMMAND,
+        (key) => {
+          $removeSpeed(key);
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand<SpeedPopupPayload>(
+        OPEN_SPEED_POPUP_COMMAND,
+        (payload) => {
+          $openSpeedPopup(dispatch, payload);
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR,
+      ),
+    )
 
-          if (speedNode !== null) {
-            console.log('append node',node)
-            speedNode.append(node);
-          }
-        });
+    return () => {
+      unregister();
+    };
 
-        return true;
-      },
-      COMMAND_PRIORITY_EDITOR
-    );
   }, [editor]);
 
   return null;

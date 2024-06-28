@@ -3,6 +3,7 @@
 @import url("./plugins/treeView.css");
 @import url("./nodes/pinyin.css");
 @import url("./nodes/symbol.css");
+@import url("./nodes/speed.css");
 
 .tts-editor-root {
   height: 100vh;
@@ -43,4 +44,10 @@
   user-select: none;
   display: inline-block;
   pointer-events: none;
+}
+
+.tag-close-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
 }

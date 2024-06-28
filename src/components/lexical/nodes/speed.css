@@ -1,32 +1,36 @@
-.editor-symbol {
+.editor-speed {
     cursor: pointer;
     display: inline-block;
     text-align: center;
-    color: #f6a64e;
 }
 
-.editor-symbol > .symbol-tag {
+.editor-speed > .speed-tag {
     display: inline-flex;
     align-items: center;
     user-select: none;
-    background-color: #f6a64e;
+    background-color: #e96c5e;
     color: #fff;
     border-radius: 6px;
     padding: 2px 4px;
     margin-left: 4px;
 }
 
-.editor-symbol > .symbol-tag > .symbol-tag-text {
+.editor-speed > .speed-tag > .speed-tag-text {
     font-size: 14px;
 }
 
-.editor-symbol > span[data-lexical-text="true"]::before {
+.editor-speed > .wrap-node {
+   position: relative;
+}
+
+.editor-speed > .wrap-node::before {
+    color: #e96c5e;
     display: inline-block;
     content: '「';
 }
 
-
-.editor-symbol > span[data-lexical-text="true"]::after {
+.editor-speed > .wrap-node::after {
+    color: #e96c5e;
     display: inline-block;
     content: '」';
 }

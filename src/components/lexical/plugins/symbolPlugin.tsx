@@ -12,8 +12,7 @@ import { InsertSymbolPayload, RemoveSymbolPayload, SymbolPopupPayload } from "..
 
 export const INSERT_SYMBOL_COMMAND: LexicalCommand<InsertSymbolPayload> = createCommand("INSERT_SYMBOL_COMMAND");
 export const REMOVE_SYMBOL_COMMAND: LexicalCommand<RemoveSymbolPayload> = createCommand("REMOVE_SYMBOL_COMMAND");
-
-export const OPEN_SYMBOL_POPUP_COMMAND: LexicalCommand<SymbolPopupPayload> = createCommand("OPEN_SYMBOL_POPUP_COMMAND");
+export const OPEN_SYMBOL_POPUP_COMMAND: LexicalCommand<SymbolPopupPayload | undefined> = createCommand("OPEN_SYMBOL_POPUP_COMMAND");
 
 export default function SymbolPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();

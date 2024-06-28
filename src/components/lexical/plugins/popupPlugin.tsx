@@ -10,16 +10,11 @@ import {
   SELECTION_CHANGE_COMMAND
 } from "lexical";
 import * as React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { getDOMRangeRect } from "../utils/dom";
 import { setPopupPosition } from "../utils/setPopupPosition";
 import { mergeRegister } from "@lexical/utils";
-import { getSelectedNode } from "../utils/getSelectedNode";
-import { useAppSelector } from "@/redux/hook";
-import { closeFloat, FloatEditType } from "@/redux/slice/initialState";
-
-
 
 interface PopopProps {
   editor: LexicalEditor;

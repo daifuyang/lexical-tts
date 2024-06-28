@@ -1,18 +1,28 @@
 import {
   $applyNodeReplacement,
+  $getNodeByKey,
+  $getSelection,
+  $isElementNode,
   $isRangeSelection,
   BaseSelection,
+  EditorConfig,
   ElementNode,
-  LexicalCommand,
+  LexicalEditor,
   LexicalNode,
   NodeKey,
   RangeSelection,
   SerializedElementNode,
-  Spread,
-  createCommand
+  Spread
 } from "lexical";
 
 import { addClassNamesToElement } from "@lexical/utils";
+import { Dispatch } from "react";
+import { setInitialState } from "@/redux/slice/initialState";
+import { SpeedPopupPayload } from "../typings/speed";
+import { $insertWrapNode, WrapNode } from "./wrapNode";
+import { useTagDom } from "../ui/tag";
+import { selectNode } from "../utils/selection";
+import { OPEN_SPEED_POPUP_COMMAND, REMOVE_SPEED_COMMAND } from "../plugins/speedPlugin";
 
 export type SerializedSpeedNode = Spread<
   {
@@ -37,22 +47,36 @@ export class SpeedNode extends ElementNode {
     this.__speed = speed;
   }
 
-  createDOM(): HTMLElement {
+  createDOM(config: EditorConfig, editor: LexicalEditor): HTMLElement {
     // Define the DOM element here
-    const wrapper = document.createElement("span");
-    wrapper.contentEditable = "false";
-    // 创建一个新的div作为容器
-    const dom = document.createElement("span");
-    wrapper.appendChild(dom);
-    addClassNamesToElement(dom, "speed-node");
-    wrapper.style.background = "#ff0000";
-    return wrapper;
+    const key = this.getKey();
+    const speed = this.getSpeed();
+    const element = document.createElement("span");
+
+    const tag = useTagDom({
+      tagClassName: "speed-tag",
+      textClassName: "speed-tag-text",
+      tagText: `语速${speed}`,
+      onTagClick: () => {
+        selectNode(element);
+        editor.dispatchCommand(OPEN_SPEED_POPUP_COMMAND, {
+          key,
+          speed: speed.toString()
+        });
+      },
+      onClose: () => {
+        editor.dispatchCommand(REMOVE_SPEED_COMMAND, key)
+      }
+    });
+    element.appendChild(tag);
+    addClassNamesToElement(element, config.theme.speed);
+    return element;
   }
 
   updateDOM(prevNode: SpeedNode, dom: HTMLElement): boolean {
     // Returning false tells Lexical that this node does not need its
     // DOM element replacing with a new copy from createDOM.
-    return false;
+    return true;
   }
 
   static importJSON(serializedNode: SerializedSpeedNode): SpeedNode {
@@ -70,8 +94,14 @@ export class SpeedNode extends ElementNode {
     };
   }
 
+  setSpeed(speed: number): void {
+    const self = this.getWritable();
+    self.__speed = speed;
+  }
+
   getSpeed(): number {
-    return this.__speed;
+    const self = this.getLatest();
+    return self.__speed;
   }
 
   insertNewAfter(_: RangeSelection, restoreSelection = true): null | ElementNode {
@@ -93,10 +123,6 @@ export class SpeedNode extends ElementNode {
   }
 
   isInline(): true {
-    return true;
-  }
-
-  isSegmented(): true {
     return true;
   }
 
@@ -124,9 +150,32 @@ export function $createSpeedNode(speed: number): SpeedNode {
   return $applyNodeReplacement(new SpeedNode(speed));
 }
 
-export const TOGGER_SPEED_COMMAND: LexicalCommand<any> = createCommand("TOGGER_SPEED_COMMAND");
+export function $insertSpeed(speed: string) {
+  const speedNode = $createSpeedNode(Number(speed));
+  $insertWrapNode(speedNode);
+}
 
-export function toggleSpeed() {}
+// 删除局部变速
+export function $removeSpeed(key: string) {
+  const speedNode = $getNodeByKey(key);
+  if ($isSpeedNode(speedNode)) {
+    const nodes = (speedNode as SpeedNode).getChildren();
+    if(nodes.length > 0) {
+      const parent = nodes[0];
+      const wrapNodes = (parent as WrapNode)?.getChildren();
+      for (let i = 0; i < wrapNodes.length; i++) {
+        speedNode.insertBefore(wrapNodes[i]);
+      }
+      speedNode.remove();
+    }
+  }
+}
+
+export function $openSpeedPopup(dispatch: Dispatch<any>, payload: SpeedPopupPayload = { speed: '0', key: ""}): void {
+  // 新增编辑逻辑合并，打开拼音选择弹窗
+  const { speed, key } = payload;
+  dispatch(setInitialState({ type: "speed", selectionText: "", nodeKey: key, value: speed }));
+}
 
 /**
  * Determines if node is a LinkNode.

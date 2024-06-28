@@ -8,21 +8,14 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
 import {
-  $getSelection,
-  $isRangeSelection,
   CAN_REDO_COMMAND,
   CAN_UNDO_COMMAND,
-  FORMAT_ELEMENT_COMMAND,
-  FORMAT_TEXT_COMMAND,
-  REDO_COMMAND,
-  SELECTION_CHANGE_COMMAND,
-  UNDO_COMMAND,
 } from "lexical";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { TOGGER_SPEED_COMMAND } from "../nodes/speedNode";
+import { useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "@/redux/hook";
 import { OPEN_PINYIN_POPUP_COMMAND } from "./pinyinPlugin";
 import { OPEN_SYMBOL_POPUP_COMMAND } from "./symbolPlugin";
+import { OPEN_SPEED_POPUP_COMMAND } from "./speedPlugin";
 const LowPriority = 1;
 
 function Divider() {
@@ -84,7 +77,7 @@ export default function ToolbarPlugin() {
       <div
         onMouseDown={(e) => {
           e.preventDefault();
-          editor.dispatchCommand(OPEN_PINYIN_POPUP_COMMAND, '');
+          editor.dispatchCommand(OPEN_PINYIN_POPUP_COMMAND, undefined);
         }}
         className="toolbar-item"
       >
@@ -92,14 +85,17 @@ export default function ToolbarPlugin() {
         <span>多音字</span>
       </div>
       <div onMouseDown={(e) => {
-         e.preventDefault();
-          editor.dispatchCommand(OPEN_SYMBOL_POPUP_COMMAND, '');
+        e.preventDefault();
+        editor.dispatchCommand(OPEN_SYMBOL_POPUP_COMMAND, undefined);
       }} className="toolbar-item">
         <img src="/assets/toolbar/number.svg" />
         <span>数字/符号</span>
       </div>
       <Divider />
-      <div className="toolbar-item">
+      <div onMouseDown={(e) => {
+        e.preventDefault();
+        editor.dispatchCommand(OPEN_SPEED_POPUP_COMMAND, undefined);
+      }} className="toolbar-item">
         <img src="/assets/toolbar/speed.svg" />
         <span>局部变速</span>
       </div>

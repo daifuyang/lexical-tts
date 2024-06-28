@@ -21,6 +21,8 @@ import {
   REMOVE_SYMBOL_COMMAND
 } from "../plugins/symbolPlugin";
 import { InsertSymbolPayload, RemoveSymbolPayload, SymbolPopupPayload } from "../typings/symbol";
+import { useTagDom } from "../ui/tag";
+import { selectNode } from "../utils/selection";
 
 export type SerializedSymbolNode = Spread<
   {
@@ -54,16 +56,9 @@ export class SymbolNode extends ElementNode {
     const text = this.getTextContent();
     const value = this.getValue();
     const key = this.getKey();
-    element.addEventListener("click", () => {
-      // 创建一个新的 Range 对象
-      const range = document.createRange();
-      range.selectNodeContents(element); // 设置 Range 为包含被点击的 span 的内容
-
-      // 获取当前的 Selection 对象
-      const selection = window.getSelection();
-      selection?.removeAllRanges(); // 清除任何已有的选区
-      selection?.addRange(range); // 添加新的选区
-
+    element.addEventListener("click", (e) => {
+      e.stopPropagation();
+      selectNode(element);
       editor.dispatchCommand(OPEN_SYMBOL_POPUP_COMMAND, {
         text,
         value
@@ -73,26 +68,15 @@ export class SymbolNode extends ElementNode {
     element.dataset.symbol = `[${this.getReadType()}]`;
     addClassNamesToElement(element, config.theme.symbol);
 
-    const tag = document.createElement("span");
-    tag.className = "symbol-tag";
-
-    const tagText = document.createElement("span");
-    tagText.className = "text-sm";
-    tagText.innerText = this.getReadType();
-
-    const closeSvg = `<svg xmlns="http://www.w3.org/2000/svg" fill="#000" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 inline-block">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-</svg>
-`;
-    const close = new DOMParser().parseFromString(closeSvg, "image/svg+xml").documentElement;
-    close.addEventListener("click", (e) => {
-      e.stopPropagation();
-      editor.dispatchCommand(REMOVE_SYMBOL_COMMAND, { key });
-    });
-
-    tag.appendChild(tagText);
-    tag.appendChild(close);
-
+    const tag = useTagDom({
+      tagClassName: 'symbol-tag',
+      textClassName: 'symbol-tag-text',
+      tagText:  this.getReadType(),
+      onClose: () => {
+        editor.dispatchCommand(REMOVE_SYMBOL_COMMAND, { key });
+      }
+     })
+    
     element.appendChild(tag);
     return element;
   }
@@ -100,7 +84,6 @@ export class SymbolNode extends ElementNode {
   updateDOM(prevNode: SymbolNode, dom: HTMLElement): boolean {
     // Returning false tells Lexical that this node does not need its
     // DOM element replacing with a new copy from createDOM.
-    dom.dataset.symbol = `[${this.getReadType()}]`;
     return true;
   }
 
@@ -195,15 +178,9 @@ export function $removeSymbol(payload: RemoveSymbolPayload) {
     const nodes = (symbolNode as SymbolNode).getChildren();
     // Remove symbolNodes
     nodes.forEach((node) => {
-      const parent = node.getParent();
-      if ($isSymbolNode(parent)) {
-        const children = parent.getChildren();
-        for (let i = 0; i < children.length; i++) {
-          parent.insertBefore(children[i]);
-        }
-        parent.remove();
-      }
+      symbolNode.insertBefore(node);
     });
+    symbolNode.remove();
   }
 }
 
@@ -220,7 +197,7 @@ function checkStringType(str: string) {
   }
 }
 
-export function $openSymbolPopup(dispatch: Dispatch<any>, payload: SymbolPopupPayload) {
+export function $openSymbolPopup(dispatch: Dispatch<any>, payload: SymbolPopupPayload = { text: '', value: '' }) {
   let { text, value } = payload;
   if (!text) {
     const selection = $getSelection();
