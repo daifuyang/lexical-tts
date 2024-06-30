@@ -16,6 +16,7 @@ import { useAppDispatch } from "@/redux/hook";
 import { OPEN_PINYIN_POPUP_COMMAND } from "./pinyinPlugin";
 import { OPEN_SYMBOL_POPUP_COMMAND } from "./symbolPlugin";
 import { OPEN_SPEED_POPUP_COMMAND } from "./speedPlugin";
+import { INSERT_PAUSE_COMMAND } from "./pausePlugin";
 const LowPriority = 1;
 
 function Divider() {
@@ -90,6 +91,15 @@ export default function ToolbarPlugin() {
       }} className="toolbar-item">
         <img src="/assets/toolbar/number.svg" />
         <span>数字/符号</span>
+      </div>
+      <Divider />
+      <div onMouseDown={(e) => {
+        e.preventDefault();
+        console.log('停顿')
+        editor.dispatchCommand(INSERT_PAUSE_COMMAND, 200);
+      }} className="toolbar-item">
+        <img src="/assets/toolbar/pause.svg" />
+        <span>停顿</span>
       </div>
       <Divider />
       <div onMouseDown={(e) => {

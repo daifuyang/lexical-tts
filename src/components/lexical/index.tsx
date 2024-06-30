@@ -23,6 +23,8 @@ import SymbolPlugin from "./plugins/symbolPlugin";
 import { SymbolNode } from "./nodes/symbolNode";
 import { WrapNode } from "./nodes/wrapNode";
 import TreeViewPlugin from "./plugins/treeViewPlugin";
+import PausePlugin from "./plugins/pausePlugin";
+import { PauseNode } from "./nodes/pauseNode";
 
 function Placeholder() {
     return (
@@ -34,7 +36,7 @@ function Placeholder() {
 
 const editorConfig = {
     namespace: "ttsEditor",
-    nodes: [PinyinNode, SymbolNode, SpeedNode, WrapNode],
+    nodes: [PinyinNode, SymbolNode, SpeedNode, WrapNode, PauseNode],
     // Handling of errors during update
     onError(error: Error) {
         throw error;
@@ -73,6 +75,7 @@ function App() {
                         <PinyinPlugin />
                         <SymbolPlugin />
                         <SpeedPlugin />
+                        <PausePlugin />
                         <InitPlugin />
                         {type && floatingAnchorElem && <PopupPlugin anchorElem={floatingAnchorElem}>
                             <Options />
