@@ -1,0 +1,8 @@
+.voice-modal {
+    padding: 0 24px;
+}
+
+.voice-container {
+    height: 500px;
+    display: flex;
+}
