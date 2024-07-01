@@ -25,8 +25,11 @@ import { WrapNode } from "./nodes/wrapNode";
 import TreeViewPlugin from "./plugins/treeViewPlugin";
 import PausePlugin from "./plugins/pausePlugin";
 import { PauseNode } from "./nodes/pauseNode";
+import dynamic from "next/dynamic";
+const VoicePlugin =  dynamic(() => import("./plugins/voicePlugin"), { ssr: false });
 
 function Placeholder() {
+
     return (
         <div className="editor-placeholder">
             请输入需要配音的内容，粘贴或输入文本内容，最多10000字…
@@ -76,6 +79,7 @@ function App() {
                         <SymbolPlugin />
                         <SpeedPlugin />
                         <PausePlugin />
+                        <VoicePlugin />
                         <InitPlugin />
                         {type && floatingAnchorElem && <PopupPlugin anchorElem={floatingAnchorElem}>
                             <Options />

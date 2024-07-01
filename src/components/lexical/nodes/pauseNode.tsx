@@ -1,3 +1,5 @@
+import { PauseOutlined } from "@ant-design/icons";
+import { Popover } from "antd";
 import {
   COMMAND_PRIORITY_HIGH,
   DecoratorNode,
@@ -7,6 +9,8 @@ import {
   SerializedLexicalNode,
   Spread
 } from "lexical";
+import { useState } from "react";
+import Pause from "./pauseComponent";
 
 export type SerializedPauseNode = Spread<
   {
@@ -38,13 +42,13 @@ export class PauseNode extends DecoratorNode<JSX.Element> {
   static importDOM(): DOMConversionMap | null {
     return {
       span: (domNode: HTMLElement) => {
-        if(!domNode.hasAttribute('data-lexical-pause')) {
-            return null;
+        if (!domNode.hasAttribute('data-lexical-pause')) {
+          return null;
         }
         return {
-            conversion: $convertPauseElement,
-            priority: COMMAND_PRIORITY_HIGH
-          }
+          conversion: $convertPauseElement,
+          priority: COMMAND_PRIORITY_HIGH
+        }
       }
     };
   }
@@ -69,8 +73,8 @@ export class PauseNode extends DecoratorNode<JSX.Element> {
     return "pause";
   }
 
-  isInline(): false {
-    return false;
+  isInline(): true {
+    return true;
   }
 
   updateDOM(): boolean {
@@ -78,7 +82,7 @@ export class PauseNode extends DecoratorNode<JSX.Element> {
   }
 
   decorate(): JSX.Element {
-    return <h1>111</h1>;
+    return <Pause />
   }
 
   setTime(time: number) {
@@ -94,12 +98,12 @@ export class PauseNode extends DecoratorNode<JSX.Element> {
 
 function $convertPauseElement(domNode: Node): null | DOMConversionOutput {
   if (domNode instanceof HTMLImageElement) {
-    if(!domNode.hasAttribute('data-lexical-pause')) {
-        return null;
+    if (!domNode.hasAttribute('data-lexical-pause')) {
+      return null;
     }
     const time = domNode.getAttribute('data-lexical-pause');
     const node = $createPauseNode(Number(time));
-      return { node };
+    return { node };
   }
   return null;
 }

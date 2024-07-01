@@ -20,21 +20,12 @@ export default function PausePlugin() {
             editor.registerCommand<number>(
                 INSERT_PAUSE_COMMAND,
                 (payload) => {
-
-                    console.log('payload',payload)
-
                     const selection = $getSelection();
-
                     if (!$isRangeSelection(selection)) {
                         return false;
                     }
-
-                    const focusNode = selection.focus.getNode();
-                    if (focusNode !== null) {
-                        const pauseNode = $createPauseNode(payload)
-                        focusNode.insertAfter(pauseNode)
-                    }
-
+                    const pauseNode = $createPauseNode(payload)
+                    selection.insertNodes([pauseNode])
                     return true;
                 },
                 COMMAND_PRIORITY_EDITOR,

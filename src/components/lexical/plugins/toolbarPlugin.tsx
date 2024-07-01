@@ -95,7 +95,6 @@ export default function ToolbarPlugin() {
       <Divider />
       <div onMouseDown={(e) => {
         e.preventDefault();
-        console.log('停顿')
         editor.dispatchCommand(INSERT_PAUSE_COMMAND, 200);
       }} className="toolbar-item">
         <img src="/assets/toolbar/pause.svg" />
@@ -111,7 +110,7 @@ export default function ToolbarPlugin() {
       </div>
       <div className="toolbar-item">
         <img src="/assets/toolbar/voice.svg" />
-        <span>多语音</span>
+        <span>多人配音</span>
       </div>
     </div>
   );

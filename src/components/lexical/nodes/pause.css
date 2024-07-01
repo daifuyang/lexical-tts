@@ -1,0 +1,22 @@
+.editor-pause {
+    cursor: pointer;
+    display: inline-block;
+    text-align: center;
+    color: #6146fe;
+}
+
+.editor-pause > .pause-tag {
+    display: inline-flex;
+    vertical-align: bottom;
+    align-items: center;
+    user-select: none;
+    background-color: #6146fe;
+    color: #fff;
+    border-radius: 6px;
+    padding: 2px 4px;
+    margin-left: 4px;
+}
+
+.editor-pause > .pause-tag > .pause-tag-text {
+    font-size: 14px;
+}
