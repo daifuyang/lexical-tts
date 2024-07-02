@@ -17,6 +17,7 @@ import { OPEN_PINYIN_POPUP_COMMAND } from "./pinyinPlugin";
 import { OPEN_SYMBOL_POPUP_COMMAND } from "./symbolPlugin";
 import { OPEN_SPEED_POPUP_COMMAND } from "./speedPlugin";
 import { INSERT_PAUSE_COMMAND } from "./pausePlugin";
+import { OPEN_VOICE_MODAL_COMMAND } from "./voicePlugin";
 const LowPriority = 1;
 
 function Divider() {
@@ -108,7 +109,10 @@ export default function ToolbarPlugin() {
         <img src="/assets/toolbar/speed.svg" />
         <span>局部变速</span>
       </div>
-      <div className="toolbar-item">
+      <div onMouseDown={(e) => {
+        e.preventDefault();
+        editor.dispatchCommand(OPEN_VOICE_MODAL_COMMAND, undefined);
+      }} className="toolbar-item">
         <img src="/assets/toolbar/voice.svg" />
         <span>多人配音</span>
       </div>

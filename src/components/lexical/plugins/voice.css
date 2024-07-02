@@ -43,15 +43,19 @@
 }
 
 .voice-modal .voice-content {
-  padding: 16px 24px 16px 0;
   flex: 1;
   margin-right: 24px;
-  overflow-y: auto;
-  border-top: 1px solid #f1f2f4;
+}
+
+.voice-modal .voice-body {
+    padding: 16px 0;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-top: 1px solid #f1f2f4;
 }
 
 .voice-modal .voice-cards {
-  width: 100%;
   display: flex;
   flex-flow: row wrap;
   min-width: 0;
@@ -70,7 +74,121 @@
   padding-right: 8px;
 }
 
+.voice-modal .voice-card {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border: 1px solid #f1f2f4;
+    border-radius: 8px;
+    padding: 4px 6px 8px 6px;
+}
+
+.voice-modal .voice-card-avatar {
+    margin-right: 6px;
+}
+
+.voice-modal .voice-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.voice-modal .voice-card-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.voice-modal .voice-card-tags .ant-tag{
+    font-size: 12px;
+}
+
 .voice-modal .voice-detail {
   width: 431px;
   height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
+
+.voice-modal .voice-detail-voice {
+    display: flex;
+    align-items: center;
+    padding:16px 0px 24px 24px; 
+    border-bottom: 1px solid #f1f2f4;
+} 
+
+.voice-modal .voice-detail-voice-avatar {
+    margin-right: 16px;
+}
+
+.voice-modal .voice-detail-voice-content-title {
+    font-size: 16px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.voice-modal .voice-detail-voice-content-collect {
+    font-size: 14px;
+}
+
+.voice-modal .voice-detail-style {
+    padding:16px 0px 24px 24px; 
+    border-bottom: 1px solid #f1f2f4;
+    display: flex;
+    flex-flow: row wrap;
+    min-width: 0;
+    margin-left: -8px;
+    margin-right: -8px;
+    box-sizing: border-box;
+    row-gap: 16px;
+}
+
+.voice-modal .voice-detail-style-item {
+    display: block;
+    flex: 0 0 25%;
+    max-width: 0 0 25%;
+    box-sizing: border-box;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  
+  .voice-modal .voice-detail-style-item-wrap {
+    text-align: center;
+  }
+
+  .voice-modal .voice-detail-slider {
+    padding:16px 0px 24px 24px;
+  }
+
+  .voice-modal .voice-detail-slider-title {
+    font-size: 16px;
+  }
+
+  .voice-modal .voice-detail-slider-container {
+    display: flex;
+    align-items: center;
+  }
+
+  .voice-modal .voice-detail-slider-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+  }
+  
+  .voice-modal .voice-detail-slider-group {
+    margin-bottom: 8px;
+  }
+
+  .voice-modal .voice-detail-slider-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .voice-modal .voice-detail-slider-start-label {
+    margin-right: 6px;
+  }
+
+  .voice-modal .voice-detail-slider-end-label {
+    margin-left: 6px;
+  }
