@@ -57,6 +57,7 @@ export default function VoicePlugin() {
         <Tabs tabBarStyle={{ margin: 0 }} defaultActiveKey="1" items={items} onChange={onChange} />
       }
       width="1000px"
+      centered
       open={open}
       footer={false}
       maskClosable={false}

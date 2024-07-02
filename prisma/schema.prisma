@@ -15,16 +15,16 @@ datasource db {
 
 // 后台管理员
 model umsAdmin {
-  id         Int       @id @default(autoincrement())
-  username   String    @db.VarChar(64)
-  password   String    @db.VarChar(64)
-  icon       String?   @db.VarChar(500) // 头像
-  email      String?   @db.VarChar(100) // 邮箱
-  nickname   String?   @db.VarChar(200)
-  note       String?   @db.VarChar(500)
-  createTime DateTime  @default(now()) @map("create_time")
-  loginTime  DateTime? @updatedAt @map("login_time")
-  status     Int       @default(1) @db.TinyInt
+  id        Int     @id @default(autoincrement())
+  username  String  @db.VarChar(64)
+  password  String  @db.VarChar(64)
+  icon      String? @db.VarChar(500) // 头像
+  email     String? @db.VarChar(100) // 邮箱
+  nickname  String? @db.VarChar(200)
+  note      String? @db.VarChar(500)
+  createdAt Int     @map("created_at")
+  loginAt   Int     @map("login_at")
+  status    Int     @default(1) @db.TinyInt
 
   @@map("ums_admin")
 }
@@ -39,7 +39,7 @@ model umsMember {
   nickname              String?   @db.VarChar(64)
   phone                 String?   @db.VarChar(64)
   status                Int       @default(1) @db.TinyInt
-  createTime            DateTime  @default(now()) @map("create_time")
+  createdAt             Int       @map("created_at")
   icon                  String?   @db.VarChar(500)
   gender                Int       @default(1) @db.TinyInt
   birthday              DateTime? @db.Date
@@ -55,24 +55,24 @@ model umsMember {
 
 // 定义用户关联token表
 model umsToken {
-  id           Int      @id @default(autoincrement())
+  id           Int    @id @default(autoincrement())
   userId       Int
-  userType     Int?     @db.TinyInt
-  accessToken  String   @db.VarChar(255)
-  refreshToken String   @db.VarChar(255)
-  expiry       DateTime
-  createdAt    DateTime @default(now())
+  userType     Int?   @db.TinyInt
+  accessToken  String @db.VarChar(255)
+  refreshToken String @db.VarChar(255)
+  expiry       Int
+  createdAt    Int    @map("created_at")
 
   @@map("ums_token")
 }
 
 // tts项目相关
 model ttsProject {
-  id         Int      @id @default(autoincrement())
-  memberId   Int      @map("member_id") // 创建人id 
-  title      String   @db.VarChar(100) // 标题
-  content    String   @db.Text
-  createTime DateTime @default(now()) @map("create_time")
+  id        Int    @id @default(autoincrement())
+  memberId  Int    @map("member_id") // 创建人id 
+  title     String @db.VarChar(100) // 标题
+  content   String @db.Text
+  createdAt Int    @map("created_at")
 
   @@map("tts_project")
 }
@@ -112,4 +112,40 @@ model ttsVoiceCategory {
   status     Int    @default(1) @db.TinyInt
 
   @@map("tts_voice_category")
+}
+
+// 用户角色
+model umsMemberRole {
+  id        Int @id @default(autoincrement())
+  memberId  Int
+  roleId    Int
+  createdAt Int @map("created_at")
+  updatedAt Int @map("updated_at")
+
+  @@map("ums_member_role")
+}
+
+model dictionary {
+  id        Int     @id @default(autoincrement())
+  name      String  @unique @db.VarChar(50)
+  key       String  @unique @db.VarChar(50)
+  status    Int     @default(1) @db.TinyInt
+  Remark    String? @db.VarChar(255)
+  createdAt Int     @map("created_at")
+  updatedAt Int     @map("updated_at")
+
+  @@map("dictionary")
+}
+
+model dictionaryItem {
+  id           Int     @id @default(autoincrement())
+  label        String  @db.VarChar(50)
+  value        String  @db.VarChar(50)
+  dictionaryId Int
+  Remark       String? @db.VarChar(255)
+  sort_order   Int?    @map("sort_order") @db.Int
+  createdAt    Int     @map("created_at")
+  updatedAt    Int     @map("updated_at")
+
+  @@map("dictionary_item")
 }

@@ -26,7 +26,7 @@ export default ({ children }: any) => {
           {
             path: "/admin/voice/category",
             name: "主播分类"
-          }
+          },
         ]
       }
     ]

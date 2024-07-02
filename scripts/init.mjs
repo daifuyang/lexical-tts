@@ -20,7 +20,9 @@ async function main() {
     await prisma.umsAdmin.create({
       data: {
         username: "admin",
-        password
+        password,
+        loginAt: 0,
+        createdAt: Math.floor(new Date().getTime() / 1000)
       }
     });
   }
