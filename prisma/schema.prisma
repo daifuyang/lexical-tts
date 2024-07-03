@@ -125,27 +125,30 @@ model umsMemberRole {
   @@map("ums_member_role")
 }
 
-model dictionary {
+model sysDictType {
   id        Int     @id @default(autoincrement())
   name      String  @unique @db.VarChar(50)
-  key       String  @unique @db.VarChar(50)
+  type      String  @unique @db.VarChar(50)
   status    Int     @default(1) @db.TinyInt
-  Remark    String? @db.VarChar(255)
+  remark    String? @db.VarChar(255)
   createdAt Int     @map("created_at")
+  createdId Int
   updatedAt Int     @map("updated_at")
 
-  @@map("dictionary")
+  @@map("sys_dict_type")
 }
 
-model dictionaryItem {
-  id           Int     @id @default(autoincrement())
-  label        String  @db.VarChar(50)
-  value        String  @db.VarChar(50)
-  dictionaryId Int
-  Remark       String? @db.VarChar(255)
-  sort_order   Int?    @map("sort_order") @db.Int
-  createdAt    Int     @map("created_at")
-  updatedAt    Int     @map("updated_at")
+model sysDictData {
+  id        Int     @id @default(autoincrement())
+  label     String  @db.VarChar(100)
+  value     String  @db.VarChar(100)
+  type      String  @db.VarChar(50)
+  status    Int     @default(1) @db.TinyInt
+  sortOrder Int?    @map("sort_order") @db.Int
+  remark    String? @db.VarChar(255)
+  createdAt Int     @map("created_at")
+  createdId Int
+  updatedAt Int     @map("updated_at")
 
-  @@map("dictionary_item")
+  @@map("sys_dict_data")
 }
