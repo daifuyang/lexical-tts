@@ -1,8 +1,5 @@
-import type { ProSettings } from "@ant-design/pro-components";
-import { ProLayout, SettingDrawer } from "@ant-design/pro-components";
-
+import { ProLayout } from "@ant-design/pro-components";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 
 export default ({ children }: any) => {
   const pathname = usePathname();
@@ -27,6 +24,16 @@ export default ({ children }: any) => {
             path: "/admin/voice/category",
             name: "主播分类"
           },
+        ]
+      },
+      {
+        path: "/admin/system",
+        name: "系统管理",
+        children: [
+          {
+            path: "/admin/system/dict",
+            name: "字典管理",
+          }
         ]
       }
     ]
