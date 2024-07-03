@@ -1,5 +1,8 @@
 import api from "@/lib/response";
 import prisma from "@/lib/prisma";
+import { getUmsToken } from "@/model/umsToken";
+import { now } from "@/lib/date";
+import { getUmsAdmin } from "@/model/umsAdmin";
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("Authorization");
@@ -8,20 +11,20 @@ export async function GET(request: Request) {
     return api.error("非法访问！");
   }
   // 验证token
-  const usereToken = await prisma.umsToken.findFirst({
+  const userToken = await getUmsToken({
     where: {
       accessToken,
       userType: 1,
       expiry: {
-        gt: new Date() // 没有失效
+        gt: now() // 没有失效
       }
     }
   });
 
-  if (usereToken?.userId) {
-    const user: any = await prisma.umsAdmin.findFirst({
+  if (userToken?.userId) {
+    const user: any = await getUmsAdmin({
       where: {
-        id: usereToken?.userId,
+        id: userToken?.userId
       }
     });
 

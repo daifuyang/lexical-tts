@@ -4,6 +4,9 @@ import dayjs from "dayjs";
 import bcrypt from "bcrypt";
 import api from "@/lib/response";
 import prisma from "@/lib/prisma";
+import { getUmsAdmin } from "@/model/umsAdmin";
+import { now } from "@/lib/date";
+import { createUmsToken } from "@/model/umsToken";
 
 export async function POST(request: Request) {
   const data = await request.json();
@@ -17,7 +20,7 @@ export async function POST(request: Request) {
   // const pwd = bcrypt.hashSync('123456',bcrypt.genSaltSync(10))
   // console.log('pwd',pwd)
 
-  const user = await prisma.umsAdmin.findFirst({
+  const user = await getUmsAdmin({
     where: {
       username: account,
     }
@@ -34,7 +37,7 @@ export async function POST(request: Request) {
   } else {
     const accessToken = jwt.sign({ userId: user.id }, "secret", { expiresIn: "1d" });
     const refreshToken = jwt.sign({ userId: user.id }, "refreshSecret", { expiresIn: "7d" }); // 7天过期
-    const expiry = dayjs().add(1, "day").toDate();
+    const expiry = dayjs().add(1, "day").unix();
 
     const token = {
       accessToken,
@@ -44,13 +47,14 @@ export async function POST(request: Request) {
     };
 
     // 入库
-    const userToken = await prisma.umsToken.create({
+    const userToken = await createUmsToken({
       data: {
         userId: user.id,
         userType: 1,
         accessToken,
         refreshToken,
-        expiry
+        expiry,
+        createdAt: now()
       }
     });
 
