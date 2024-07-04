@@ -1,27 +1,29 @@
 "use client"
-import { ReactNode } from "react";
-import { Space } from 'antd';
-import { PageContainer, ProTable } from "@ant-design/pro-components";
+import { ReactNode, useRef } from "react";
+import { Space, Divider, Popconfirm, message } from 'antd';
+import { ActionType, PageContainer, ProTable } from "@ant-design/pro-components";
 import type { ProColumns } from '@ant-design/pro-table';
-import { getSystemDictList } from "@/services/admin/systemDict";
+import { deleteSystemDict, getSystemDictList } from "@/services/admin/systemDict";
+import SaveModal from "./save";
+import type { DictItem } from './typings.d'
+import { useRouter } from "next/navigation";
+import dayjs from "dayjs";
 
-const valueEnum: any = {
+
+const statusValueEnum: any = {
     0: 'disabled',
     1: 'enabled',
 }
 
+const statusKeyEnum: any = {
+    disabled: 0,
+    enabled: 1,
+}
+
 export default function Dict() {
 
-    // 定义数据的接口
-    interface DictItem {
-        id: number;
-        name: string;
-        type: string;
-        status: number;
-        remark: string;
-        createTime: string;
-    }
-
+    const router = useRouter();
+    const actionRef = useRef<ActionType>();
     // 定义 columns 的数组
     const columns: ProColumns<DictItem>[] = [
         {
@@ -42,21 +44,11 @@ export default function Dict() {
             width: 100,
             dataIndex: 'type',
             key: 'type',
-        },
-
-        {
-            title: '备注',
-            width: 100,
-            dataIndex: 'remark',
-            key: 'remark',
-            hideInSearch: true,
-        },
-        {
-            title: '创建时间',
-            width: 100,
-            dataIndex: 'createTime',
-            key: 'createTime',
-            valueType: 'dateTime',
+            render: (text: ReactNode, record) => {
+                return <a onClick={() => {
+                    router.push(`/admin/system/dict/data/${record.id}`)
+                }}>{text}</a>
+            }
         },
         {
             title: '状态',
@@ -70,53 +62,89 @@ export default function Dict() {
             },
         },
         {
+            title: '备注',
+            width: 100,
+            dataIndex: 'remark',
+            key: 'remark',
+            hideInSearch: true,
+        },
+        {
+            title: '创建时间',
+            width: 100,
+            dataIndex: 'createTime',
+            key: 'createTime',
+            valueType: 'dateTime',
+            hideInSearch: true,
+        },
+        {
+            title: '创建时间',
+            dataIndex: 'createdAt',
+            valueType: 'dateTimeRange',
+            hideInTable: true,
+            search: {
+              transform: (value) => {
+                return {
+                  createdStartAt: dayjs(value[0]).unix(),
+                  createdEndAt: dayjs(value[1]).unix(),
+                };
+              },
+            },
+          },
+        {
             title: '操作',
             width: 80,
             valueType: 'option',
             key: 'option',
-            render: (text: ReactNode, record: DictItem) => (
-                <Space size="middle">
-                    <a onClick={() => handleEdit(record)}>修改</a>
-                    <a onClick={() => handleDelete(record.id)}>删除</a>
-                </Space>
-            ),
+            render: (text: ReactNode, record: DictItem) => {
+                return (
+                    <Space split={<Divider type="vertical" />}>
+                        <SaveModal trigger={<a>修改</a>} onOk={() => {
+                            actionRef.current?.reload()
+                        }} values={{ ...record, status: record.status === 'enabled' ? true : false }} />
+                        <Popconfirm title="确认删除" onConfirm={async () => {
+                            const res: any = await deleteSystemDict(record.id)
+                            if (res.code === 1) {
+                                message.success(res.msg)
+                                actionRef.current?.reload()
+                                return
+                            }
+                            message.error(res.msg);
+                        }}>
+                            <a style={{ color: '#ff4d4f' }}>删除</a>
+                        </Popconfirm>
+                    </Space>
+                )
+            }
         },
     ];
 
-    // 定义编辑和删除操作函数的类型
-    const handleEdit = (record: DictItem) => {
-        // 编辑操作的逻辑
-        console.log('Edit:', record);
-    };
-
-    const handleDelete = (id: number) => {
-        // 删除操作的逻辑
-        console.log('Delete:', id);
-    };
-
     return (
         <PageContainer>
-            <ProTable<DictItem> headerTitle="字典管理" columns={columns} request={async () => {
-                const res: any = await getSystemDictList()
-                if (res.code === 1) {
-
-                    const data = res.data.data.map((item: any) => {
+            <ProTable<DictItem> rowKey="id" actionRef={actionRef} headerTitle="字典管理"
+                toolBarRender={() => [
+                    <SaveModal key="create" onOk={() => {
+                        actionRef.current?.reload()
+                    }} />
+                ]}
+                columns={columns} request={async (params, sort, filter) => {
+                    const res: any = await getSystemDictList({...params, status: statusKeyEnum[params.status]})
+                    if (res.code === 1) {
+                        const data = res.data.data.map((item: any) => {
+                            return {
+                                ...item,
+                                status: statusValueEnum[item.status],
+                            }
+                        })
                         return {
-                            ...item,
-                            status: valueEnum[item.status],
+                            data,
+                            success: true,
+                            total: res.data.total,
                         }
-                    })
-
-                    return {
-                        data,
-                        success: true,
-                        total: res.data.total,
                     }
-                }
-                return {
-                    success: false
-                }
-            }} />
+                    return {
+                        success: false
+                    }
+                }} />
         </PageContainer>
     )
 }
