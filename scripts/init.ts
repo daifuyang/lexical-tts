@@ -1,7 +1,9 @@
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt";
+const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcrypt");
 
 const prisma = new PrismaClient();
+
+const now= () => Math.floor(new Date().getTime() / 1000)
 
 async function main() {
   console.log("sql init start");
@@ -22,9 +24,57 @@ async function main() {
         username: "admin",
         password,
         loginAt: 0,
-        createdAt: Math.floor(new Date().getTime() / 1000)
+        createdAt: now()
       }
     });
+  }
+
+  // 创建系统默认字典
+  const sysUserGender = await prisma.sysDictType.findFirst({
+    where: {
+      type: "sys_user_gender"
+    }
+  });
+
+  if (!sysUserGender) {
+    const newSysUserGender = await prisma.sysDictType.create({
+      data: {
+        type: "sys_user_gender",
+        name: "性别",
+        status: 1,
+        remark: "用户性别列表	",
+        createdId: 1,
+        createdAt: now(),
+        updatedAt: now()
+      }
+    });
+
+    if (newSysUserGender) {
+      await prisma.sysDictData.createMany({
+        data: [
+          {
+            type: "sys_user_gender",
+            label: "男",
+            value: "1",
+            status: 1,
+            remark: "",
+            createdId: 1,
+            createdAt: now(),
+            updatedAt: now()
+          },
+          {
+            type: "sys_user_gender",
+            label: "女",
+            value: "0",
+            status: 1,
+            remark: "",
+            createdId: 1,
+            createdAt: now(),
+            updatedAt: now()
+          }
+        ]
+      });
+    }
   }
 
   const first = await prisma.ttsVoiceStyle.findFirst();

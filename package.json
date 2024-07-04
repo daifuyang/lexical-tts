@@ -2,13 +2,14 @@
   "name": "lexical-tts",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "turbo": "next dev --turbo",
     "lint": "next lint",
-    "init": "dotenv -e .env.local node scripts/init.mjs",
+    "init": "dotenv -e .env.local node scripts/init.ts",
     "migrate": "dotenv -e .env.local npx prisma migrate dev --name init"
   },
   "dependencies": {
