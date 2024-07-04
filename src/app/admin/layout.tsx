@@ -1,9 +1,12 @@
 "use client";
 import AuthLayout from "@/lib/layout/adminAuth";
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
+dayjs.locale('zh-cn');
 
 import "./loading.css";
-import { usePathname } from "next/navigation";
 
 const AdminLayout = dynamic(() => import("./components/adminLayout"), {
   loading: () => (

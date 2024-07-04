@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 // import { Inter } from "next/font/google";
 import "./globals.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
+import { ConfigProvider } from "antd";
+import zhCNIntl from 'antd/lib/locale/zh_CN';
 
 // const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +20,11 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body>
-        <AntdRegistry>{children}</AntdRegistry>
+        <AntdRegistry>
+          <ConfigProvider locale={zhCNIntl}>
+          {children}
+          </ConfigProvider>
+          </AntdRegistry>
       </body>
     </html>
   );
