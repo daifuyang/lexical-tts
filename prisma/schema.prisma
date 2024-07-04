@@ -127,7 +127,7 @@ model umsMemberRole {
 
 model sysDictType {
   id        Int     @id @default(autoincrement())
-  name      String  @unique @db.VarChar(50)
+  name      String  @db.VarChar(50)
   type      String  @unique @db.VarChar(50)
   status    Int     @default(1) @db.TinyInt
   remark    String? @db.VarChar(255)
