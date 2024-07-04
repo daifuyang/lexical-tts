@@ -33,6 +33,13 @@ export default ({ children }: any) => {
           {
             path: "/admin/system/dict",
             name: "字典管理",
+            children: [
+              {
+                path: "/admin/system/dict/data/:id",
+                name: "字典数据",
+                hideInMenu: true
+              }
+            ]
           }
         ]
       }
