@@ -9,7 +9,7 @@
     "start": "next start",
     "turbo": "next dev --turbo",
     "lint": "next lint",
-    "init": "dotenv -e .env.local node scripts/init.ts",
+    "init": "dotenv -e .env.local node ./scripts/init.js",
     "migrate": "dotenv -e .env.local npx prisma migrate dev --name init"
   },
   "dependencies": {
@@ -54,6 +54,7 @@
     "prisma": "^5.11.0",
     "sass": "^1.76.0",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "ioredis": "^5.4.1"
   }
 }

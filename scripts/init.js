@@ -1,9 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
-
-const prisma = new PrismaClient();
-
-const now= () => Math.floor(new Date().getTime() / 1000)
+const { now, prisma } = require("./utils/util");
+const { initVoice } = require("./ttsVoice");
 
 async function main() {
   console.log("sql init start");
@@ -57,7 +54,7 @@ async function main() {
             label: "男",
             value: "1",
             status: 1,
-            remark: "",
+            remark: "性别男",
             createdId: 1,
             createdAt: now(),
             updatedAt: now()
@@ -67,7 +64,7 @@ async function main() {
             label: "女",
             value: "0",
             status: 1,
-            remark: "",
+            remark: "性别女",
             createdId: 1,
             createdAt: now(),
             updatedAt: now()
@@ -77,8 +74,9 @@ async function main() {
     }
   }
 
-  const first = await prisma.ttsVoiceStyle.findFirst();
+  initVoice();
 
+  const first = await prisma.ttsVoiceStyle.findFirst();
   if (!first) {
     const style = await prisma.ttsVoiceStyle.createMany({
       data: [

@@ -1,5 +1,6 @@
 import api from "@/lib/response";
 import prisma from "@/lib/prisma";
+import { now } from "@/lib/date";
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("Authorization");
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     where: {
       accessToken,
       expiry: {
-        gt: new Date() // 没有失效
+        gt: now() // 没有失效
       }
     }
   });

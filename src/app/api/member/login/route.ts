@@ -2,6 +2,7 @@ import _ from "lodash";
 import jwt from "jsonwebtoken";
 import dayjs from "dayjs";
 import bcrypt from "bcrypt";
+import { now } from "@/lib/date";
 import api from "@/lib/response";
 import prisma from "@/lib/prisma";
  
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
   } else {
     const accessToken = jwt.sign({ userId: user.id }, "secret", { expiresIn: "1d" });
     const refreshToken = jwt.sign({ userId: user.id }, "refreshSecret", { expiresIn: "7d" }); // 7天过期
-    const expiry = dayjs().add(1, "day").toDate();
+    const expiry = dayjs().add(1, "day").unix();
 
     const token = {
       accessToken,
@@ -50,7 +51,8 @@ export async function POST(request: Request) {
         userId: user.id,
         accessToken,
         refreshToken,
-        expiry
+        expiry,
+        createdAt: now()
       }
     });
 
