@@ -1,6 +1,6 @@
 import { memberRequest } from "@/utils/request";
 
-export function voiceList(params: any = {}) {
+export function getVoiceList(params: any = {}) {
   return memberRequest.get("/api/voice", { params });
 }
 

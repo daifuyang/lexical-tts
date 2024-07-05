@@ -44,6 +44,8 @@
 
 .voice-modal .voice-content {
   flex: 1;
+  overflow-x: none;
+  overflow-y: auto;
   margin-right: 24px;
 }
 
