@@ -1,5 +1,9 @@
 import { memberRequest } from "@/utils/request";
 
+export function getDefaultVoice() {
+  return memberRequest.get("/api/voice/default");
+}
+
 export function getVoiceList(params: any = {}) {
   return memberRequest.get("/api/voice", { params });
 }

@@ -1,7 +1,10 @@
-import {  useState, useEffect } from "react";
-import { Input, Modal, Select, Tabs, Avatar, Tag, Button, Slider } from "antd";
+import { useState, useEffect } from "react";
+import { Input, Modal, Select, Tabs, Avatar, Tag, Button, Slider, Skeleton } from "antd";
 import { SearchOutlined, StarOutlined } from "@ant-design/icons";
-import {getVoiceList} from '@/services/voice'
+import { getVoiceList } from "@/services/voice";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { fetchDefaultVoice } from "@/redux/slice/voiceState";
+import classNames from "classnames";
 
 interface VoiceModalProps {
   open: boolean;
@@ -11,33 +14,54 @@ interface VoiceModalProps {
 }
 
 function truncateString(str: string, maxLength: number) {
-    if (str.length <= maxLength) {
-      return str; // 如果字符串长度小于等于指定长度，则直接返回原字符串
-    } else {
-      return str.substring(0, maxLength); // 否则，返回前两个字符
-    }
+  if (str.length <= maxLength) {
+    return str; // 如果字符串长度小于等于指定长度，则直接返回原字符串
+  } else {
+    return str.substring(0, maxLength); // 否则，返回前两个字符
   }
+}
 
 export default function VoiceModal(props: VoiceModalProps) {
   const { open, onOpenChange, items, onChange } = props;
 
-  const [voice,setVoice] = useState([])
+  const [voiceList, setVoiceList] = useState([]); // 所有主播列表
 
-  useEffect( () => {
+  const [currentVoice, setCurrentVoice] = useState<any>(null); // 当前右侧的显示主播
 
-    if(open) {
+  const [activeVoive, setActiveVoice] = useState<any>(null);
+
+  const [voiceLoading, setVoiceLoading] = useState(false);
+
+  const defaultVoice = useAppSelector((state) => state.voiceState.defaultVoice);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (open) {
       const fetchData = async () => {
+        setVoiceLoading(true);
         const res: any = await getVoiceList({
-            pageSize: 24
-        })
-        if(res.code === 1) {
-          setVoice(res.data.data);
+          pageSize: 24
+        });
+        setVoiceLoading(false);
+        if (res.code === 1) {
+          setVoiceList(res.data.data);
         }
-      }
+      };
+      dispatch(fetchDefaultVoice());
       fetchData();
     }
+  }, [open]);
 
-  } ,[open])
+  useEffect(() => {
+
+    const fetchActiveVoice = async () => {
+
+      // todo 获取主播详细信息
+
+      setCurrentVoice(activeVoive || defaultVoice);
+    }
+    fetchActiveVoice()
+  }, [defaultVoice, activeVoive]);
 
   return (
     <Modal
@@ -118,20 +142,33 @@ export default function VoiceModal(props: VoiceModalProps) {
               />
             </div>
           </div>
-          <div className="voice-content">
+          <div className="voice-content scrollbar">
             <div className="voice-body">
               <div className="voice-cards">
-                {voice.map((item: any) => {
+                {voiceLoading && <Skeleton />}
+
+                {voiceList.map((item: any) => {
                   return (
-                    <div key={item.id} className="voice-card-item">
-                      <div className="voice-card">
+                    <div
+                      key={item.id}
+                      onClick={() => {
+                        setActiveVoice(item);
+                      }}
+                      className="voice-card-item"
+                    >
+                      <div
+                        className={classNames({
+                          ["voice-card"]: true,
+                          ["voice-card-active"]: item?.id === activeVoive?.id
+                        })}
+                      >
                         <div className="voice-card-avatar">
                           <Avatar
                             style={{ backgroundColor: "#7265e6", verticalAlign: "middle" }}
                             size="large"
                             gap={4}
                           >
-                            {truncateString(item.name,2)}
+                            {truncateString(item.name, 2)}
                           </Avatar>
                         </div>
                         <div className="vocie-card-content">
@@ -158,12 +195,12 @@ export default function VoiceModal(props: VoiceModalProps) {
                 size="large"
                 gap={4}
               >
-                晓晓
+                {currentVoice?.name}
               </Avatar>
             </div>
             <div className="voice-detail-voice-content">
               <div className="voice-detail-voice-content-title-wrap">
-                <span className="voice-detail-voice-content-title">晓晓</span>
+                <span className="voice-detail-voice-content-title">{currentVoice?.name}</span>
                 <span className="voice-detail-voice-content-collect">
                   <StarOutlined style={{ fontSize: 14, marginRight: 2 }} />
                   <span>收藏</span>

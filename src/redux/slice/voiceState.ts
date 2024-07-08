@@ -1,19 +1,33 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { voiceCategoryList } from "@/services/voice";
+import { getDefaultVoice, voiceCategoryList } from "@/services/voice";
 import { message } from "antd";
 
 const initialState: {
   list: any[];
   category: any[];
-  categoryStatus?: "loading" | "succeeded" | "failed";
-  categoryError?: string | null;
   voice?: any;
+  defaultVoice?: any;
+  loading: {
+    category?: "loading" | "succeeded" | "failed";
+    defaultVoice?: "loading" | "succeeded" | "failed";
+  };
+  error: {
+    category?: string;
+    defaultVoice?: string;
+  };
 } = {
   list: [],
   category: [],
-  categoryStatus: undefined,
-  categoryError: null,
-  voice: null
+  loading: {
+    category: undefined,
+    defaultVoice: undefined
+  },
+  error: {
+    category: undefined,
+    defaultVoice: undefined
+  },
+  voice: undefined,
+  defaultVoice: undefined
 };
 
 export const voiceStateSlice = createSlice({
@@ -30,17 +44,34 @@ export const voiceStateSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchVocieCategory.pending, (state) => {
-        state.categoryStatus = "loading";
-        state.categoryError = null;
+        state.loading.category = "loading";
+        state.error.category = undefined;
       })
       .addCase(fetchVocieCategory.fulfilled, (state, action) => {
-        state.categoryStatus = "succeeded";
+        state.loading.category = "succeeded";
         state.category = action.payload;
+        state.error.category = undefined;
       })
       .addCase(fetchVocieCategory.rejected, (state, action) => {
-        state.categoryStatus = "failed";
-        state.categoryError = action.error.message;
-        message.error(action.error.message)
+        state.loading.category = "failed";
+        state.error.category = action.error.message;
+        message.error(action.error.message);
+      });
+
+    builder
+      .addCase(fetchDefaultVoice.pending, (state) => {
+        state.loading.defaultVoice = "loading";
+        state.error.defaultVoice = undefined;
+      })
+      .addCase(fetchDefaultVoice.fulfilled, (state, action) => {
+        state.loading.defaultVoice = "succeeded";
+        state.defaultVoice = action.payload;
+        state.error.defaultVoice = undefined;
+      })
+      .addCase(fetchDefaultVoice.rejected, (state, action) => {
+        state.loading.defaultVoice = "failed";
+        state.error.defaultVoice = action.error.message;
+        message.error(action.error.message);
       });
   }
 });
@@ -51,6 +82,16 @@ export const fetchVocieCategory = createAsyncThunk(
   "voiceState/fetchVocieCategory",
   async (params: any, thunkAPI) => {
     const res: any = await voiceCategoryList(params);
+    if (res.code === 1) {
+      return res.data;
+    }
+  }
+);
+
+export const fetchDefaultVoice = createAsyncThunk(
+  "voiceState/fetchDefaultVoice",
+  async () => {
+    const res: any = await getDefaultVoice();
     if (res.code === 1) {
       return res.data;
     }
