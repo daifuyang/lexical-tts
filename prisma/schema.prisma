@@ -103,6 +103,14 @@ model ttsVoiceStyle {
   @@map("tts_voice_style")
 }
 
+model ttsVoiceStyleRelation {
+  id      Int    @id @default(autoincrement())
+  voiceId Int
+  style   String
+  
+  @@map("tts_voice_style_relation")
+}
+
 // 主播分类
 model ttsVoiceCategory {
   id         Int    @id @default(autoincrement())

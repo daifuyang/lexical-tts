@@ -51,9 +51,6 @@
 
 .voice-modal .voice-body {
   padding: 16px 0;
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
   border-top: 1px solid #f1f2f4;
 }
 
