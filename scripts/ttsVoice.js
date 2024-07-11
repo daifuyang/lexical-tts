@@ -31,7 +31,7 @@ async function initVoice() {
           desc: "用随意和亲切的语气进行对话。"
         },
         {
-          style: "chat_casual",
+          style: "chat-casual",
           name: "聊天-休闲",
           desc: "用轻松和愉快的语气进行非正式的对话。"
         },
@@ -76,7 +76,12 @@ async function initVoice() {
           desc: "用专业和正式的语气播报新闻。"
         },
         {
-          style: "poetry_reading",
+          "style": "newscast-casual",
+          "name": "新闻-休闲",
+          "desc": "用轻松和非正式的语气传递新闻。"
+        },
+        {
+          style: "poetry-reading",
           name: "诗歌朗诵",
           desc: "用富有感情和节奏的语气朗诵诗歌。"
         },
@@ -111,12 +116,22 @@ async function initVoice() {
           desc: "用困惑和尴尬的语气表达不安。"
         },
         {
-          style: "advertisement_upbeat",
+          style: "envious",
+          name: "羡慕",
+          desc: "用渴望和嫉妒的语气表达对他人优越地位或成就的羡慕。"
+        },
+        {
+          style: "advertisement-upbeat",
           name: "广告-欢快",
           desc: "用兴奋和精力充沛的语气推广产品或服务。"
         },
         {
-          style: "documentary_narration",
+          style: "livecommercial",
+          name: "实时广告",
+          desc: "用清晰和吸引人的语气进行实时广告宣传。"
+        },
+        {
+          style: "documentary-narration",
           name: "纪录片-旁白",
           desc: "用客观和中立的语气讲述纪录片内容。"
         },
@@ -126,22 +141,22 @@ async function initVoice() {
           desc: "用清晰和简洁的语气进行旁白。"
         },
         {
-          style: "narration_relaxed",
+          style: "narration-relaxed",
           name: "旁白-放松",
           desc: "用轻松和愉快的语气进行旁白。"
         },
         {
-          style: "narration_professional",
+          style: "narration-professional",
           name: "旁白-专业",
           desc: "用专业和正式的语气进行旁白。"
         },
         {
-          style: "sports_commentary",
+          style: "sports-commentary",
           name: "体育解说",
           desc: "用激动和专业的语气进行体育赛事解说。"
         },
         {
-          style: "sports_commentary_excited",
+          style: "sports-commentary-excited",
           name: "体育解说-兴奋",
           desc: "用极其兴奋和激动的语气解说体育赛事。"
         }
@@ -388,7 +403,22 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 293,
-      status: 1
+      status: 1,
+      styles: [
+        "angry",
+        "assistant",
+        "chat",
+        "cheerful",
+        "depressed",
+        "disgruntled",
+        "embarrassed",
+        "fearful",
+        "narration-relaxed",
+        "newscast",
+        "sad",
+        "serious"
+      ],
+      roles: ["Boy", "Narrator", "YoungAdultMale"]
     },
     {
       name: "云健",
@@ -398,7 +428,19 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 279,
-      status: 1
+      status: 1,
+      styles: [
+        "angry",
+        "cheerful",
+        "depressed",
+        "disgruntled",
+        "documentary-narration",
+        "narration-relaxed",
+        "sad",
+        "serious",
+        "sports-commentary",
+        "sports-commentary-excited"
+      ]
     },
     {
       name: "晓伊",
@@ -408,7 +450,18 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 263,
-      status: 1
+      status: 1,
+      styles: [
+        "affectionate",
+        "angry",
+        "cheerful",
+        "disgruntled",
+        "embarrassed",
+        "fearful",
+        "gentle",
+        "sad",
+        "serious"
+      ]
     },
     {
       name: "云扬",
@@ -418,7 +471,8 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 293,
-      status: 1
+      status: 1,
+      styles: ["customerservice", "narration-professional", "newscast-casual"]
     },
     {
       name: "晓辰",
@@ -428,18 +482,19 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 283,
-      status: 1
+      status: 1,
+      styles: ["livecommercial"]
     },
-    {
-      name: "晓辰(多语言)",
-      shortName: "zh-CN-XiaochenMultilingualNeural",
-      gender: 0,
-      locale: "zh-CN",
-      sampleRateHertz: 24000,
-      voiceType: "Neural",
-      wordsPerMinute: null,
-      status: 1
-    },
+    // {
+    //   name: "晓辰(多语言)",
+    //   shortName: "zh-CN-XiaochenMultilingualNeural",
+    //   gender: 0,
+    //   locale: "zh-CN",
+    //   sampleRateHertz: 24000,
+    //   voiceType: "Neural",
+    //   wordsPerMinute: null,
+    //   status: 1
+    // },
     {
       name: "晓涵",
       shortName: "zh-CN-XiaohanNeural",
@@ -448,7 +503,19 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 259,
-      status: 1
+      status: 1,
+      styles: [
+        "affectionate",
+        "angry",
+        "calm",
+        "cheerful",
+        "disgruntled",
+        "embarrassed",
+        "fearful",
+        "gentle",
+        "sad",
+        "serious"
+      ]
     },
     {
       name: "晓梦",
@@ -458,7 +525,8 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 272,
-      status: 1
+      status: 1,
+      styles: ["chat"]
     },
     {
       name: "晓墨",
@@ -468,7 +536,21 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 286,
-      status: 1
+      status: 1,
+      styles: [
+        "affectionate",
+        "angry",
+        "calm",
+        "cheerful",
+        "depressed",
+        "disgruntled",
+        "embarrassed",
+        "envious",
+        "fearful",
+        "gentle",
+        "sad",
+        "serious"
+      ]
     },
     {
       name: "晓秋",
@@ -498,7 +580,8 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 243,
-      status: 1
+      status: 1,
+      styles: ["angry", "calm", "fearful", "sad"]
     },
     {
       name: "晓双",
@@ -508,28 +591,29 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 225,
-      status: 1
+      status: 1,
+      styles: ["chat"]
     },
-    {
-      name: "晓晓(方言)",
-      shortName: "zh-CN-XiaoxiaoDialectsNeural",
-      gender: 0,
-      locale: "zh-CN",
-      sampleRateHertz: 24000,
-      voiceType: "Neural",
-      wordsPerMinute: null,
-      status: 1
-    },
-    {
-      name: "晓晓(多语言)",
-      shortName: "zh-CN-XiaoxiaoMultilingualNeural",
-      gender: 0,
-      locale: "zh-CN",
-      sampleRateHertz: 24000,
-      voiceType: "Neural",
-      wordsPerMinute: null,
-      status: 1
-    },
+    // {
+    //   name: "晓晓(方言)",
+    //   shortName: "zh-CN-XiaoxiaoDialectsNeural",
+    //   gender: 0,
+    //   locale: "zh-CN",
+    //   sampleRateHertz: 24000,
+    //   voiceType: "Neural",
+    //   wordsPerMinute: null,
+    //   status: 1
+    // },
+    // {
+    //   name: "晓晓(多语言)",
+    //   shortName: "zh-CN-XiaoxiaoMultilingualNeural",
+    //   gender: 0,
+    //   locale: "zh-CN",
+    //   sampleRateHertz: 24000,
+    //   voiceType: "Neural",
+    //   wordsPerMinute: null,
+    //   status: 1
+    // },
     {
       name: "晓颜",
       shortName: "zh-CN-XiaoyanNeural",
@@ -550,16 +634,16 @@ async function initVoice() {
       wordsPerMinute: 211,
       status: 1
     },
-    {
-      name: "晓宇(多语言)",
-      shortName: "zh-CN-XiaoyuMultilingualNeural",
-      gender: 0,
-      locale: "zh-CN",
-      sampleRateHertz: 24000,
-      voiceType: "Neural",
-      wordsPerMinute: null,
-      status: 1
-    },
+    // {
+    //   name: "晓宇(多语言)",
+    //   shortName: "zh-CN-XiaoyuMultilingualNeural",
+    //   gender: 0,
+    //   locale: "zh-CN",
+    //   sampleRateHertz: 24000,
+    //   voiceType: "Neural",
+    //   wordsPerMinute: null,
+    //   status: 1
+    // },
     {
       name: "晓甄",
       shortName: "zh-CN-XiaozhenNeural",
@@ -568,7 +652,8 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 273,
-      status: 1
+      status: 1,
+      styles: ["angry", "cheerful", "disgruntled", "fearful", "sad", "serious"]
     },
     {
       name: "云枫",
@@ -578,7 +663,8 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 320,
-      status: 1
+      status: 1,
+      styles: ["angry", "cheerful", "depressed", "disgruntled", "fearful", "sad", "serious"]
     },
     {
       name: "云皓",
@@ -588,7 +674,8 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 315,
-      status: 1
+      status: 1,
+      styles: ["advertisement-upbeat"]
     },
     {
       name: "云杰",
@@ -608,7 +695,8 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 269,
-      status: 1
+      status: 1,
+      styles: ["angry", "calm", "cheerful", "fearful", "sad"]
     },
     {
       name: "云野",
@@ -618,18 +706,28 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 278,
-      status: 1
+      status: 1,
+      styles: [
+        "angry",
+        "calm",
+        "cheerful",
+        "disgruntled",
+        "embarrassed",
+        "fearful",
+        "sad",
+        "serious"
+      ]
     },
-    {
-      name: "云逸(多语言)",
-      shortName: "zh-CN-YunyiMultilingualNeural",
-      gender: 1,
-      locale: "zh-CN",
-      sampleRateHertz: 24000,
-      voiceType: "Neural",
-      wordsPerMinute: null,
-      status: 1
-    },
+    // {
+    //   name: "云逸(多语言)",
+    //   shortName: "zh-CN-YunyiMultilingualNeural",
+    //   gender: 1,
+    //   locale: "zh-CN",
+    //   sampleRateHertz: 24000,
+    //   voiceType: "Neural",
+    //   wordsPerMinute: null,
+    //   status: 1
+    // },
     {
       name: "云泽",
       shortName: "zh-CN-YunzeNeural",
@@ -638,7 +736,18 @@ async function initVoice() {
       sampleRateHertz: 48000,
       voiceType: "Neural",
       wordsPerMinute: 255,
-      status: 1
+      status: 1,
+      styles: [
+        "angry",
+        "calm",
+        "cheerful",
+        "depressed",
+        "disgruntled",
+        "documentary-narration",
+        "fearful",
+        "sad",
+        "serious"
+      ]
     }
   ];
 

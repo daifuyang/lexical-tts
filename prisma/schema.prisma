@@ -95,7 +95,7 @@ model ttsVoice {
 // 主播风格
 model ttsVoiceStyle {
   id     Int    @id @default(autoincrement())
-  style  String @db.VarChar(150)
+  style  String @unique @db.VarChar(150) 
   name   String @db.VarChar(100)
   desc   String @db.VarChar(255)
   status Int    @default(1) @db.TinyInt

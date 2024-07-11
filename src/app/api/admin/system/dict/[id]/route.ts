@@ -9,7 +9,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   const { id } = params;
   const data = await getSystemDictTypeById(Number(id));
   if (!data) {
-    return api.error("该文章不存在或已被删除");
+    return api.error("该字典不存在或已被删除");
   }
   return api.success("获取成功！", data);
 }

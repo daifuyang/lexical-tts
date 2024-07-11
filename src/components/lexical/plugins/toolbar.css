@@ -22,6 +22,27 @@
   line-height: 18px;
 }
 
+.toolbar .toolbar-voice-container {
+  width: 142px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  padding:0 10px;
+  border-radius: 29px;
+  background-color: #fff;
+  border: .5px solid #e4e9ed;
+}
+
+.toolbar .toolbar-voice-avatar {
+  margin-right: 10px;
+}
+
+.toolbar .toolbar-voice-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .toolbar .toolbar-play {
   width: 77px;
 }
