@@ -1,9 +1,14 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
 import { getToken } from "@/lib/token";
 
+let baseURL = "/";
+if (typeof window === "undefined") {
+  baseURL = `http://localhost:${process.env.PORT}`;
+}
+
 // 创建 Axios 实例
 const memberRequest: AxiosInstance = axios.create({
-  baseURL: "/",
+  baseURL,
   timeout: 0 // 设置超时时间为 5 秒
 });
 
@@ -11,9 +16,11 @@ const memberRequest: AxiosInstance = axios.create({
 memberRequest.interceptors.request.use(
   (config) => {
     // 在请求发送之前做一些处理
-    const accessToken = getToken();
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    if (typeof window !== "undefined") {
+      const accessToken = getToken();
+      if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+      }
     }
 
     return config;
@@ -36,11 +43,9 @@ memberRequest.interceptors.response.use(
   }
 );
 
-
-
 // 创建 Axios 实例
 const adminRequest: AxiosInstance = axios.create({
-  baseURL: "/",
+  baseURL,
   timeout: 0 // 设置超时时间为 5 秒
 });
 
@@ -48,9 +53,11 @@ const adminRequest: AxiosInstance = axios.create({
 adminRequest.interceptors.request.use(
   (config) => {
     // 在请求发送之前做一些处理
-    const accessToken = getToken('admin');
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    if (typeof window !== "undefined") {
+      const accessToken = getToken("admin");
+      if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+      }
     }
 
     return config;

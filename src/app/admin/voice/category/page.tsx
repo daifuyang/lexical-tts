@@ -5,7 +5,7 @@ import { ActionType, PageContainer, ProColumns, ProTable } from "@ant-design/pro
 import { PlusOutlined } from "@ant-design/icons";
 import { useRef, useState } from "react";
 import SaveModal from "./save";
-import { voiceCategoryList } from "@/services/voice";
+import { getVoiceCategoryList } from "@/services/voice";
 
 interface Anchor {
   name: string;
@@ -92,7 +92,7 @@ export default function Category() {
         rowKey="id"
         headerTitle="分类列表"
         request={async (params, sort, filter) => {
-          const res: any = await voiceCategoryList(params);
+          const res: any = await getVoiceCategoryList(params);
           if (res.code === 1) {
             return {
               success: true,
