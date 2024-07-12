@@ -22,6 +22,11 @@
   line-height: 18px;
 }
 
+.toolbar .toolbar-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
 .toolbar .toolbar-voice-container {
   width: 142px;
   height: 54px;

@@ -74,7 +74,6 @@ export default function VoiceModal(props: VoiceModalProps) {
   }
 
   useEffect(() => {
-    if (open) {
       const fetchData = async () => {
         setVoiceListLoading(true);
         const res: any = await getVoiceList({
@@ -130,8 +129,7 @@ export default function VoiceModal(props: VoiceModalProps) {
       };
 
       fetchVoiceCatrgory();
-    }
-  }, [open]);
+  }, []);
 
   useEffect( () => {
     if(activeVoice?.id && !voiceActiveId) {

@@ -8,6 +8,9 @@
 @import url("./nodes/pause.css");
 
 .tts-editor-root {
+  position: relative;
+  max-width: 1920px;
+  margin:0 auto;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -34,6 +37,11 @@
   outline: 0;
   overflow-y: auto;
   outline: none;
+}
+
+.editor-paragraph {
+  line-height: 2;
+  font-size: 18px;
 }
 
 .editor-placeholder {

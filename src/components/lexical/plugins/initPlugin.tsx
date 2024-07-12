@@ -1,8 +1,6 @@
-import { $isCodeHighlightNode } from '@lexical/code';
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $getSelection, $isRangeSelection } from "lexical";
+import { $getSelection } from "lexical";
 import { useCallback, useEffect } from "react";
-import { getSelectedNode } from "../utils/getSelectedNode";
 import { mergeRegister } from '@lexical/utils';
 import { useAppDispatch } from '@/redux/hook';
 import { closeFloat } from '@/redux/slice/initialState';
@@ -43,7 +41,7 @@ export default function InitPlugin(): JSX.Element | null {
 
     useEffect(() => {
         return mergeRegister(
-            editor.registerUpdateListener(() => {
+            editor.registerUpdateListener(({editorState}) => {
                 updateInit();
             })
         );

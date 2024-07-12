@@ -35,7 +35,7 @@ export class SpeedNode extends ElementNode {
   __speed: number;
 
   static getType(): string {
-    return "speed";
+    return "speedNode";
   }
 
   static clone(node: SpeedNode): SpeedNode {
@@ -88,7 +88,7 @@ export class SpeedNode extends ElementNode {
   exportJSON(): SerializedSpeedNode {
     return {
       ...super.exportJSON(),
-      type: "speed",
+      type: this.getType(),
       speed: this.__speed,
       version: 1
     };

@@ -16,7 +16,6 @@ import {
 } from "lexical";
 import { Dispatch } from "react";
 import {
-  INSERT_SYMBOL_COMMAND,
   OPEN_SYMBOL_POPUP_COMMAND,
   REMOVE_SYMBOL_COMMAND
 } from "../plugins/symbolPlugin";
