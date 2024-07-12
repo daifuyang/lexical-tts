@@ -1,4 +1,4 @@
-import { Table } from "antd";
+import { Space, Table, Divider } from "antd";
 
 export default function List() {
   const dataSource = [
@@ -18,23 +18,38 @@ export default function List() {
 
   const columns = [
     {
-      title: "姓名",
-      dataIndex: "name",
-      key: "name"
+      title: "序号",
+      dataIndex: "index",
+      key: "index"
     },
     {
-      title: "年龄",
-      dataIndex: "age",
-      key: "age"
+      title: "标题",
+      dataIndex: "title",
+      key: "title"
     },
     {
-      title: "住址",
-      dataIndex: "address",
-      key: "address"
+      title: "主播",
+      dataIndex: "voice",
+      key: "voice"
+    },
+    {
+      title: "时长",
+      dataIndex: "duration",
+      key: "duration"
+    },
+    {
+      title: "操作",
+      key: "action",
+      width: 280,
+      render: (_, record) => (
+        <Space size="middle" split={ <Divider type="vertical" /> }>
+          <a>编辑</a>
+          <a>下载</a>
+          <a style={{color:'#ff4d4f'}}>删除</a>
+        </Space>
+      )
     }
   ];
 
-  return (
-    <Table dataSource={dataSource} columns={columns} />
-  )
+  return <Table dataSource={dataSource} columns={columns} />;
 }

@@ -34,7 +34,7 @@ export default function Desktop() {
             <HomeIcon className="w-5 h-5" /> <span className="pl-2 font-bold">首页</span>
           </li>
           <li className="flex px-3 py-2 cursor-pointer items-center text-base">
-            <FolderIcon className="w-5 h-5" /> <span className="pl-2 font-bold">我的空间</span>
+            <FolderIcon className="w-5 h-5" /> <span className="pl-2 font-bold">我的作品</span>
           </li>
         </ul>
       </div>
@@ -57,8 +57,8 @@ export default function Desktop() {
 
           <div className="tab">
             <ul className="flex mt-6">
-              <li className="px-2 text-lg cursor-pointer">最近</li>
-              <li className="px-2 text-lg cursor-pointer">收藏</li>
+              <li className="px-2 text-lg cursor-pointer">作品</li>
+              <li className="px-2 text-lg cursor-pointer">草稿</li>
             </ul>
           </div>
 
