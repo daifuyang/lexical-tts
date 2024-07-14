@@ -47,7 +47,7 @@
 .editor-placeholder {
   color: #999;
   position: absolute;
-  top: 35px;
+  top: 25px;
   left: 36px;
   text-overflow: ellipsis;
   overflow: hidden;

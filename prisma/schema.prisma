@@ -83,7 +83,7 @@ model ttsVoice {
   name            String @db.VarChar(100) // 名称
   gender          Int    @db.TinyInt
   locale          String @db.VarChar(20)
-  shortName       String @db.VarChar(255)
+  shortName       String @unique @db.VarChar(255)
   sampleRateHertz Int?   @map("sample_rate_hertz") @db.Int
   voiceType       String @db.VarChar(20)
   status          Int    @default(1) @db.TinyInt
@@ -95,7 +95,7 @@ model ttsVoice {
 // 主播风格
 model ttsVoiceStyle {
   id     Int    @id @default(autoincrement())
-  style  String @unique @db.VarChar(150) 
+  style  String @unique @db.VarChar(150)
   name   String @db.VarChar(100)
   desc   String @db.VarChar(255)
   status Int    @default(1) @db.TinyInt
@@ -107,7 +107,7 @@ model ttsVoiceStyleRelation {
   id      Int    @id @default(autoincrement())
   voiceId Int
   style   String
-  
+
   @@map("tts_voice_style_relation")
 }
 
@@ -120,6 +120,18 @@ model ttsVoiceCategory {
   status     Int    @default(1) @db.TinyInt
 
   @@map("tts_voice_category")
+}
+
+// 配音作品表
+model TtsWork {
+  id          Int      @id @default(autoincrement())
+  title       String
+  speaker     String
+  duration    Float
+  editorState String
+  ssml        String
+  creatorId   String
+  createdAt   DateTime @default(now())
 }
 
 // 用户角色

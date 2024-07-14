@@ -35,7 +35,7 @@ export default function Login() {
     <div className="h-screen">
       <div className="flex min-h-full flex-1 flex-col justify-center px-6 pt-12 pb-36 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-          <h1 className="text-center font-bold text-4xl">AI配音</h1>
+          <h1 className="text-center font-bold text-4xl">{process.env.NEXT_PUBLIC_TITLE}</h1>
           {/* <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
             登录账号
           </h2> */}

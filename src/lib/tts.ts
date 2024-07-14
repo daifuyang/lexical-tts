@@ -8,19 +8,19 @@ class tts {
     const serviceRegion = process.env.serviceRegion;
     const audioConfig = sdk.AudioConfig.fromAudioFileOutput(filename);
     const speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
-    speechConfig.speechSynthesisLanguage = "zh-CN"
-    speechConfig.speechSynthesisVoiceName = "zh-CN-XiaoxiaoNeural"
+    // speechConfig.speechSynthesisLanguage = "zh-CN";
+    // speechConfig.speechSynthesisVoiceName = "zh-CN-XiaoxiaoNeural";
     this.synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
   }
 
-  async synthesizeText(text: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
+  async synthesizeText(text: string): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
       this.synthesizer.speakSsmlAsync(
         text,
         (result) => {
           if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
-            console.log("Synthesis finished.",JSON.stringify(result));
-            resolve();
+            console.log("Synthesis finished.", JSON.stringify(result));
+            resolve({ success: "ok" });
           } else {
             console.error(
               "Speech synthesis canceled, " +
@@ -37,9 +37,8 @@ class tts {
           reject(err);
         }
       );
-      console.log("Now synthesizing to: ");
     });
   }
 }
 
-export default tts
+export default tts;

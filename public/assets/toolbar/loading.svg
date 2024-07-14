@@ -1,0 +1,13 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="&#231;&#188;&#150;&#231;&#187;&#132; 20">
+<circle id="&#230;&#164;&#173;&#229;&#156;&#134;&#229;&#189;&#162;" opacity="0.08" cx="12" cy="12" r="11" fill="#1A91FF" stroke="#1A91FF" stroke-width="1.8"/>
+<path id="Ellipse 319" d="M16.8002 12.0002C16.8002 9.34923 14.6512 7.2002 12.0002 7.2002C9.34923 7.2002 7.2002 9.34923 7.2002 12.0002C7.2002 14.6512 9.34923 16.8002 12.0002 16.8002" stroke="url(#paint0_angular_6544_48675)" stroke-width="1.2" stroke-linecap="round"/>
+</g>
+<defs>
+<radialGradient id="paint0_angular_6544_48675" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(12.0002 12.0002) rotate(90) scale(4.8)">
+<stop offset="0.0610069" stop-color="#1A91FF" stop-opacity="0.08"/>
+<stop offset="0.763317" stop-color="#1A91FF"/>
+<stop offset="0.965948" stop-color="#1A91FF" stop-opacity="0"/>
+</radialGradient>
+</defs>
+</svg>

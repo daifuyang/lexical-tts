@@ -20,10 +20,10 @@ export default function PinyinRadio() {
         multiple: true // 启用多音字模式
       });
       const _options = tone?.split(" ");
-      const toneNone = pinyin(_text, { toneType: "none" });
-      if (!_options.includes(toneNone)) {
-        _options.push(toneNone);
-      }
+      // const toneNone = pinyin(_text, { toneType: "none" });
+      // if (!_options.includes(toneNone)) {
+      //   _options.push(toneNone);
+      // }
 
       setOptions([..._options, '取消']);
     }

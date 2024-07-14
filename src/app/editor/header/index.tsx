@@ -6,7 +6,7 @@ export default function Header() {
     <header className="bg-white">
       <div className="flex mx-4 my-2">
         <div className="w-80 flex items-center">
-          <h1 className="text-xl">创梦工坊</h1>
+          <h1 className="text-xl">{process.env.NEXT_PUBLIC_TITLE}</h1>
           <div className="w-px h-4 bg-gray-300 mx-2"></div>
           <div className="flex items-center cursor-pointer text-slate-700  mr-5">
             <LeftOutlined />

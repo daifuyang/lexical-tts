@@ -17,10 +17,10 @@ interface VoiceModalProps {
 }
 
 function truncateString(str: string, maxLength: number) {
-  if (str.length <= maxLength) {
+  if (str?.length <= maxLength) {
     return str; // 如果字符串长度小于等于指定长度，则直接返回原字符串
   } else {
-    return str.substring(0, maxLength); // 否则，返回前两个字符
+    return str?.substring(0, maxLength); // 否则，返回前两个字符
   }
 }
 
@@ -278,6 +278,7 @@ export default function VoiceModal(props: VoiceModalProps) {
                 <div className="voice-detail-voice-extra">
                   <Button onClick={ () => {
                       onOk?.({...activeVoice, style: voiceActiveStyle, rate, volume, pitch })
+                      onOpenChange?.(false);
                   } } type="primary">使用</Button>
                 </div>
               </div>

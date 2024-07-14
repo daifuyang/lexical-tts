@@ -3,6 +3,7 @@
 node_modules/
 prisma/migrations
 .DS_Store
+output/
 
 yarn.lock
 pnpm-lock.yaml

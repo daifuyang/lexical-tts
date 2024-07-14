@@ -752,14 +752,14 @@ async function initVoice() {
   ];
 
   for (const voice of ttsVoices) {
-    const existVoice = await prisma.ttsVoice.findFirst({
+    let existVoice = await prisma.ttsVoice.findFirst({
       where: {
         shortName: voice.shortName
       }
     });
 
     if (!existVoice) {
-      await prisma.ttsVoice.create({
+      existVoice = await prisma.ttsVoice.create({
         data: {
           name: voice.name,
           gender: voice.gender,

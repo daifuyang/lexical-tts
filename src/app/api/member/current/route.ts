@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   });
 
   if (usereToken?.userId) {
-    const user: any = await prisma.umsMember.findFirst({
+    const user: any = await prisma.umsMember.findUnique({
       where: {
         id: usereToken?.userId
       }

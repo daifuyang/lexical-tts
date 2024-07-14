@@ -5,7 +5,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { mergeRegister } from "@lexical/utils";
 
 import { useAppDispatch } from "@/redux/hook";
-import { fetchDefaultVoice } from "@/redux/slice/voiceState";
+import { fetchDefaultVoice, setGlobalVoice } from "@/redux/slice/voiceState";
 
 import type { TabsProps } from "antd";
 import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_EDITOR, createCommand, LexicalCommand } from "lexical";
@@ -32,9 +32,6 @@ export default function VoicePlugin() {
           editor.registerCommand<string>(
             OPEN_VOICE_MODAL_COMMAND,
               (payload) => {
-
-                console.log('payload', payload)
-
                   const selection = $getSelection();
                   if (!$isRangeSelection(selection)) {
                       return false;
@@ -67,7 +64,7 @@ export default function VoicePlugin() {
     <VoiceModal open={open} onOpenChange={ (togger: boolean) => {
         setOpen(togger)
     }} items={items} onChange={onChange} onOk={ (values) => {
-      console.log('values', values)
+      dispatch(setGlobalVoice(values))
     } } />
   );
 }

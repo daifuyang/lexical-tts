@@ -3,9 +3,6 @@ import { Avatar, Button, Input } from "antd";
 import {
   SearchOutlined,
   PlusOutlined,
-  CrownOutlined,
-  BellOutlined,
-  UserOutlined
 } from "@ant-design/icons";
 import { FolderIcon, HomeIcon } from "@heroicons/react/24/solid";
 
