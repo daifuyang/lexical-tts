@@ -8,36 +8,31 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
 import {
-  $createTextNode,
   $isTextNode,
   $isElementNode,
-  $splitNode,
   $getNodeByKey,
   $getSelection,
   CAN_REDO_COMMAND,
   CAN_UNDO_COMMAND,
   REDO_COMMAND,
-  UNDO_COMMAND
+  UNDO_COMMAND,
+  $isRangeSelection,
+  TextNode,
+  $createParagraphNode
 } from "lexical";
 import { useEffect, useRef, useState } from "react";
 import { Avatar, Spin, message } from "antd";
-import { useAppSelector, useAppDispatch } from "@/redux/hook";
+import { useAppSelector } from "@/redux/hook";
 import { OPEN_PINYIN_POPUP_COMMAND } from "./pinyinPlugin";
 import { OPEN_SYMBOL_POPUP_COMMAND } from "./symbolPlugin";
 import { OPEN_SPEED_POPUP_COMMAND } from "./speedPlugin";
 import { INSERT_PAUSE_COMMAND } from "./pausePlugin";
 import { OPEN_VOICE_MODAL_COMMAND } from "./voicePlugin";
 
-import { $patchStyleText } from "@lexical/selection";
-
 import { convert, pinyin } from "pinyin-pro";
-
 import { addWork } from "@/services/work";
-
 import classNames from "classnames";
-
-import { arrayToTree } from "../utils/node";
-import { getSample } from "@/services/sample";
+import { $isAtNodeEnd } from '@lexical/selection';
 
 const LowPriority = 1;
 
@@ -45,28 +40,7 @@ function Divider() {
   return <div className="divider" />;
 }
 
-function $setNodeStyle(editor,sampleKey, style = '') {
-      // 根据id获取node
-      editor.update(() => {
-        const keys = sampleKey.split('-')
-        keys.forEach( (key) => {
-          const node = $getNodeByKey(key);
-          if($isTextNode(node)) {
-            node.setStyle(style)
-          }
-          else if($isElementNode(node)) {
-          const childs = node.getAllTextNodes()
-          childs.forEach( (node) => {
-            if($isTextNode(node)) {
-              node.setStyle(style)
-            } 
-          } )
-        }
-        })
-      })
-}
-
-export default function ToolbarPlugin(props) {
+export default function ToolbarPlugin(props: any) {
   const { total } = props;
 
   const [editor] = useLexicalComposerContext();
@@ -76,14 +50,10 @@ export default function ToolbarPlugin(props) {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
-  const [playList, setPlayList] = useState<any>(null);
-  const [play, setPlay] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
 
-  const [sampleKey,setSampleKey] = useState<string>('');
-  const [samplePlayList, setSamplePlayList] = useState<any>(null);
-
-  const [playSelection, setPlaySelection] = useState(null);
+  const [playingNodes, setPlayingNodes] = useState<any>(null);
 
   const voiceState = useAppSelector((state) => state.voiceState);
 
@@ -175,6 +145,7 @@ export default function ToolbarPlugin(props) {
   };
 
   const playAudio = () => {
+    setPlaying(true);
     audioRef.current?.play();
   };
 
@@ -183,9 +154,84 @@ export default function ToolbarPlugin(props) {
   };
 
   const handlePause = () => {
-    setPlay(false);
-    $setNodeStyle(editor,sampleKey);
+    setPlaying(false);
+    editor.update(() => {
+      console.log('playingNodes',playingNodes)
+      playingNodes?.forEach( (key: string) => {
+        const node = $getNodeByKey(key);
+        if(node) {
+        (node as TextNode).setStyle("")
+      }
+      })
+
+    });
   };
+
+  function arrayToTree(array: any) {
+    // 创建一个字典以便快速查找
+    const map: any = {};
+    array.forEach((item: any) => {
+      map[item.__key] = { ...item.exportJSON(), children: [] };
+    });
+  
+    // 创建树状结构
+    const tree: any = [];
+    array.forEach((item: any) => {
+      const parent = map[item.__parent];
+      if (!parent) {
+        tree.push(map[item.__key]);
+      }else {
+          parent.children.push(map[item.__key]);
+      }
+    });
+  
+    return tree;
+  }
+
+  const samplePlay = () => {
+    editor.update(() => {
+      const selection = $getSelection();
+
+      if(selection === null) {
+        return;
+      }
+
+      if (!$isRangeSelection(selection)) {
+        return;
+      }
+
+      const anchorAndFocus = selection.getStartEndPoints();
+
+      if(anchorAndFocus) {
+        const end = $isAtNodeEnd(anchorAndFocus[0])
+        if(end) {
+          console.log("all try")
+          return
+        }
+      }
+
+      const nodes = selection.extract();
+      const playingNodes: any = []
+
+      const trees = arrayToTree(nodes)
+
+      const ssml = getSsml([{children: trees, type: "paragraph"}])
+      console.log('ssml',ssml)
+
+      nodes.forEach((node) => {
+        if($isTextNode(node)) {
+          playingNodes.push(node.getKey())
+          node.setStyle("color:green")
+        }
+      })
+
+      setPlayingNodes(playingNodes)
+
+     // 生成ssml
+      playAudio();
+      
+    })
+  }
 
   useEffect(() => {
     return mergeRegister(
@@ -209,153 +255,36 @@ export default function ToolbarPlugin(props) {
   }, [editor]);
 
   useEffect(() => {
-    return editor.registerUpdateListener(({ editorState }) => {
-      
-    });
+    return editor.registerUpdateListener(({ editorState }) => {});
   }, [editor]);
 
   return (
     <>
       <audio
+        controls
         ref={audioRef}
-        src={ samplePlayList?.[globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"]?.[sampleKey]?.prevPath }
+        // src={ samplePlayList?.[globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"]?.[sampleKey]?.prevPath }
         onPause={handlePause}
         autoPlay
-      ></audio>
+      >
+        <source src="https://www.runoob.com/try/demo_source/horse.mp3" type="audio/mpeg" />
+        Your browser does not support this audio format.
+      </audio>
       <div className="toolbar" ref={toolbarRef}>
         <div
-          onClick={async () => {
+          onMouseDown={async (e) => {
+            e.preventDefault();
             if (!total) {
               message.error("请先输入配音内容！");
               return;
             }
-
-            if (!sampleLoading && play) {
-              setPlay(false);
-              pauseAudio();
-              return;
-            }
-
-            console.log('试听')
-
-            editor.update( () => {
-              const selection = $getSelection();
-              const nodes = selection?.extract()
-              nodes.forEach( (node) => {
-                console.log('node',node)
-                // 如果是text，则按照句号分割
-                if($isTextNode(node)) {
-                  const splitNodes = node?.getTextContent().split("。")
-                  splitNodes.forEach( (_node) => {
-                    if(_node) {
-                    const textNode = $createTextNode(_node + '。')
-                    textNode.toggleUnmergeable()
-                    node.insertBefore(textNode)
-                  }
-                  } )
-                }
-                node.remove()
-              } )
-  
-            })
-
-
-            // 获取当前选择器
-            // editor.update(async () => {
-            //   const selection = $getSelection();
-            //   if (selection) {
-               
-            //     $patchStyleText(selection, {
-            //       color: "#369eff"
-            //     });  
-
-            //     const nodes = selection.getNodes()
-
-            //     console.log('nodes', nodes)
-
-            //     return
-
-            //     const selectionNodes = arrayToTree(nodes);
-
-            //     const sampleKey = selectionNodes.map((node) => node.key).join("-");
-
-            //     console.log('sampleKey',sampleKey)
-
-            //     setSampleKey(sampleKey)
-
-            //     if (samplePlayList?.[globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"]?.[sampleKey]?.prevPath) {
-            //       setPlay(true);
-            //       playAudio();
-            //       return;
-            //     }
-                
-            //     const ssml = getSsml([{ type: "paragraph", children: selectionNodes }]);
-            //     console.log("ssml", ssml);
-
-            //     setSampleLoading(true);
-            //     const res = await getSample({ ssml })
-            //     if (res.code === 1) {
-                  
-            //       setSampleLoading(false);
-           
-
-            //       let newSamplePlayList: any = {}
-                  
-            //       if(samplePlayList) {
-            //         newSamplePlayList = {...samplePlayList}
-            //       }
-
-            //       const voicePlayList =
-            //       newSamplePlayList?.[globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"] || {};
-            //       if (!voicePlayList?.[sampleKey]) {
-            //         voicePlayList[sampleKey] = {};
-            //       }
-            //       voicePlayList[sampleKey].prevPath = res.data.prevPath;
-
-            //       newSamplePlayList[globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"] = voicePlayList
-
-            //       setSamplePlayList(newSamplePlayList)
-
-            //       setPlay(true);
-
-            //     }
-            //   }
-            // });
-
-            return;
-
-            const state = editor.getEditorState();
-            const json = state.toJSON();
-            let ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-cn">`;
-            ssml += parseSSMLNode(json.root.children);
-            ssml += `</speak>`;
-            console.log("ssml", ssml);
-
-            return;
-
-            setSampleLoading(true);
-            const res: any = await addWork({
-              title: "测试",
-              speaker: globalVoice?.shortName || "zh-CN-XiaoxiaoNeural",
-              editorState: JSON.stringify(json),
-              ssml
-            });
-
-            setSampleLoading(false);
-
-            if (res.code === 1) {
-              setPlayList({
-                [globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"]: res.data.prevPath
-              });
-
-              setPlay(true);
-            }
+            samplePlay();
           }}
           className="toolbar-item toolbar-play"
         >
           <img
             src={`/assets/toolbar/${
-              sampleLoading ? "loading.svg" : play ? "playing.svg" : "play.svg"
+              sampleLoading ? "loading.svg" : playing ? "playing.svg" : "play.svg"
             }`}
           />
           <span>试听</span>
