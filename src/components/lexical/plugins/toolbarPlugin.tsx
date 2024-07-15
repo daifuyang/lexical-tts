@@ -30,9 +30,11 @@ import { INSERT_PAUSE_COMMAND } from "./pausePlugin";
 import { OPEN_VOICE_MODAL_COMMAND } from "./voicePlugin";
 
 import { convert, pinyin } from "pinyin-pro";
-import { addWork } from "@/services/work";
 import classNames from "classnames";
 import { $isAtNodeEnd } from '@lexical/selection';
+
+import { addWork } from "@/services/work";
+import { getSample } from "@/services/sample"
 
 const LowPriority = 1;
 
@@ -53,6 +55,8 @@ export default function ToolbarPlugin(props: any) {
   const [playing, setPlaying] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
 
+  const [samplePlayList, setSamplePlayList] = useState<any>(null);
+
   const [playingNodes, setPlayingNodes] = useState<any>(null);
 
   const voiceState = useAppSelector((state) => state.voiceState);
@@ -68,7 +72,6 @@ export default function ToolbarPlugin(props: any) {
     nodes.forEach((node: any) => {
       switch (node.type) {
         case "paragraph":
-          ssml += `<voice name="${globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"}">`;
           ssml += `<p><s>`;
           const nodes = node.children;
           const content = parseSSMLNode(nodes);
@@ -76,13 +79,12 @@ export default function ToolbarPlugin(props: any) {
             ssml += content;
           }
           ssml += `</s></p>`;
-          ssml += `</voice>`;
           break;
         case "voice":
           let voiceChildrenSsml = parseSSMLNode(node.children);
-          let voice = `<voice name="zh-CN-YunxiNeural">
+          let voice = `</voice><voice name="zh-CN-YunxiNeural">
           ${voiceChildrenSsml}
-      </voice>`;
+      </voice><voice name="${globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"}">`;
           if (voiceChildrenSsml) {
             ssml += voice;
           }
@@ -94,7 +96,12 @@ export default function ToolbarPlugin(props: any) {
           }
           let ph = convert(node.pinyin, { format: "symbolToNum" });
           if (ph) {
-            ph = ph.slice(0, -1) + " " + ph.slice(-1);
+
+            let num = ph.slice(-1)
+            if(num == "0") {
+              num = "1"
+            }
+            ph = ph.slice(0, -1) + " " + num;
             ssml += `<phoneme alphabet="sapi" ph="${ph}">${pinyinNodeText}</phoneme>`;
           } else {
             ssml += `${pinyinNodeText}`;
@@ -139,14 +146,23 @@ export default function ToolbarPlugin(props: any) {
 
   const getSsml = (nodes: any = []) => {
     let ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-cn">`;
+    ssml += `<voice name="${globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"}">`;
     ssml += parseSSMLNode(nodes);
+    ssml += `</voice>`;
     ssml += `</speak>`;
     return ssml;
   };
 
+  const handleCanPlay = () => {
+    audioRef.current.play().catch(error => {
+      console.error('Error playing audio:', error);
+    });
+  };
+
   const playAudio = () => {
     setPlaying(true);
-    audioRef.current?.play();
+    audioRef.current.addEventListener('canplay', handleCanPlay);
+    audioRef.current?.load();
   };
 
   const pauseAudio = () => {
@@ -156,7 +172,6 @@ export default function ToolbarPlugin(props: any) {
   const handlePause = () => {
     setPlaying(false);
     editor.update(() => {
-      console.log('playingNodes',playingNodes)
       playingNodes?.forEach( (key: string) => {
         const node = $getNodeByKey(key);
         if(node) {
@@ -188,6 +203,44 @@ export default function ToolbarPlugin(props: any) {
     return tree;
   }
 
+  const fetchSample = (playingNodes: any,ssml: string, onOk?: () => void) => {
+    setSampleLoading(true)
+    getSample({ssml}).then( (res: any) => {
+
+    setSampleLoading(false)
+    if(res.code === 1) {
+     
+      const { prevPath } = res.data
+      
+      let samplekey
+      if(playingNodes) {
+        samplekey = playingNodes?.join("-")
+      }
+      let newSamplePlayList: any = {}
+      if(samplePlayList) {
+        newSamplePlayList = samplePlayList
+      }
+      if(!newSamplePlayList[shortName]) {
+        newSamplePlayList[shortName] = {}
+      }
+
+      if(samplekey) {
+        newSamplePlayList[shortName][samplekey] = prevPath
+      }
+
+      setSamplePlayList(newSamplePlayList)
+        
+      setPlayingNodes(playingNodes)
+
+      if(onOk) {
+        onOk()
+      }
+
+
+    }
+    } )
+  }
+
   const samplePlay = () => {
     editor.update(() => {
       const selection = $getSelection();
@@ -205,7 +258,14 @@ export default function ToolbarPlugin(props: any) {
       if(anchorAndFocus) {
         const end = $isAtNodeEnd(anchorAndFocus[0])
         if(end) {
-          console.log("all try")
+          const state = editor.getEditorState();
+            const json = state.toJSON();
+            console.log('json',json)
+            let ssml = getSsml(json.root.children)
+            console.log("ssml", ssml);
+            fetchSample(json.root.children, ssml, () => {
+              playAudio()
+            });
           return
         }
       }
@@ -214,10 +274,7 @@ export default function ToolbarPlugin(props: any) {
       const playingNodes: any = []
 
       const trees = arrayToTree(nodes)
-
-      const ssml = getSsml([{children: trees, type: "paragraph"}])
-      console.log('ssml',ssml)
-
+      
       nodes.forEach((node) => {
         if($isTextNode(node)) {
           playingNodes.push(node.getKey())
@@ -225,11 +282,12 @@ export default function ToolbarPlugin(props: any) {
         }
       })
 
-      setPlayingNodes(playingNodes)
+      const ssml = getSsml([{children: trees, type: "paragraph"}])
+   
+      fetchSample(playingNodes, ssml , () => {
+        playAudio()
+      })
 
-     // 生成ssml
-      playAudio();
-      
     })
   }
 
@@ -254,20 +312,33 @@ export default function ToolbarPlugin(props: any) {
     );
   }, [editor]);
 
+  const shortName = globalVoice?.shortName || "zh-CN-XiaoxiaoNeural" // 当前主播
+  const sampleKey =  playingNodes?.join("-")
+
   useEffect(() => {
-    return editor.registerUpdateListener(({ editorState }) => {});
-  }, [editor]);
+    if(samplePlayList?.[shortName]?.[sampleKey]) {
+      playAudio()
+  }
+
+   // 清除事件监听器
+   return () => {
+    audioRef.current.removeEventListener('canplay', handleCanPlay);
+  };
+
+  }, [samplePlayList?.[shortName]?.[sampleKey]]);
 
   return (
     <>
       <audio
-        controls
+        // controls
         ref={audioRef}
         // src={ samplePlayList?.[globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"]?.[sampleKey]?.prevPath }
         onPause={handlePause}
         autoPlay
       >
-        <source src="https://www.runoob.com/try/demo_source/horse.mp3" type="audio/mpeg" />
+        <source src={
+          samplePlayList?.[shortName]?.[sampleKey]
+        } type="audio/mpeg" />
         Your browser does not support this audio format.
       </audio>
       <div className="toolbar" ref={toolbarRef}>
