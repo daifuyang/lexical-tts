@@ -30,6 +30,7 @@ import dynamic from "next/dynamic";
 import {OnChangePlugin} from "./plugins/onChangePlugin";
 import SamplePlugin from "./plugins/SamplePlugin";
 import { calculateTextLength } from "./utils/util";
+import { VoiceNode } from "./nodes/voiceNode";
 const VoicePlugin = dynamic(() => import("./plugins/voicePlugin"), { ssr: false });
 
 function Placeholder() {
@@ -40,7 +41,7 @@ function Placeholder() {
 
 const editorConfig = {
   namespace: "ttsEditor",
-  nodes: [PinyinNode, SymbolNode, SpeedNode, WrapNode, PauseNode, SampleNode],
+  nodes: [PinyinNode, SymbolNode, SpeedNode, WrapNode, PauseNode, SampleNode, VoiceNode],
   // Handling of errors during update
   onError(error: Error) {
     throw error;

@@ -7,18 +7,30 @@ import { mergeRegister } from "@lexical/utils";
 import { useAppDispatch } from "@/redux/hook";
 import { fetchDefaultVoice, setGlobalVoice } from "@/redux/slice/voiceState";
 
-import type { TabsProps } from "antd";
-import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_EDITOR, createCommand, LexicalCommand } from "lexical";
+import { message, type TabsProps } from "antd";
+import {
+  $getSelection,
+  $isRangeSelection,
+  COMMAND_PRIORITY_EDITOR,
+  createCommand,
+  LexicalCommand
+} from "lexical";
 
 import VoiceModal from "./voiceModal";
+import { $isSpeedNode } from "../nodes/speedNode";
+import { $insertVoice, VoiceNode } from "../nodes/voiceNode";
+import { InsertVoicePayload, OpenVoicePayload } from "../typings/voice";
 
-export const OPEN_VOICE_MODAL_COMMAND: LexicalCommand<string> = createCommand('OPEN_VOICE_MODAL_COMMAND');
+export const INSERT_VOICE_COMMAND: LexicalCommand<InsertVoicePayload> = createCommand("INSERT_VOICE_COMMAND");
+export const OPEN_VOICE_MODAL_COMMAND: LexicalCommand<OpenVoicePayload | undefined> = createCommand(
+  "OPEN_VOICE_MODAL_COMMAND"
+);
 
 export default function VoicePlugin() {
-
   const dispatch = useAppDispatch();
 
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [voiceType, setVoiceType] = useState<"global" | undefined>();
 
   const onChange = (key: string) => {
     console.log(key);
@@ -27,27 +39,73 @@ export default function VoicePlugin() {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
-      
-      return mergeRegister(
-          editor.registerCommand<string>(
-            OPEN_VOICE_MODAL_COMMAND,
-              (payload) => {
-                  const selection = $getSelection();
-                  if (!$isRangeSelection(selection)) {
-                      return false;
-                  }
-                  setOpen(true)
-                  return true;
-              },
-              COMMAND_PRIORITY_EDITOR,
-          ),
-      );
+    if (!editor.hasNodes([VoiceNode])) {
+      throw new Error("VoicePlugin: VoiceNode not registered on editor (initialConfig.nodes)");
+    }
+
+    return mergeRegister(
+      editor.registerCommand<OpenVoicePayload>(
+        OPEN_VOICE_MODAL_COMMAND,
+        (payload = {}) => {
+
+          const {voice, type} = payload
+
+          const selection = $getSelection();
+          if (!$isRangeSelection(selection)) {
+            return false;
+          }
+
+          const text = selection.getTextContent();
+          if (!text) {
+            message.error("请先选中文字!");
+            return false;
+          }
+          const anchorAndFocus = selection.getStartEndPoints();
+          if (anchorAndFocus) {
+            const [anchor, focus] = anchorAndFocus;
+            const isBefore = anchor.isBefore(focus);
+            const firstPoint = isBefore ? anchor : focus;
+            let firstNode = firstPoint.getNode();
+            const nexts = firstNode.getNextSiblings();
+            const allNodes = [firstNode, ...nexts];
+            for (let index = 0; index < allNodes.length; index++) {
+              const node = allNodes[index];
+              if ($isSpeedNode(node)) {
+                message.error("多人配音不能和局部变速重叠！");
+                return false;
+              }
+            }
+            setVoiceType(type);
+            setOpen(true);
+          }
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand<InsertVoicePayload>(
+        INSERT_VOICE_COMMAND,
+        (payload) => {
+          const selection = $getSelection();
+          if (!$isRangeSelection(selection)) {
+            return false;
+          }
+          $insertVoice(payload.name,
+            payload.shortName,
+            payload.style,
+            payload.styleName,
+            payload.rate,
+            payload.volume,
+            payload.pitch);
+          return true
+        },
+        COMMAND_PRIORITY_EDITOR
+      )
+    );
   }, [editor]);
 
-  useEffect( () => {
+  useEffect(() => {
     dispatch(fetchDefaultVoice());
-  } ,[])
-
+  }, []);
 
   const items: TabsProps["items"] = [
     {
@@ -61,10 +119,21 @@ export default function VoicePlugin() {
   ];
 
   return (
-    <VoiceModal open={open} onOpenChange={ (togger: boolean) => {
-        setOpen(togger)
-    }} items={items} onChange={onChange} onOk={ (values) => {
-      dispatch(setGlobalVoice(values))
-    } } />
+    <VoiceModal
+      open={open}
+      onOpenChange={(togger: boolean) => {
+        setOpen(togger);
+      }}
+      items={items}
+      onChange={onChange}
+      onOk={(values) => {
+        if (voiceType === "global") {
+          dispatch(setGlobalVoice(values));
+        }else {
+          editor.dispatchCommand(INSERT_VOICE_COMMAND, values);
+            console.log('values',values)
+        }
+      }}
+    />
   );
 }

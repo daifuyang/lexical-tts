@@ -6,6 +6,7 @@
 @import url("./nodes/symbol.css");
 @import url("./nodes/speed.css");
 @import url("./nodes/pause.css");
+@import url("./nodes/voice.css");
 
 .tts-editor-root {
   position: relative;

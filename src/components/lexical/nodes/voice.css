@@ -1,37 +1,37 @@
-.editor-speed {
+.editor-voice {
     cursor: pointer;
     display: inline-block;
     text-align: center;
 }
 
-.editor-speed > .speed-tag {
+.editor-voice > .voice-tag {
     display: inline-flex;
     align-items: center;
     user-select: none;
-    background-color: #e96c5e;
+    background-color: #3fd3a2;
     color: #fff;
     border-radius: 6px;
     padding: 2px 4px;
     margin-left: 4px;
 }
 
-.editor-speed > .speed-tag > .speed-tag-text {
+.editor-voice > .voice-tag > .voice-tag-text {
     font-size: 14px;
 }
 
-.editor-speed > .wrap-node {
+.editor-voice > .wrap-node {
    position: relative;
 }
 
-.editor-speed > .wrap-node::before {
-    color: #e96c5e;
+.editor-voice > .wrap-node::before {
+    color: #3fd3a2;
     display: inline-block;
     content: "「";
     font-weight: 700;
 }
 
-.editor-speed > .wrap-node::after {
-    color: #e96c5e;
+.editor-voice > .wrap-node::after {
+    color: #3fd3a2;
     display: inline-block;
     content: "」";
     font-weight: 700;

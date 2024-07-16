@@ -154,14 +154,14 @@ export default function ToolbarPlugin(props: any) {
   };
 
   const handleCanPlay = () => {
-    audioRef.current.play().catch(error => {
+    audioRef.current?.play().catch(error => {
       console.error('Error playing audio:', error);
     });
   };
 
   const playAudio = () => {
     setPlaying(true);
-    audioRef.current.addEventListener('canplay', handleCanPlay);
+    audioRef.current?.addEventListener('canplay', handleCanPlay);
     audioRef.current?.load();
   };
 
@@ -322,7 +322,7 @@ export default function ToolbarPlugin(props: any) {
 
    // 清除事件监听器
    return () => {
-    audioRef.current.removeEventListener('canplay', handleCanPlay);
+    audioRef.current?.removeEventListener('canplay', handleCanPlay);
   };
 
   }, [samplePlayList?.[shortName]?.[sampleKey]]);
@@ -332,7 +332,6 @@ export default function ToolbarPlugin(props: any) {
       <audio
         // controls
         ref={audioRef}
-        // src={ samplePlayList?.[globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"]?.[sampleKey]?.prevPath }
         onPause={handlePause}
         autoPlay
       >
@@ -364,7 +363,7 @@ export default function ToolbarPlugin(props: any) {
         <div
           onMouseDown={(e) => {
             e.preventDefault();
-            editor.dispatchCommand(OPEN_VOICE_MODAL_COMMAND, "global");
+            editor.dispatchCommand(OPEN_VOICE_MODAL_COMMAND, {type:"global"});
           }}
           className="toolbar-item toolbar-voice"
         >
