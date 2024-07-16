@@ -8,8 +8,9 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
 import {
+  $getRoot,
+  $isRootNode,
   $isTextNode,
-  $isElementNode,
   $getNodeByKey,
   $getSelection,
   CAN_REDO_COMMAND,
@@ -18,7 +19,6 @@ import {
   UNDO_COMMAND,
   $isRangeSelection,
   TextNode,
-  $createParagraphNode
 } from "lexical";
 import { useEffect, useRef, useState } from "react";
 import { Avatar, Spin, message } from "antd";
@@ -32,6 +32,8 @@ import { OPEN_VOICE_MODAL_COMMAND } from "./voicePlugin";
 import { convert, pinyin } from "pinyin-pro";
 import classNames from "classnames";
 import { $isAtNodeEnd } from '@lexical/selection';
+
+import { $isVoiceNode } from '../nodes/voiceNode';
 
 import { addWork } from "@/services/work";
 import { getSample } from "@/services/sample"
@@ -67,24 +69,48 @@ export default function ToolbarPlugin(props: any) {
 
   const toolbarRef = useRef(null);
 
+  let endVoice = false //存在结尾闭合标签
   const parseSSMLNode = (nodes: any = []) => {
     let ssml = "";
     nodes.forEach((node: any) => {
       switch (node.type) {
         case "paragraph":
-          ssml += `<p><s>`;
+          ssml += `<voice name="${globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"}">`;
           const nodes = node.children;
           const content = parseSSMLNode(nodes);
           if (content) {
             ssml += content;
           }
-          ssml += `</s></p>`;
+          ssml += `${endVoice ? '' : '</voice>'}`;
+          endVoice = false
           break;
         case "voice":
+
+          const {key} = node
+          const voiceNode = $getNodeByKey(key);
+          
+          const previous = voiceNode?.getPreviousSibling()
+          const next = voiceNode?.getNextSibling()
+          
+          let start = '</voice>'
+          let end = `<voice name="${globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"}">`
+
+          if($isVoiceNode(previous)) {
+            start = ''
+          }
+          if($isVoiceNode(next)) {
+            end = ''
+          }
+
+          // 如果是结尾
+          if(!next) {
+            end = ''
+            endVoice = true
+          }
+          
           let voiceChildrenSsml = parseSSMLNode(node.children);
-          let voice = `</voice><voice name="zh-CN-YunxiNeural">
-          ${voiceChildrenSsml}
-      </voice><voice name="${globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"}">`;
+          let voice = `${start}<voice name="${node.voice}">${voiceChildrenSsml}</voice>${end}`;
+
           if (voiceChildrenSsml) {
             ssml += voice;
           }
@@ -96,7 +122,6 @@ export default function ToolbarPlugin(props: any) {
           }
           let ph = convert(node.pinyin, { format: "symbolToNum" });
           if (ph) {
-
             let num = ph.slice(-1)
             if(num == "0") {
               num = "1"
@@ -146,9 +171,7 @@ export default function ToolbarPlugin(props: any) {
 
   const getSsml = (nodes: any = []) => {
     let ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-cn">`;
-    ssml += `<voice name="${globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"}">`;
     ssml += parseSSMLNode(nodes);
-    ssml += `</voice>`;
     ssml += `</speak>`;
     return ssml;
   };
@@ -171,6 +194,7 @@ export default function ToolbarPlugin(props: any) {
 
   const handlePause = () => {
     setPlaying(false);
+    if(playingNodes instanceof Array) {
     editor.update(() => {
       playingNodes?.forEach( (key: string) => {
         const node = $getNodeByKey(key);
@@ -178,8 +202,8 @@ export default function ToolbarPlugin(props: any) {
         (node as TextNode).setStyle("")
       }
       })
-
     });
+  }
   };
 
   function arrayToTree(array: any) {
@@ -204,6 +228,20 @@ export default function ToolbarPlugin(props: any) {
   }
 
   const fetchSample = (playingNodes: any,ssml: string, onOk?: () => void) => {
+
+    let cacheKey: string
+
+    if($isRootNode(playingNodes)) {
+      cacheKey = "all"
+    }else  if(playingNodes) {
+      cacheKey = playingNodes?.join("-")
+    }
+    
+    if(cacheKey && samplePlayList?.[shortName]?.[cacheKey]) {
+      playAudio()
+      return
+    }
+
     setSampleLoading(true)
     getSample({ssml}).then( (res: any) => {
 
@@ -212,10 +250,8 @@ export default function ToolbarPlugin(props: any) {
      
       const { prevPath } = res.data
       
-      let samplekey
-      if(playingNodes) {
-        samplekey = playingNodes?.join("-")
-      }
+      let samplekey = cacheKey
+      
       let newSamplePlayList: any = {}
       if(samplePlayList) {
         newSamplePlayList = samplePlayList
@@ -230,6 +266,7 @@ export default function ToolbarPlugin(props: any) {
 
       setSamplePlayList(newSamplePlayList)
         
+      
       setPlayingNodes(playingNodes)
 
       if(onOk) {
@@ -242,6 +279,12 @@ export default function ToolbarPlugin(props: any) {
   }
 
   const samplePlay = () => {
+
+    if(playing) {
+      pauseAudio()
+      return
+    }
+
     editor.update(() => {
       const selection = $getSelection();
 
@@ -262,8 +305,10 @@ export default function ToolbarPlugin(props: any) {
             const json = state.toJSON();
             console.log('json',json)
             let ssml = getSsml(json.root.children)
-            console.log("ssml", ssml);
-            fetchSample(json.root.children, ssml, () => {
+
+            const root = $getRoot();
+
+            fetchSample(root, ssml, () => {
               playAudio()
             });
           return
@@ -281,6 +326,8 @@ export default function ToolbarPlugin(props: any) {
           node.setStyle("color:green")
         }
       })
+
+      console.log('playingNodes',playingNodes)
 
       const ssml = getSsml([{children: trees, type: "paragraph"}])
    
@@ -313,7 +360,7 @@ export default function ToolbarPlugin(props: any) {
   }, [editor]);
 
   const shortName = globalVoice?.shortName || "zh-CN-XiaoxiaoNeural" // 当前主播
-  const sampleKey =  playingNodes?.join("-")
+  const sampleKey =  playingNodes instanceof Array ?  playingNodes?.join("-") : "all"
 
   useEffect(() => {
     if(samplePlayList?.[shortName]?.[sampleKey]) {

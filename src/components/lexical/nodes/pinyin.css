@@ -1,6 +1,6 @@
 .editor-pinyin {
     cursor: pointer;
-    display: inline-block;
+    display: inline;
     text-align: center;
     color: #369eff;
 }
