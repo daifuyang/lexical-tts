@@ -1,6 +1,6 @@
 .editor-symbol {
     cursor: pointer;
-    display: inline-block;
+    display: inline;
     text-align: center;
     color: #f6a64e;
 }

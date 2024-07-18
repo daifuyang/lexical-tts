@@ -27,6 +27,7 @@ export type SerializedVoiceNode = Spread<
     rate: number; // 语速
     volume: number; // 音量
     pitch: number; // 音调
+    key: string;
   },
   SerializedElementNode
 >;
@@ -121,6 +122,7 @@ export class VoiceNode extends ElementNode {
   exportJSON(): SerializedVoiceNode {
     return {
       ...super.exportJSON(),
+      key: this.getKey(),
       type: this.getType(),
       name: this.getName(),
       voice: this.getVoice(),
