@@ -12,7 +12,8 @@ import {
   Spread,
   SerializedElementNode,
   $isTextNode,
-  $getNodeByKey
+  $getNodeByKey,
+  BaseSelection
 } from "lexical";
 import { Dispatch } from "react";
 import { OPEN_PINYIN_POPUP_COMMAND } from "../plugins/pinyinPlugin";
@@ -60,7 +61,6 @@ export class PinyinNode extends ElementNode {
         pinyin,
       });
     });
-    element.contentEditable = "false";
     element.dataset.pinyin = `[${this.getPinyin()}]`;
     addClassNamesToElement(element, config.theme.pinyin);
     return element;
@@ -111,6 +111,7 @@ export class PinyinNode extends ElementNode {
     const self = this.getLatest();
     return self.__pinyin;
   }
+
 }
 
 export function $createPinyinNode(pinyin: string): PinyinNode {

@@ -60,24 +60,8 @@ export default function VoicePlugin() {
             message.error("请先选中文字!");
             return false;
           }
-          const anchorAndFocus = selection.getStartEndPoints();
-          if (anchorAndFocus) {
-            const [anchor, focus] = anchorAndFocus;
-            const isBefore = anchor.isBefore(focus);
-            const firstPoint = isBefore ? anchor : focus;
-            let firstNode = firstPoint.getNode();
-            const nexts = firstNode.getNextSiblings();
-            const allNodes = [firstNode, ...nexts];
-            for (let index = 0; index < allNodes.length; index++) {
-              const node = allNodes[index];
-              if ($isSpeedNode(node)) {
-                message.error("多人配音不能和局部变速重叠！");
-                return false;
-              }
-            }
-            setVoiceType(type);
+          setVoiceType(type);
             setOpen(true);
-          }
           return true;
         },
         COMMAND_PRIORITY_EDITOR

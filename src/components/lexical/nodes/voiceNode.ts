@@ -296,3 +296,13 @@ export function $removeVoice(key: string) {
 export function $isVoiceNode(node: LexicalNode | null | undefined): node is VoiceNode {
   return node instanceof VoiceNode;
 }
+
+export function $getVoiceAncestor(
+  node: LexicalNode,
+) {
+  let parent = node;
+  while (parent !== null && parent.getParent() !== null && !$isVoiceNode(parent)) {
+    parent = parent.getParentOrThrow();
+  }
+  return $isVoiceNode(parent) ? parent : null;
+}

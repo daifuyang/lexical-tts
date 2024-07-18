@@ -1,3 +1,5 @@
+import { LexicalNode, RangeSelection } from "lexical";
+
 export function arrayToTree(array: any[]): any {
     // Step 1: Create a map to store references to each node
     const nodeMap: { [key: string]: any } = {};
@@ -37,3 +39,47 @@ export function arrayToTree(array: any[]): any {
 
     return rootNodes;
 }
+
+export function getNodes(selection: RangeSelection): Array<LexicalNode> {
+    const anchor = selection.anchor;
+    const focus = selection.focus;
+    const isBefore = anchor.isBefore(focus);
+    const firstPoint = isBefore ? anchor : focus;
+    const lastPoint = isBefore ? focus : anchor;
+    let firstNode = firstPoint.getNode();
+    let lastNode = lastPoint.getNode();
+    const startOffset = firstPoint.offset;
+    const endOffset = lastPoint.offset;
+
+    console.log("firstNode",firstNode,lastNode)
+
+    let next: any = firstNode
+
+    let nodes = []
+    let index = 0
+
+    do {
+        const nextNode =  next.getNextSibling();
+
+        if(nextNode) {
+        next = nextNode;
+        nodes.push(next)
+     }
+
+     index++
+
+     if(index > 100) {
+        console.log('out memary')
+        break
+     }
+
+     console.log('key',next,next?.getKey(), lastNode?.getKey())
+
+       if(next?.getKey() === lastNode.getKey()) {
+            console.log('next',next)
+           break;
+       }
+   } while (true);
+   console.log('nodes',nodes)
+    return []
+  }
