@@ -2,6 +2,7 @@ import {
   $applyNodeReplacement,
   $getNodeByKey,
   $getSelection,
+  $isParagraphNode,
   $isRangeSelection,
   $isTextNode,
   ElementNode,
@@ -10,12 +11,23 @@ import {
   SerializedElementNode,
   Spread
 } from "lexical";
-import { $wrapNodes } from "@lexical/selection";
-import { $createSpeedNode, $getSpeedAncestor, $isSpeedNode, SpeedNode } from "./speedNode";
-import { getNodes } from "../utils/node";
-import { $createVoiceNode, VoiceNode } from "./voiceNode";
+import { $createSpeedNode, $isSpeedNode, SpeedNode } from "./speedNode";
+import { $createVoiceNode, $isVoiceNode, VoiceNode } from "./voiceNode";
+import { $createPinyinNode, $isPinyinNode } from "./pinyinNode";
+import { $isSymbolNode } from "./symbolNode";
 
 export type SerializedWrapNode = Spread<{}, SerializedElementNode>;
+
+function $getAncestor<NodeType extends LexicalNode = LexicalNode>(
+  node: LexicalNode,
+  predicate: (ancestor: LexicalNode) => ancestor is NodeType
+) {
+  let parent = node;
+  while (parent !== null && parent.getParent() !== null && !predicate(parent)) {
+    parent = parent.getParentOrThrow();
+  }
+  return predicate(parent) ? parent : null;
+}
 
 export class WrapNode extends ElementNode {
   static getType(): string {
@@ -103,18 +115,77 @@ function arrayToTree(array: any, hasChildren = false) {
   return tree;
 }
 
-function getTopNode(node) {
-  let target = node;
-  while (!(target.getParent() instanceof ParagraphNode)) {
-    target = target.getParent();
+function $getTopNode<NodeType extends LexicalNode = LexicalNode>(
+  node: LexicalNode,
+  predicate: (ancestor: LexicalNode) => ancestor is NodeType
+) {
+  let parent = node;
+  while (parent !== null && parent.getParent() !== null && !predicate(parent.getParent())) {
+    parent = parent.getParentOrThrow();
   }
-  return target;
+  return parent;
 }
+
+function findTopLevelParent(key: string) {
+  function findParent(childKey: string) {
+    const node = $getNodeByKey(childKey);
+    return node?.getParent() || null;
+  }
+
+  let currentKey = key;
+  let parentNode = findParent(currentKey);
+
+  console.log("parentNode", parentNode);
+
+  let parentKey: string | null = null;
+
+  if (parentNode) {
+    parentKey = parentNode.__key;
+  }
+
+  let index = 0;
+  while (parentKey !== null) {
+    // 当前的上级是段落则结束
+    const parentParentNode = findParent(parentKey);
+    if ($isParagraphNode(parentNode)) {
+      console.log("段落");
+      break;
+    } else if ($isParagraphNode(parentParentNode)) {
+      console.log("parentKey段落");
+      currentKey = parentKey;
+      break;
+    }
+
+    if (index > 999) {
+      console.log("bug 死循环了");
+      break;
+    }
+
+    const nextParentNode = findParent(parentKey);
+    if (nextParentNode) {
+      parentKey = nextParentNode.__key;
+    } else {
+      parentKey = null;
+    }
+
+    index++;
+  }
+
+  return $getNodeByKey(currentKey);
+}
+
+function $getFirstChild(node: WrapNode) {
+  if ($isWrapNode(node)) {
+    return node.getFirstChild();
+  }
+  return node;
+}
+
 export function $insertWrapNode(parentNode: ElementNode) {
   if (!parentNode) {
     return;
   }
-  const nodeType = parentNode.getType();
+
   const selection = $getSelection();
   if (!$isRangeSelection(selection)) {
     return;
@@ -125,6 +196,102 @@ export function $insertWrapNode(parentNode: ElementNode) {
   }
 
   const nodes = selection.extract();
+  console.log("nodes", nodes);
+
+  let paragraphNodeIndex: number = -1;
+  let speedNodeIndex: number = -1;
+
+  let firstSpeedNode: SpeedNode | null = null;
+  let firstSpeedWrapNode: WrapNode | null = null;
+
+  let parentWrapNode: any = null;
+
+  /* --------------------------------------- */
+  let prevParent: any = null; // 游标，记录上一次的父节点
+  let prevNode: LexicalNode | null = null; // 游标，记录上一次的节点
+
+  let speedWrapNode: WrapNode | null = null; // 准备要插入的变速节点
+
+  nodes.forEach((node, i) => {
+    const topNode = findTopLevelParent(node.getKey());
+    if (parent === null) {
+      return;
+    }
+    if ($isTextNode(node)) {
+      const parent = topNode?.getParent();
+      if (parent && !parent.is(prevParent)) {
+        prevParent = parent;
+        if (node.getPreviousSibling() === null) {
+          speedWrapNode = $createWrapNode();
+          parentNode.append(speedWrapNode);
+          node.insertBefore(parentNode);
+        }
+      }
+
+      if ($isSpeedNode(parentNode)) {
+        // 插入变速
+        parentNode.append(topNode.clone());
+      }
+      return;
+
+      // 如果父节点是变速
+      const speedNode = $getAncestor(node, $isSpeedNode);
+
+      if ($isParagraphNode(parent)) {
+        paragraphNodeIndex++;
+        if (paragraphNodeIndex === 0) {
+          parentWrapNode = $createWrapNode();
+          parentNode.append(parentWrapNode);
+          node.insertBefore(parentNode);
+        }
+        parentWrapNode.append(topNode);
+        // console.log('node',node)
+      } else if (speedNode) {
+        speedNodeIndex++;
+        if (prevParent != speedNode) {
+          prevParent = speedNode;
+        }
+
+        if (!firstSpeedNode) {
+          firstSpeedNode = $createSpeedNode(speedNode.getSpeed());
+          const parentWrapNode = $createWrapNode();
+          parentNode.append(parentWrapNode);
+          parentWrapNode.append(firstSpeedNode);
+          firstSpeedWrapNode = $createWrapNode();
+          firstSpeedNode.append(firstSpeedWrapNode);
+        }
+
+        let firstNode = speedNode.getFirstChild();
+        if (firstNode) {
+          firstNode = $getFirstChild(firstNode as WrapNode);
+        }
+
+        if (speedNodeIndex === 0) {
+          const curFirstNode = node;
+          console.log("firstNode", firstNode?.getKey(), curFirstNode.getKey());
+          speedNode.insertBefore(parentNode);
+        }
+
+        if (firstSpeedWrapNode !== null) {
+          const pinyinParent = $getAncestor(node, $isPinyinNode);
+          const symbolParent = $getAncestor(node, $isSymbolNode);
+          if (pinyinParent) {
+            firstSpeedWrapNode.append(pinyinParent);
+          } else if (symbolParent) {
+            firstSpeedWrapNode.append(symbolParent);
+          } else {
+            firstSpeedWrapNode.append(node);
+          }
+          // console.log('topNode',topNode)
+          // firstSpeedWrapNode.append(topNode)
+        }
+        console.log("node", node);
+      }
+    }
+  });
+
+  return;
+
   // 插入主播
   if (nodeType === "voice") {
     let wrapType = "normal";

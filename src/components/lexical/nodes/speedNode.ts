@@ -126,24 +126,24 @@ export class SpeedNode extends ElementNode {
     return true;
   }
 
-  // extractWithChild(
-  //   child: LexicalNode,
-  //   selection: BaseSelection,
-  //   destination: "clone" | "html"
-  // ): boolean {
-  //   if (!$isRangeSelection(selection)) {
-  //     return false;
-  //   }
+  extractWithChild(
+    child: LexicalNode,
+    selection: BaseSelection,
+    destination: "clone" | "html"
+  ): boolean {
+    if (!$isRangeSelection(selection)) {
+      return false;
+    }
 
-  //   const anchorNode = selection.anchor.getNode();
-  //   const focusNode = selection.focus.getNode();
+    const anchorNode = selection.anchor.getNode();
+    const focusNode = selection.focus.getNode();
 
-  //   return (
-  //     this.isParentOf(anchorNode) &&
-  //     this.isParentOf(focusNode) &&
-  //     selection.getTextContent().length > 0
-  //   );
-  // }
+    return (
+      this.isParentOf(anchorNode) &&
+      this.isParentOf(focusNode) &&
+      selection.getTextContent().length > 0
+    );
+  }
 }
 
 export function $createSpeedNode(speed: number): SpeedNode {

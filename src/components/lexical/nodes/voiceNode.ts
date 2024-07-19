@@ -42,7 +42,7 @@ export class VoiceNode extends ElementNode {
   __pitch: number;
 
   static getType(): string {
-    return "voice";
+    return "voiceNode";
   }
 
   static clone(node: VoiceNode): VoiceNode {
