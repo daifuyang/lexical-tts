@@ -303,7 +303,8 @@ export default function ToolbarPlugin(props: any) {
         if(end) {
           const state = editor.getEditorState();
             const json = state.toJSON();
-            console.log('json',json)
+            console.log('json',JSON.stringify(json))
+            return
             let ssml = getSsml(json.root.children)
 
             const root = $getRoot();
@@ -326,8 +327,6 @@ export default function ToolbarPlugin(props: any) {
           node.setStyle("color:green")
         }
       })
-
-      console.log('playingNodes',playingNodes)
 
       const ssml = getSsml([{children: trees, type: "paragraph"}])
    
