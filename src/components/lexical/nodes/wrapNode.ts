@@ -14,6 +14,8 @@ import {
 } from "lexical";
 import { $createSpeedNode, $isSpeedNode, SpeedNode } from "./speedNode";
 import { $createVoiceNode, $isVoiceNode, VoiceNode } from "./voiceNode";
+import { $isPinyinNode } from "./pinyinNode";
+import { $isSymbolNode } from "./symbolNode";
 
 export type SerializedWrapNode = Spread<{}, SerializedElementNode>;
 
@@ -181,16 +183,54 @@ export function $insertWrapNode(parentNode: ElementNode) {
   });
 
   // 如果是变速内部创建
-  let ancestorChildren = [] 
+
   if($isSpeedNode(ancestorWrap)) {
-    
-    let wrapNodes = [[],[],[]];
-    let cursorKey = null;
-
+    const speedNode = $createSpeedNode((parentNode as SpeedNode).getSpeed());
+    const speedWrapNode:any = $createWrapNode();
+    speedNode.append(speedWrapNode);
     // todo 完成同级别插入
+    let first = false
+    nodes.forEach((node) => {
+      const parent = node.getParent();
+      if($isTextNode(node) && $isWrapNode(parent)) {
+        if(!first) {
+          first = true
+          node.insertBefore(speedNode);
+        }
+        speedWrapNode.append(node)
+      }else if( $isPinyinNode(node) || $isSymbolNode(node) ) {
+        if(!first) {
+          first = true
+          node.insertBefore(speedNode);
+        }
+        speedWrapNode.append(node)
+      }
+    })
 
-    ancestorChildren = ancestorWrap.getChildren()[0].getChildren();
-    console.log('ancestorChildren', ancestorChildren , nodes);
+    const ancestorNodes = ancestorWrap.getChildren()[0].getChildren();
+    let ancestorWrapNode: any = null;
+
+    let speedNodes:any = [];
+    ancestorNodes.forEach( (item) => {
+      if($isSpeedNode(item)) {
+        speedNodes.push(item);
+        ancestorWrapNode = null
+      }else if(ancestorWrapNode == null) {
+        const speedNode = $createSpeedNode((ancestorWrap as SpeedNode).getSpeed());
+        speedNodes.push(speedNode);
+        ancestorWrapNode = $createWrapNode();
+        speedNode.append(ancestorWrapNode);
+        item.insertBefore(speedNode);
+        ancestorWrapNode.append(item);
+      }else {
+        ancestorWrapNode.append(item);
+      }
+    });
+
+    speedNodes.forEach( (item) => {
+      ancestorWrap.insertBefore(item);
+    } )
+    ancestorWrap.remove();
     return
   }
 
