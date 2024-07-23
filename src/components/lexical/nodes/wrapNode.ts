@@ -36,13 +36,11 @@ function $getTopNode<NodeType extends LexicalNode = LexicalNode>(
   predicate: (ancestor: LexicalNode) => ancestor is NodeType
 ) {
   let parent: any = node;
-
   //todo
 
   while (parent !== null && parent.getParent() !== null) {
-    parent = parent.getParentOrThrow();
+    parent = parent.getParent();
   }
-
   return parent;
 }
 
@@ -103,7 +101,7 @@ export function $createWrapNode(): WrapNode {
 }
 
 // 获取拼音，数字包裹节点
-function getTextWrap(node: LexicalNode) {
+function $getTextWrap(node: LexicalNode) {
   let parent = node.getParent();
   if ($isPinyinNode(parent) || $isSymbolNode(parent)) {
     return parent;
@@ -112,12 +110,93 @@ function getTextWrap(node: LexicalNode) {
   return node;
 }
 
+// 获取变速，配音包裹节点
+function $getSpeedWrap(node: LexicalNode) {
+  let parent: any = node.getParent();
+  if ($isWrapNode(parent)) {
+    parent = parent.getParent();
+  } else {
+    parent = node;
+  }
+  return parent;
+}
+
+// 获取父亲节点
+function $getElementWrap(node: LexicalNode) {
+  let parent: any = node.getParent();
+  if ($isWrapNode(parent)) {
+    return parent.getParent();
+  } else {
+    return null;
+  }
+}
+
+// 获取包裹节点的所有子节点
+function $getWrapChildren(node: SpeedNode | VoiceNode) {
+  const wrap = node.getChildren();
+  const nodes = wrap[0].getChildren();
+  return nodes;
+}
+
 // 创建变速包裹组件
 function $createSpeedWrapNode(speed: number) {
   const speedNode = $createSpeedNode(speed);
   const wrapNode = $createWrapNode();
   speedNode.append(wrapNode);
   return { speedNode, wrapNode };
+}
+
+// 创建配音包裹组件
+function $createVoiceWrapNode(parentVoiceNode: VoiceNode) {
+  const voiceNode = $createVoiceNode(
+    parentVoiceNode.getName(),
+    parentVoiceNode.getVoice(),
+    parentVoiceNode.getStyle(),
+    parentVoiceNode.getStyleName(),
+    parentVoiceNode.getRate(),
+    parentVoiceNode.getVolume(),
+    parentVoiceNode.getPitch()
+  );
+  const wrapNode = $createWrapNode();
+  voiceNode.append(wrapNode);
+  return { voiceNode, wrapNode };
+}
+
+function $insertSpeedNode(nodes: any[]) {
+  let wrapNode: any = null;
+  let prevParent: any = null; // 上一次的element节点
+
+  nodes.forEach((node) => {
+    const element = $getTextWrap(node);
+    const parent = $getElementWrap(element);
+
+    if (!parent) {
+      return;
+    }
+
+    // 开始创建包裹节点
+    if (wrapNode == null) {
+      const { speedNode, wrapNode: speedWrapNode } = $createSpeedWrapNode(
+        (parent as SpeedNode).getSpeed()
+      );
+      prevParent = parent;
+      wrapNode = speedWrapNode;
+      parent.insertBefore(speedNode);
+    }
+
+    if (!$isSpeedNode(node)) {
+      if (prevParent.is(parent)) {
+        wrapNode.append(node);
+      }
+    } else {
+      parent.insertBefore(node);
+      wrapNode = null;
+    }
+  });
+
+  if (prevParent) {
+    prevParent.remove();
+  }
 }
 
 export function $insertWrapNode(parentNode: ElementNode) {
@@ -152,32 +231,88 @@ export function $insertWrapNode(parentNode: ElementNode) {
 */
 
   if (parentType === "speedNode") {
-    let wrapType = ""; // 混合还是包裹
-    let ancestorNode = ""; // 顶级节点
     for (let index = 0; index < nodes.length; index++) {
       const node = nodes[index];
-
-      const parent = $getTopNode(node, $isSpeedNode)
-
-      if ($isSpeedNode(node)) {
-        if(wrapType = "") {
-          wrapType = "mixed";
-        }
+      if (node.getType() === "voiceNode") {
+        message.error("变速不能和主播重叠！");
+        return;
       }
     }
+    const parentSpeed = (parentNode as SpeedNode).getSpeed();
+    const { speedNode, wrapNode } = $createSpeedWrapNode(parentSpeed);
+    let prevParent: any = null;
+    nodes.forEach((node, i) => {
+      const element = $getTextWrap(node);
+      const parent = element;
+      if (i === 0) {
+        parent.insertBefore(speedNode);
+      }
+      if ($isTextNode(node)) {
+        wrapNode.append(parent);
+      } else if ($isSpeedNode(node)) {
+        prevParent = node;
+      }
 
-    if (!wrapType) {
-      const { speedNode, wrapNode } = $createSpeedWrapNode((parentNode as SpeedNode).getSpeed());
-      nodes.forEach((node, i) => {
-        if ($isTextNode(node)) {
-          const parent = getTextWrap(node);
-          if (i === 0) {
-            parent.insertBefore(speedNode);
-          }
+      if (prevParent) {
+        const parentNode = $getWrapChildren(prevParent);
+        if (parentNode.length === 0) {
+          prevParent.remove();
+        }
+      }
+    });
+    const ancestor = $getElementWrap(speedNode);
+    if (ancestor) {
+      const childrenNodes = $getWrapChildren(ancestor);
+      $insertSpeedNode(childrenNodes);
+    }
+  } else if (parentType === "voiceNode") {
+    // todo，完成
+
+    const { voiceNode, wrapNode } = $createVoiceWrapNode(parentNode as VoiceNode);
+    let prevParent: any = null;
+    let prevSpeedNode: SpeedNode | null = null;
+    let prevSpeedWrap: any = null;
+
+    let wrapNodes = [];
+
+    nodes.forEach((node, i) => {
+      const element = $getTextWrap(node);
+      const wrap = $getElementWrap(element);
+
+      const parent = element;
+      if (i === 0) {
+        parent.insertBefore(voiceNode);
+      }
+
+      if (prevSpeedNode && prevSpeedWrap === null) {
+        const parentSpeed = prevSpeedNode.getSpeed();
+        const { speedNode, wrapNode: speedWrapNode } = $createSpeedWrapNode(parentSpeed);
+        prevSpeedNode.insertBefore(speedNode);
+        prevSpeedWrap = speedWrapNode;
+      }
+
+      if ($isTextNode(node)) {
+        if ($isSpeedNode(wrap)) {
+          const wrap = $getElementWrap(element);
+          prevSpeedWrap.append(parent);
+
+          const newWrap = $getElementWrap(node);
+          wrapNode.append(newWrap);
+        } else {
           wrapNode.append(parent);
         }
-      });
-    }
+      } else if ($isSpeedNode(node)) {
+        prevSpeedWrap = null;
+        prevSpeedNode = node;
+      }
+
+      if (prevSpeedNode) {
+        const parentNode = $getWrapChildren(prevSpeedNode);
+        if (parentNode.length === 0) {
+          prevSpeedNode.remove();
+        }
+      }
+    });
   }
 
   return;
