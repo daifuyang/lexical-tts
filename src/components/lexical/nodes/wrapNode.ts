@@ -36,7 +36,10 @@ function $getTopNode<NodeType extends LexicalNode = LexicalNode>(
   predicate: (ancestor: LexicalNode) => ancestor is NodeType
 ) {
   let parent: any = node;
-  while (parent !== null && parent.getParent() !== null && !predicate(parent.getParent())) {
+
+  //todo
+
+  while (parent !== null && parent.getParent() !== null) {
     parent = parent.getParentOrThrow();
   }
 
@@ -99,45 +102,6 @@ export function $createWrapNode(): WrapNode {
   return $applyNodeReplacement(new WrapNode());
 }
 
-// childItem.ancestor.getSpeed()
-let speedWrapNpde: WrapNode | null = null;
-function createVoiceSpeedNode(wrapNode: WrapNode, childItem: any, item: any) {
-  const { ancestor } = childItem;
-  const { node, parent } = item;
-
-  if (speedWrapNpde === null) {
-    const speedNode = $createSpeedNode(ancestor.getSpeed());
-    wrapNode.append(speedNode);
-    speedWrapNpde = $createWrapNode();
-    speedNode.append(speedWrapNpde);
-  }
-
-  if ($isSpeedNode(ancestor)) {
-    if ($isWrapNode(parent)) {
-      speedWrapNpde.append(node);
-    } else {
-      speedWrapNpde.append(parent);
-      // wrapNode.append(parent);
-    }
-  }
-
-  return speedWrapNpde;
-}
-
-// 获取node的包裹节点
-function getNodeWrap(node: LexicalNode) {
-  let parent = node.getParent();
-  if ($isWrapNode(parent)) {
-    parent = parent.getParent();
-  }
-
-  if ($isSpeedNode(parent) || $isVoiceNode(parent)) {
-    return parent;
-  }
-
-  return node;
-}
-
 // 获取拼音，数字包裹节点
 function getTextWrap(node: LexicalNode) {
   let parent = node.getParent();
@@ -146,6 +110,14 @@ function getTextWrap(node: LexicalNode) {
   }
 
   return node;
+}
+
+// 创建变速包裹组件
+function $createSpeedWrapNode(speed: number) {
+  const speedNode = $createSpeedNode(speed);
+  const wrapNode = $createWrapNode();
+  speedNode.append(wrapNode);
+  return { speedNode, wrapNode };
 }
 
 export function $insertWrapNode(parentNode: ElementNode) {
@@ -165,22 +137,52 @@ export function $insertWrapNode(parentNode: ElementNode) {
 
   const nodes = selection.extract();
 
-// 如果插入多人配音
-/* 
+  // 如果插入多人配音
+  /* 
 1. 插入的内容包含纯文本或者多音字，数字，则直接插入到配音节点
 2. 插入的内容包含变速的，如果文本不属于变速子节点则直接插入，否则需要拆分变速节点为多节点
 3. 插入的内容包含其他配音的，则需要拆分配音，配音包含变速的，则需要拆除变速（逻辑复杂）
 */
 
-// 如果插入局部变速
-/* 
+  // 如果插入局部变速
+  /* 
 1、插入的内容包含纯文本或者多音字，数字，则直接插入到变速节点
 2.插入的内容包含变速的， 如果文本不属于变速子节点，则直接插入，否则需要拆分合并变速节点
 3.插入的内容包含纯文本或者主播，文本插入变速，主播节点插入变速容器，（逻辑复杂）
 */
-  
 
-/*   const textNodes: any = [];
+  if (parentType === "speedNode") {
+    let wrapType = ""; // 混合还是包裹
+    let ancestorNode = ""; // 顶级节点
+    for (let index = 0; index < nodes.length; index++) {
+      const node = nodes[index];
+
+      const parent = $getTopNode(node, $isSpeedNode)
+
+      if ($isSpeedNode(node)) {
+        if(wrapType = "") {
+          wrapType = "mixed";
+        }
+      }
+    }
+
+    if (!wrapType) {
+      const { speedNode, wrapNode } = $createSpeedWrapNode((parentNode as SpeedNode).getSpeed());
+      nodes.forEach((node, i) => {
+        if ($isTextNode(node)) {
+          const parent = getTextWrap(node);
+          if (i === 0) {
+            parent.insertBefore(speedNode);
+          }
+          wrapNode.append(parent);
+        }
+      });
+    }
+  }
+
+  return;
+
+  /*   const textNodes: any = [];
   const textMap: any = {};
 
   let ancestorWrap: any = null; // 根节点包裹类型
@@ -195,7 +197,7 @@ export function $insertWrapNode(parentNode: ElementNode) {
   }
  */
 
-/*   if(parentType === "voiceNode") {
+  /*   if(parentType === "voiceNode") {
       // 获得所有的选取节点
   let wrapNode: any = null;
   nodes.forEach((node: any, i) => {
