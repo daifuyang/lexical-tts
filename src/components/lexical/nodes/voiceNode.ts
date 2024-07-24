@@ -16,7 +16,7 @@ import {
 import { addClassNamesToElement } from "@lexical/utils";
 import { $insertWrapNode, WrapNode } from "./wrapNode";
 import { useTagDom } from "../ui/tag";
-import { OPEN_VOICE_MODAL_COMMAND } from "../plugins/voicePlugin";
+import { OPEN_VOICE_MODAL_COMMAND, REMOVE_VOICE_COMMAND } from "../plugins/voicePlugin";
 
 export type SerializedVoiceNode = Spread<
   {
@@ -91,7 +91,7 @@ export class VoiceNode extends ElementNode {
         editor.dispatchCommand(OPEN_VOICE_MODAL_COMMAND, { voice });
       },
       onClose: () => {
-        // editor.dispatchCommand(REMOVE_SPEED_COMMAND, key);
+        editor.dispatchCommand(REMOVE_VOICE_COMMAND, this.getKey());
       }
     });
     element.appendChild(tag);

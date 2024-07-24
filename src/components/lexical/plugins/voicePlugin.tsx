@@ -9,6 +9,7 @@ import { fetchDefaultVoice, setGlobalVoice } from "@/redux/slice/voiceState";
 
 import { message, type TabsProps } from "antd";
 import {
+  $getNodeByKey,
   $getSelection,
   $isRangeSelection,
   COMMAND_PRIORITY_EDITOR,
@@ -20,10 +21,14 @@ import VoiceModal from "./voiceModal";
 import { $isSpeedNode } from "../nodes/speedNode";
 import { $insertVoice, VoiceNode } from "../nodes/voiceNode";
 import { InsertVoicePayload, OpenVoicePayload } from "../typings/voice";
+import { $getWrapChildren } from "../nodes/wrapNode";
 
 export const INSERT_VOICE_COMMAND: LexicalCommand<InsertVoicePayload> = createCommand("INSERT_VOICE_COMMAND");
 export const OPEN_VOICE_MODAL_COMMAND: LexicalCommand<OpenVoicePayload | undefined> = createCommand(
   "OPEN_VOICE_MODAL_COMMAND"
+);
+export const REMOVE_VOICE_COMMAND: LexicalCommand<OpenVoicePayload | undefined> = createCommand(
+  "REMOVE_VOICE_COMMAND"
 );
 
 export default function VoicePlugin() {
@@ -83,8 +88,23 @@ export default function VoicePlugin() {
           return true
         },
         COMMAND_PRIORITY_EDITOR
-      )
-    );
+      ),
+      editor.registerCommand<string>(
+        REMOVE_VOICE_COMMAND,
+        (payload) => {
+          const voiceNode = $getNodeByKey(payload);
+          if(voiceNode) {
+          const children = $getWrapChildren(voiceNode);
+          children.forEach((node: any) => {
+            voiceNode.insertBefore(node);  
+          })
+          voiceNode.remove();
+          }
+          return true
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+    )
   }, [editor]);
 
   useEffect(() => {
