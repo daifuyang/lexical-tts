@@ -131,7 +131,18 @@ model TtsWork {
   editorState String
   ssml        String
   creatorId   String
+  status      Int      @default(1) @db.TinyInt
   createdAt   DateTime @default(now())
+}
+
+// 配音试听表
+model TtsSample {
+  id        Int      @id @default(autoincrement())
+  workId    Int
+  content   String // 试听内容
+  audioUrl  String
+  creatorId String
+  createdAt DateTime @default(now())
 }
 
 // 用户角色

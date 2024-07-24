@@ -1,12 +1,10 @@
 import { NextRequest } from "next/server";
 import response from "@/lib/response";
 import { existsSync, mkdirSync } from "fs";
+import { v4 } from "uuid";
 import tts from "@/lib/tts";
 import dayjs from "dayjs";
-import redis from "@/lib/redis";
 import { uploadFile } from "@/lib/qiniu";
-
-const sampleFileDateKey = "tts:sampleFile:date:";
 
 // 新增作品
 export async function POST(request: NextRequest) {
@@ -23,29 +21,24 @@ export async function POST(request: NextRequest) {
 
   // 其他逻辑
 
-  const localDir = "sample/"
-
-  const target = process.cwd() + `/output/${localDir}`;
-
-  if (!existsSync(target)) {
-        mkdirSync(target);
-  }
-
+  const localDir = "tts/"
   const currentDate = dayjs().format("YYYY-MM-DD");
-  const key = `${sampleFileDateKey}${currentDate}`;
+  const keyDir = `${localDir}/${currentDate}/`;
+  const assetDir = process.cwd() + `/output/`; // 资源根路径
+  const target = assetDir + keyDir;
+  if (!existsSync(target)) {
+    mkdirSync(target,{ recursive: true });
+}
 
-  const incrementId = await redis.incr(key);
 
   // 增加文件安全显示，可加上加密转换逻辑
-  const name = `${currentDate}-${incrementId}`;
-
-  const localFile = target + name + ".mp3";
-
+  const name = v4();
+  const localFile = target +"sample-"+ name + ".mp3";
   const res = await new tts(localFile).synthesizeText(ssml);
 
   if (res.success === "ok") {
     const filename = name + ".mp3";
-    const key = "tts/" + localDir + filename
+    const key = keyDir + filename
 
     // 上传到七牛云
     const uploadRes: any = await uploadFile(filename, key, localFile);

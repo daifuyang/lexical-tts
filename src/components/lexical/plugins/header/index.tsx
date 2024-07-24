@@ -1,7 +1,16 @@
+'use client'
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { CloudUploadOutlined, EditOutlined, LeftOutlined, UserOutlined } from "@ant-design/icons";
 import { Avatar, Button, Input } from "antd";
+import { $getRoot, $isParagraphNode, ParagraphNode } from "lexical";
+import { useState } from "react";
 
 export default function Header() {
+
+  const [editor] = useLexicalComposerContext();
+
+  const [title, setTitle] = useState(undefined);
+
   return (
     <header className="bg-white">
       <div className="flex mx-4 my-2">
@@ -12,7 +21,15 @@ export default function Header() {
             <LeftOutlined />
             <span>返回首页</span>
           </div>
-          <div className="flex items-center cursor-pointer text-slate-700">
+          <div onClick={() => {
+            editor.update( () => {
+              const root = $getRoot();
+              const first = root.getFirstChild();
+              if($isParagraphNode(first)) {
+                const firstText = (first as ParagraphNode).getFirstChild();
+              }
+            })
+          } } className="flex items-center cursor-pointer text-slate-700">
             <CloudUploadOutlined />
             <span className="ml-2">音频未保存</span>
           </div>
@@ -23,6 +40,7 @@ export default function Header() {
               suffix={<EditOutlined />}
               className="text-center"
               placeholder="未命名"
+              value={title}
               variant="filled"
             />
           </div>
