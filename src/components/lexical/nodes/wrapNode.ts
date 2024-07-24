@@ -267,6 +267,8 @@ export function $insertWrapNode(parentNode: ElementNode) {
         wrapNode.append(parent);
       } else if ($isSpeedNode(node)) {
         prevParent = node;
+      } else {
+        wrapNode.append(node);
       }
 
       if (prevParent) {

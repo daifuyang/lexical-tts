@@ -5,12 +5,14 @@ import {
   DecoratorNode,
   DOMConversionMap,
   DOMConversionOutput,
+  LexicalEditor,
   LexicalNode,
   SerializedLexicalNode,
   Spread
 } from "lexical";
 import { useState } from "react";
 import Pause from "./pauseComponent";
+import { UPDATE_PAUSE_COMMAND } from "../plugins/pausePlugin";
 
 export type SerializedPauseNode = Spread<
   {
@@ -81,8 +83,13 @@ export class PauseNode extends DecoratorNode<JSX.Element> {
     return false;
   }
 
-  decorate(): JSX.Element {
-    return <Pause />
+  decorate(editor: LexicalEditor): JSX.Element {
+    return <Pause value={this.getTime()} onChange={ (value: number) => {
+      editor.dispatchCommand(UPDATE_PAUSE_COMMAND, {
+        key:this.getKey(),
+        value
+      });
+    } } />
   }
 
   setTime(time: number) {
