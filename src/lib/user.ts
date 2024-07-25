@@ -3,7 +3,7 @@ import {getCurrentAdmin as admin } from "@/services/admin";
 import { NextRequest } from "next/server";
 
 export const getUserId = (request: NextRequest) => {
-  const userId = request.headers.get('x-userId')
+  const userId = request.headers.get('x-userId');
   return userId;
 }
 

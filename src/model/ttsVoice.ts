@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
 import { Prisma } from "@prisma/client";
 
-const voiceIdKey = `tts:voice:id`;
+const voiceIdKey = `tts:voice:id:`;
 
 // 获取总数
 export async function getVoiceTotal(tx = prisma) {

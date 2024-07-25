@@ -1,15 +1,27 @@
-'use client'
+"use client";
+import { useRouter } from 'next/navigation'
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { CloudUploadOutlined, EditOutlined, LeftOutlined, UserOutlined } from "@ant-design/icons";
 import { Avatar, Button, Input } from "antd";
-import { $getRoot, $isParagraphNode, ParagraphNode } from "lexical";
 import { useState } from "react";
+import { $getFirstText } from "../../utils/node";
+import { addWork } from "@/services/work";
+import { useAppSelector } from '@/redux/hook';
 
 export default function Header() {
 
+  const router = useRouter()
   const [editor] = useLexicalComposerContext();
+ 
+  const work = useAppSelector((state) => state.lexicalState.work);
 
-  const [title, setTitle] = useState(undefined);
+  async function saveWork() {
+    const text = await $getFirstText(editor);
+    const res: any = await addWork({ title: text });
+    if (res.code === 1) {
+      router.replace(`/editor?id=${res.data.id}`);
+    }
+  }
 
   return (
     <header className="bg-white">
@@ -21,15 +33,12 @@ export default function Header() {
             <LeftOutlined />
             <span>返回首页</span>
           </div>
-          <div onClick={() => {
-            editor.update( () => {
-              const root = $getRoot();
-              const first = root.getFirstChild();
-              if($isParagraphNode(first)) {
-                const firstText = (first as ParagraphNode).getFirstChild();
-              }
-            })
-          } } className="flex items-center cursor-pointer text-slate-700">
+          <div
+            onClick={async () => {
+              await saveWork();
+            }}
+            className="flex items-center cursor-pointer text-slate-700"
+          >
             <CloudUploadOutlined />
             <span className="ml-2">音频未保存</span>
           </div>
@@ -40,7 +49,7 @@ export default function Header() {
               suffix={<EditOutlined />}
               className="text-center"
               placeholder="未命名"
-              value={title}
+              value={work?.title}
               variant="filled"
             />
           </div>

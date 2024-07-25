@@ -6,13 +6,17 @@ import dayjs from "dayjs";
 import redis from "@/lib/redis";
 import { uploadFile } from "@/lib/qiniu";
 import { createTtsWork } from "@/model/ttsWork";
+import { getUserId } from "@/lib/user";
 
 const workFileDateKey = "tts:workFile:date:";
 
 // 新增作品
 export async function POST(request: NextRequest) {
+
+  const userId = getUserId(request);
+
   const json = await request.json();
-  const { title = "", speaker = "", editorState = "", ssml = "", status = 0 } = json;
+  const { title = "", speaker = "", editorState = "", ssml = "",duration = 0, status = 0 } = json;
 
   if (!title) {
     return response.error("标题不能为空！");
@@ -66,7 +70,9 @@ export async function POST(request: NextRequest) {
     speaker,
     editorState,
     ssml,
-    status
+    duration,
+    status,
+    creatorId: userId,
   });
 
   if(work) {

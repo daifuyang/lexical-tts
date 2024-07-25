@@ -15,8 +15,8 @@ import { PinyinNode } from "./nodes/pinyinNode";
 import { SpeedNode } from "./nodes/speedNode";
 import SpeedPlugin from "./plugins/speedPlugin";
 import PopupPlugin from "./plugins/popupPlugin";
-import { useState } from "react";
-import { useAppSelector } from "@/redux/hook";
+import { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import InitPlugin from "./plugins/initPlugin";
 import Options from "./ui/options";
 import SymbolPlugin from "./plugins/symbolPlugin";
@@ -32,6 +32,10 @@ import SamplePlugin from "./plugins/SamplePlugin";
 import { calculateTextLength } from "./utils/util";
 import { VoiceNode } from "./nodes/voiceNode";
 import Header from "./plugins/header";
+
+import { useSearchParams } from 'next/navigation'
+import { fetchWorkDetail } from "@/redux/slice/lexicalState";
+
 const VoicePlugin = dynamic(() => import("./plugins/voicePlugin"), { ssr: false });
 
 function Placeholder() {
@@ -54,6 +58,9 @@ const editorConfig = {
 };
 
 function App() {
+
+  const dispatch = useAppDispatch();
+
   const [floatingAnchorElem, setFloatingAnchorElem] = useState<HTMLDivElement | null>(null);
 
   const [total, setTotal] = useState(0);
@@ -65,6 +72,16 @@ function App() {
       setFloatingAnchorElem(_floatingAnchorElem);
     }
   };
+
+  const searchParams = useSearchParams()
+ 
+  const id = searchParams.get('id')
+
+  useEffect( () => {
+    if(id) {
+      dispatch(fetchWorkDetail(Number(id)))
+    }
+  }, [id])
 
   return (
     <>
