@@ -128,21 +128,26 @@ model TtsWork {
   title       String
   speaker     String
   duration    Float
-  editorState String
-  ssml        String
-  creatorId   String
+  editorState String   @map("editor_state") @db.Text
+  ssml        String   @db.Text
+  creatorId   String   @map("creator_id")
   status      Int      @default(1) @db.TinyInt
+  version     Int      @default(1)
   createdAt   DateTime @default(now())
+
+  @@map("tts_work")
 }
 
 // 配音试听表
 model TtsSample {
   id        Int      @id @default(autoincrement())
-  workId    Int
+  workId    Int      @map("work_id")
   content   String // 试听内容
-  audioUrl  String
-  creatorId String
+  audioUrl  String   @map("audio_url")
+  creatorId String   @map("creator_id")
   createdAt DateTime @default(now())
+
+  @@map("tts_sample")
 }
 
 // 用户角色

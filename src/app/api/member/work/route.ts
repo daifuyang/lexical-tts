@@ -21,6 +21,10 @@ export async function POST(request: NextRequest) {
   if (!title) {
     return response.error("标题不能为空！");
   }
+  
+  if(!editorState) {
+    return response.error("内容不能为空！");
+  }
 
 
   // 统计字数

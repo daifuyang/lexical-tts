@@ -29,7 +29,7 @@ import { OPEN_SPEED_POPUP_COMMAND } from "./speedPlugin";
 import { INSERT_PAUSE_COMMAND } from "./pausePlugin";
 import { OPEN_VOICE_MODAL_COMMAND } from "./voicePlugin";
 
-import { convert, pinyin } from "pinyin-pro";
+
 import classNames from "classnames";
 import { $isAtNodeEnd } from '@lexical/selection';
 
@@ -37,6 +37,7 @@ import { $isVoiceNode } from '../nodes/voiceNode';
 
 import { addWork } from "@/services/work";
 import { getSample } from "@/services/sample"
+import { getSsml } from "@/lib/lexical";
 
 const LowPriority = 1;
 
@@ -68,113 +69,6 @@ export default function ToolbarPlugin(props: any) {
   const defaultVoiceLoading = loading.defaultVoice;
 
   const toolbarRef = useRef(null);
-
-  let endVoice = false //存在结尾闭合标签
-  const parseSSMLNode = (nodes: any = []) => {
-    let ssml = "";
-    nodes.forEach((node: any) => {
-      switch (node.type) {
-        case "paragraph":
-          ssml += `<voice name="${globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"}">`;
-          const nodes = node.children;
-          const content = parseSSMLNode(nodes);
-          if (content) {
-            ssml += content;
-          }
-          ssml += `${endVoice ? '' : '</voice>'}`;
-          endVoice = false
-          break;
-        case "voice":
-
-          const {key} = node
-          const voiceNode = $getNodeByKey(key);
-          
-          const previous = voiceNode?.getPreviousSibling()
-          const next = voiceNode?.getNextSibling()
-          
-          let start = '</voice>'
-          let end = `<voice name="${globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"}">`
-
-          if($isVoiceNode(previous)) {
-            start = ''
-          }
-          if($isVoiceNode(next)) {
-            end = ''
-          }
-
-          // 如果是结尾
-          if(!next) {
-            end = ''
-            endVoice = true
-          }
-          
-          let voiceChildrenSsml = parseSSMLNode(node.children);
-          let voice = `${start}<voice name="${node.voice}">${voiceChildrenSsml}</voice>${end}`;
-
-          if (voiceChildrenSsml) {
-            ssml += voice;
-          }
-          break;
-        case "pinyinNode":
-          let pinyinNodeText = "";
-          if (node?.children?.length > 0) {
-            pinyinNodeText = node.children.map((item: any) => item.text)?.join("");
-          }
-          let ph = convert(node.pinyin, { format: "symbolToNum" });
-          if (ph) {
-            let num = ph.slice(-1)
-            if(num == "0") {
-              num = "1"
-            }
-            ph = ph.slice(0, -1) + " " + num;
-            ssml += `<phoneme alphabet="sapi" ph="${ph}">${pinyinNodeText}</phoneme>`;
-          } else {
-            ssml += `${pinyinNodeText}`;
-          }
-          break;
-
-        case "symbolNode":
-          let symbolNodeText = "";
-          if (node?.children?.length > 0) {
-            symbolNodeText = node.children.map((item: any) => item.text)?.join("");
-          }
-          // 数字，符号的逻辑不同
-          switch (node.readType) {
-            case "序列":
-            case "数值":
-              const reads = pinyin(node.value, { toneType: "num", type: "array" });
-              const ph = reads.map((read) => read.slice(0, -1) + " " + read.slice(-1)).join(" ");
-              ssml += `<phoneme alphabet="sapi" ph="${ph}">${symbolNodeText}</phoneme>`;
-              return;
-            default:
-              ssml += `${symbolNodeText}`;
-          }
-          break;
-
-        case "speedNode":
-          let speedChildrenSsml = parseSSMLNode(node.children);
-          // const speedNodetext = speedNodes?.map((item: any) => item.text)?.join("");
-          ssml += `<prosody rate="${node.speed}0%">${speedChildrenSsml}</prosody>`;
-          break;
-
-        case "wrapNode":
-          let wrapChildrenSsml = parseSSMLNode(node.children);
-          ssml += wrapChildrenSsml;
-          break;
-        default:
-          ssml += `${node.text}`;
-          break;
-      }
-    });
-    return ssml;
-  };
-
-  const getSsml = (nodes: any = []) => {
-    let ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-cn">`;
-    ssml += parseSSMLNode(nodes);
-    ssml += `</speak>`;
-    return ssml;
-  };
 
   const handleCanPlay = () => {
     audioRef.current?.play().catch(error => {
@@ -303,12 +197,8 @@ export default function ToolbarPlugin(props: any) {
         if(end) {
           const state = editor.getEditorState();
             const json = state.toJSON();
-            console.log('json',JSON.stringify(json))
-            return
-            let ssml = getSsml(json.root.children)
-
+            let ssml = getSsml(json.root.children, globalVoice.shortName);
             const root = $getRoot();
-
             fetchSample(root, ssml, () => {
               playAudio()
             });

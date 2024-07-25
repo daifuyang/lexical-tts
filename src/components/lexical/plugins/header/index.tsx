@@ -1,9 +1,9 @@
 "use client";
-import { useRouter } from 'next/navigation'
+import {useState} from 'react';
+import { useRouter } from 'next/navigation';
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { CloudUploadOutlined, EditOutlined, LeftOutlined, UserOutlined } from "@ant-design/icons";
 import { Avatar, Button, Input } from "antd";
-import { useState } from "react";
 import { $getFirstText } from "../../utils/node";
 import { addWork } from "@/services/work";
 import { useAppSelector } from '@/redux/hook';
@@ -13,11 +13,16 @@ export default function Header() {
   const router = useRouter()
   const [editor] = useLexicalComposerContext();
  
+  const [isSave, setIsSave] = useState(false);
+
   const work = useAppSelector((state) => state.lexicalState.work);
 
   async function saveWork() {
+    const state = editor.getEditorState();
+    const json = state.toJSON();
+           
     const text = await $getFirstText(editor);
-    const res: any = await addWork({ title: text });
+    const res: any = await addWork({ title: text,editorState: JSON.stringify(json) });
     if (res.code === 1) {
       router.replace(`/editor?id=${res.data.id}`);
     }
@@ -40,7 +45,7 @@ export default function Header() {
             className="flex items-center cursor-pointer text-slate-700"
           >
             <CloudUploadOutlined />
-            <span className="ml-2">音频未保存</span>
+            <span className="ml-2">音频{isSave ? '已保存' : '未保存'}</span>
           </div>
         </div>
         <div className="flex-1 flex justify-center items-center">
