@@ -5,15 +5,19 @@ import { v4 } from "uuid";
 import tts from "@/lib/tts";
 import dayjs from "dayjs";
 import { uploadFile } from "@/lib/qiniu";
+import { getSsml } from "@/lib/ssml";
 
 // 新增作品
 export async function POST(request: NextRequest) {
   const json = await request.json();
-  const { ssml = "" } = json;
+  const { editorState = [] } = json;
 
-  if (!ssml) {
+  if (!editorState) {
     return response.error("配音数据不能为空！");
   }
+
+  const nodes = JSON.parse(editorState);
+  const ssml = getSsml(nodes);
 
   // 统计字数
 

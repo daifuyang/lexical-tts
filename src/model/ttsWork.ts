@@ -28,3 +28,16 @@ export async function getTtsWorkById(id: number, tx = prisma) {
 export async function createTtsWork(data: Prisma.TtsWorkCreateInput,tx = prisma) {
     return await tx.ttsWork.create({ data });
 }
+
+// 更新作品
+export async function updateTtsWork(id: number, data: Prisma.TtsWorkUpdateInput, tx = prisma) {
+    const work = await tx.ttsWork.update({
+      where: {
+        id
+      },
+      data
+    });
+    const key = `${workIdKey}${id}`;
+    redis.del(key);
+    return work
+}

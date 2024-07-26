@@ -8,8 +8,6 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
 import {
-  $getRoot,
-  $isRootNode,
   $isTextNode,
   $getNodeByKey,
   $getSelection,
@@ -29,17 +27,30 @@ import { OPEN_SPEED_POPUP_COMMAND } from "./speedPlugin";
 import { INSERT_PAUSE_COMMAND } from "./pausePlugin";
 import { OPEN_VOICE_MODAL_COMMAND } from "./voicePlugin";
 
-
 import classNames from "classnames";
-import { $isAtNodeEnd } from '@lexical/selection';
-
-import { $isVoiceNode } from '../nodes/voiceNode';
+import { $isAtNodeEnd } from "@lexical/selection";
 
 import { addWork } from "@/services/work";
-import { getSample } from "@/services/sample"
-import { getSsml } from "@/lib/lexical";
+import { $getElementWrap, $getTextWrap } from "@/lib/lexical";
+import { $createSampleNode } from "../nodes/sampleNode";
+import { $isParagraphNode } from "lexical";
+import { $isSpeedNode } from "../nodes/speedNode";
+import { getSample } from "@/services/sample";
 
 const LowPriority = 1;
+
+function findChildrenText(nodes: any) {
+  return nodes.map( (node: any) => {
+    const result = node.exportJSON();
+    if(!$isTextNode(node)) {
+      if(node.getChildren().length > 0) {
+        const children = findChildrenText(node.getChildren());
+        result.children = children;
+      }
+    }
+    return result;
+  })
+}
 
 function Divider() {
   return <div className="divider" />;
@@ -71,14 +82,14 @@ export default function ToolbarPlugin(props: any) {
   const toolbarRef = useRef(null);
 
   const handleCanPlay = () => {
-    audioRef.current?.play().catch(error => {
-      console.error('Error playing audio:', error);
+    audioRef.current?.play().catch((error) => {
+      console.error("Error playing audio:", error);
     });
   };
 
   const playAudio = () => {
     setPlaying(true);
-    audioRef.current?.addEventListener('canplay', handleCanPlay);
+    audioRef.current?.addEventListener("canplay", handleCanPlay);
     audioRef.current?.load();
   };
 
@@ -88,16 +99,16 @@ export default function ToolbarPlugin(props: any) {
 
   const handlePause = () => {
     setPlaying(false);
-    if(playingNodes instanceof Array) {
-    editor.update(() => {
-      playingNodes?.forEach( (key: string) => {
-        const node = $getNodeByKey(key);
-        if(node) {
-        (node as TextNode).setStyle("")
-      }
-      })
-    });
-  }
+    if (playingNodes instanceof Array) {
+      editor.update(() => {
+        playingNodes?.forEach((key: string) => {
+          const node = $getNodeByKey(key);
+          if (node) {
+            (node as TextNode).setStyle("");
+          }
+        });
+      });
+    }
   };
 
   function arrayToTree(array: any) {
@@ -106,83 +117,50 @@ export default function ToolbarPlugin(props: any) {
     array.forEach((item: any) => {
       map[item.__key] = { ...item.exportJSON(), children: [] };
     });
-  
+
     // 创建树状结构
     const tree: any = [];
     array.forEach((item: any) => {
       const parent = map[item.__parent];
       if (!parent) {
         tree.push(map[item.__key]);
-      }else {
-          parent.children.push(map[item.__key]);
+      } else {
+        parent.children.push(map[item.__key]);
       }
     });
-  
+
     return tree;
   }
 
-  const fetchSample = (playingNodes: any,ssml: string, onOk?: () => void) => {
+  const fetchSample = (editorState: string, onOk?: () => void) => {
+   
+    setSampleLoading(true);
+    getSample({ editorState }).then((res: any) => {
+      setSampleLoading(false);
+      if (res.code === 1) {
+        const { prevPath } = res.data;
 
-    let cacheKey: string
+        console.log('prevPath',prevPath);
 
-    if($isRootNode(playingNodes)) {
-      cacheKey = "all"
-    }else  if(playingNodes) {
-      cacheKey = playingNodes?.join("-")
-    }
-    
-    if(cacheKey && samplePlayList?.[shortName]?.[cacheKey]) {
-      playAudio()
-      return
-    }
+        setPlayingNodes(playingNodes);
 
-    setSampleLoading(true)
-    getSample({ssml}).then( (res: any) => {
-
-    setSampleLoading(false)
-    if(res.code === 1) {
-     
-      const { prevPath } = res.data
-      
-      let samplekey = cacheKey
-      
-      let newSamplePlayList: any = {}
-      if(samplePlayList) {
-        newSamplePlayList = samplePlayList
+        if (onOk) {
+          onOk();
+        }
       }
-      if(!newSamplePlayList[shortName]) {
-        newSamplePlayList[shortName] = {}
-      }
-
-      if(samplekey) {
-        newSamplePlayList[shortName][samplekey] = prevPath
-      }
-
-      setSamplePlayList(newSamplePlayList)
-        
-      
-      setPlayingNodes(playingNodes)
-
-      if(onOk) {
-        onOk()
-      }
-
-
-    }
-    } )
-  }
+    });
+  };
 
   const samplePlay = () => {
-
-    if(playing) {
-      pauseAudio()
-      return
+    if (playing) {
+      pauseAudio();
+      return;
     }
 
     editor.update(() => {
       const selection = $getSelection();
 
-      if(selection === null) {
+      if (selection === null) {
         return;
       }
 
@@ -192,40 +170,68 @@ export default function ToolbarPlugin(props: any) {
 
       const anchorAndFocus = selection.getStartEndPoints();
 
-      if(anchorAndFocus) {
-        const end = $isAtNodeEnd(anchorAndFocus[0])
-        if(end) {
+      if (anchorAndFocus) {
+        const end = $isAtNodeEnd(anchorAndFocus[0]);
+        if (end) {
           const state = editor.getEditorState();
-            const json = state.toJSON();
-            let ssml = getSsml(json.root.children, globalVoice.shortName);
-            const root = $getRoot();
-            fetchSample(root, ssml, () => {
-              playAudio()
-            });
-          return
+          const json = state.toJSON();
+
+          const editorState = JSON.stringify(JSON);
+
+          fetchSample( editorState, () => {
+            playAudio();
+          });
+          return;
         }
       }
 
       const nodes = selection.extract();
-      const playingNodes: any = []
+      let sampleNodes: any = [];
+      let prevSampleNode: any = null;
+      nodes.forEach((node, i) => {
+        const element = $getTextWrap(node);
+        const wrap = $getElementWrap(element);
+        const parent = element;
 
-      const trees = arrayToTree(nodes)
-      
-      nodes.forEach((node) => {
-        if($isTextNode(node)) {
-          playingNodes.push(node.getKey())
-          node.setStyle("color:green")
+        if ($isParagraphNode(node)) {
+          prevSampleNode = null;
+        } else {
+          if (prevSampleNode === null) {
+            prevSampleNode = $createSampleNode();
+            parent.insertBefore(prevSampleNode);
+            sampleNodes.push(prevSampleNode);
+          }
+          if ($isTextNode(node)) {
+            prevSampleNode.append(wrap || element);
+          }
         }
-      })
+      });
+      
+      const editorNodes = findChildrenText(sampleNodes)
+      fetchSample( JSON.stringify(editorNodes), () => {
+        playAudio();
+      });
 
-      const ssml = getSsml([{children: trees, type: "paragraph"}])
-   
-      fetchSample(playingNodes, ssml , () => {
-        playAudio()
-      })
+      return;
 
-    })
-  }
+      const playingNodes: any = [];
+
+      const trees = arrayToTree(nodes);
+
+      nodes.forEach((node) => {
+        if ($isTextNode(node)) {
+          playingNodes.push(node.getKey());
+          node.setStyle("color:green");
+        }
+      });
+
+      return;
+
+      fetchSample(playingNodes, ssml, () => {
+        playAudio();
+      });
+    });
+  };
 
   useEffect(() => {
     return mergeRegister(
@@ -248,19 +254,18 @@ export default function ToolbarPlugin(props: any) {
     );
   }, [editor]);
 
-  const shortName = globalVoice?.shortName || "zh-CN-XiaoxiaoNeural" // 当前主播
-  const sampleKey =  playingNodes instanceof Array ?  playingNodes?.join("-") : "all"
+  const shortName = globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"; // 当前主播
+  const sampleKey = playingNodes instanceof Array ? playingNodes?.join("-") : "all";
 
   useEffect(() => {
-    if(samplePlayList?.[shortName]?.[sampleKey]) {
-      playAudio()
-  }
+    if (samplePlayList?.[shortName]?.[sampleKey]) {
+      playAudio();
+    }
 
-   // 清除事件监听器
-   return () => {
-    audioRef.current?.removeEventListener('canplay', handleCanPlay);
-  };
-
+    // 清除事件监听器
+    return () => {
+      audioRef.current?.removeEventListener("canplay", handleCanPlay);
+    };
   }, [samplePlayList?.[shortName]?.[sampleKey]]);
 
   return (
@@ -271,9 +276,7 @@ export default function ToolbarPlugin(props: any) {
         onPause={handlePause}
         autoPlay
       >
-        <source src={
-          samplePlayList?.[shortName]?.[sampleKey]
-        } type="audio/mpeg" />
+        <source src={samplePlayList?.[shortName]?.[sampleKey]} type="audio/mpeg" />
         Your browser does not support this audio format.
       </audio>
       <div className="toolbar" ref={toolbarRef}>
@@ -299,7 +302,7 @@ export default function ToolbarPlugin(props: any) {
         <div
           onMouseDown={(e) => {
             e.preventDefault();
-            editor.dispatchCommand(OPEN_VOICE_MODAL_COMMAND, {type:"global"});
+            editor.dispatchCommand(OPEN_VOICE_MODAL_COMMAND, { type: "global" });
           }}
           className="toolbar-item toolbar-voice"
         >

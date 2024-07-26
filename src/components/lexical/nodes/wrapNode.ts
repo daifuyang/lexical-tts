@@ -1,48 +1,20 @@
 import {
   $applyNodeReplacement,
-  $getNodeByKey,
   $getSelection,
-  $isParagraphNode,
   $isRangeSelection,
   $isTextNode,
   ElementNode,
   LexicalNode,
-  ParagraphNode,
   SerializedElementNode,
   Spread,
-  TextNode
 } from "lexical";
 import { $createSpeedNode, $isSpeedNode, SpeedNode } from "./speedNode";
 import { $createVoiceNode, $isVoiceNode, VoiceNode } from "./voiceNode";
 import { $isPinyinNode } from "./pinyinNode";
 import { $isSymbolNode } from "./symbolNode";
-import { message } from "antd";
+import { $getElementWrap, $getTextWrap } from "@/lib/lexical";
 
 export type SerializedWrapNode = Spread<{}, SerializedElementNode>;
-
-function $getAncestor<NodeType extends LexicalNode = LexicalNode>(
-  node: LexicalNode,
-  predicate: (ancestor: LexicalNode) => ancestor is NodeType
-) {
-  let parent = node;
-  while (parent !== null && parent.getParent() !== null && !predicate(parent)) {
-    parent = parent.getParentOrThrow();
-  }
-  return predicate(parent) ? parent : null;
-}
-
-function $getTopNode<NodeType extends LexicalNode = LexicalNode>(
-  node: LexicalNode,
-  predicate: (ancestor: LexicalNode) => ancestor is NodeType
-) {
-  let parent: any = node;
-  //todo
-
-  while (parent !== null && parent.getParent() !== null) {
-    parent = parent.getParent();
-  }
-  return parent;
-}
 
 export class WrapNode extends ElementNode {
   static getType(): string {
@@ -100,36 +72,7 @@ export function $createWrapNode(): WrapNode {
   return $applyNodeReplacement(new WrapNode());
 }
 
-// 获取拼音，数字包裹节点
-function $getTextWrap(node: LexicalNode) {
-  let parent = node.getParent();
-  if ($isPinyinNode(parent) || $isSymbolNode(parent)) {
-    return parent;
-  }
 
-  return node;
-}
-
-// 获取父亲节点
-function $getElementWrap(node: LexicalNode) {
-  let parent: any = node.getParent();
-  if ($isWrapNode(parent)) {
-    return parent.getParent();
-  } else {
-    return null;
-  }
-}
-
-// 获取变速，配音包裹节点
-function $getSpeedWrap(node: LexicalNode) {
-  let parent: any = node.getParent();
-  if ($isWrapNode(parent)) {
-    parent = parent.getParent();
-  } else {
-    parent = node;
-  }
-  return parent;
-}
 
 // 获取包裹节点的所有子节点
 export function $getWrapChildren(node: SpeedNode | VoiceNode) {
