@@ -1,58 +1,62 @@
 import { NextRequest } from "next/server";
 import response from "@/lib/response";
-import { existsSync, mkdirSync } from "fs";
-import { v4 } from "uuid";
-import tts from "@/lib/tts";
-import dayjs from "dayjs";
-import { uploadFile } from "@/lib/qiniu";
-import { getSsml } from "@/lib/ssml";
+import path from "path";
+import { generateAudio } from "@/lib/ssml";
+import { createSample, getSampleFirst } from "@/model/ttsSample";
+import { now } from "@/lib/date";
+import { getUserId } from "@/lib/user";
 
-// 新增作品
+// 示例
 export async function POST(request: NextRequest) {
   const json = await request.json();
-  const { editorState = [] } = json;
+  const { voiceName, editorState = [] } = json;
 
   if (!editorState) {
     return response.error("配音数据不能为空！");
   }
 
-  const nodes = JSON.parse(editorState);
-  const ssml = getSsml(nodes);
+  if (!voiceName) {
+    return response.error("配音名称不能为空！");
+  }
 
-  // 统计字数
+  const userId = getUserId(request);
 
-  // 判断vip
+  const sample = await getSampleFirst({
+    voiceName,
+    content: editorState,
+    creatorId: Number(userId)
+  });
 
-  // 其他逻辑
+  const filePath = sample?.audioUrl;
 
-  const localDir = "tts/"
-  const currentDate = dayjs().format("YYYY-MM-DD");
-  const keyDir = `${localDir}/${currentDate}/`;
-  const assetDir = process.cwd() + `/output/`; // 资源根路径
-  const target = assetDir + keyDir;
-  if (!existsSync(target)) {
-    mkdirSync(target,{ recursive: true });
-}
-
-
-  // 增加文件安全显示，可加上加密转换逻辑
-  const name = v4();
-  const localFile = target +"sample-"+ name + ".mp3";
-  const res = await new tts(localFile).synthesizeText(ssml);
-
-  if (res.success === "ok") {
-    const filename = name + ".mp3";
-    const key = keyDir + filename
-
-    // 上传到七牛云
-    const uploadRes: any = await uploadFile(filename, key, localFile);
-
+  if (sample && filePath) {
     return response.success("生成成功！", {
-      filename,
-      filePath: uploadRes.key,
-      prevPath: `https://cdn.vlog-v.com/${uploadRes.key}`
+      filename: path.basename(filePath),
+      filePath,
+      prevPath: `https://cdn.vlog-v.com/${filePath}`
     });
   }
 
-  return response.success("生成失败！");
+  const generateRes = await generateAudio(editorState, voiceName);
+
+  if (generateRes.status === "error") {
+    return response.error("生成失败！");
+  }
+
+  const { filename, res: uploadRes } = generateRes.res;
+
+  // 入库
+  await createSample({
+    voiceName,
+    content: editorState,
+    audioUrl: uploadRes.key,
+    creatorId: Number(userId),
+    createdAt: now()
+  });
+
+  return response.success("生成成功！", {
+    filename,
+    filePath: uploadRes.key,
+    prevPath: `https://cdn.vlog-v.com/${uploadRes.key}`
+  });
 }

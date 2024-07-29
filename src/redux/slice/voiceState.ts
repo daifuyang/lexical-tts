@@ -14,6 +14,7 @@ const initialState: {
     defaultVoice?: string;
     activeVoice?: string;
   };
+  isSaved: Boolean,
 } = {
   loading: {
     defaultVoice: undefined
@@ -23,7 +24,8 @@ const initialState: {
   },
   globalVoice: undefined,
   defaultVoice: undefined,
-  activeVoice: undefined
+  activeVoice: undefined,
+  isSaved: false,
 };
 
 export const voiceStateSlice = createSlice({
@@ -35,6 +37,9 @@ export const voiceStateSlice = createSlice({
     },
     setActiveVoice: (state, action) => {
       state.activeVoice = action.payload;
+    },
+    setIsSaved: (state, action) => {
+      state.isSaved = action.payload;
     }
   },
   extraReducers: (builder) => {
@@ -84,7 +89,7 @@ export const voiceStateSlice = createSlice({
   }
 });
 
-export const { setGlobalVoice } = voiceStateSlice.actions;
+export const { setGlobalVoice, setIsSaved } = voiceStateSlice.actions;
 
 export const fetchDefaultVoice = createAsyncThunk("voiceState/fetchDefaultVoice", async () => {
   const res: any = await getDefaultVoice();

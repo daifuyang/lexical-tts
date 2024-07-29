@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
-import { Prisma } from "@prisma/client";
+import { Prisma, TtsWork } from "@prisma/client";
 
 const workIdKey = `tts:work:id:`;
 
@@ -8,7 +8,7 @@ const workIdKey = `tts:work:id:`;
 export async function getTtsWorkById(id: number, tx = prisma) {
     const key = `${workIdKey}${id}`;
     const cache = await redis.get(key);
-    let work = null;
+    let work: TtsWork | null = null;
   if (cache) {
     work = JSON.parse(cache);
   } else {
@@ -40,4 +40,12 @@ export async function updateTtsWork(id: number, data: Prisma.TtsWorkUpdateInput,
     const key = `${workIdKey}${id}`;
     redis.del(key);
     return work
+}
+
+// 根据条件查询作品
+export async function getTtsWorkFirst(where: Prisma.TtsWorkWhereInput) {
+  const sample = await prisma.ttsWork.findFirst({
+    where
+  });
+  return sample;
 }

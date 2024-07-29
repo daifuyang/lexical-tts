@@ -10,7 +10,7 @@
     "turbo": "next dev --turbo",
     "lint": "next lint",
     "init": "dotenv -e .env.local node ./scripts/init.js",
-    "migrate": "dotenv -e .env.local npx prisma migrate dev --name init"
+    "migrate": "dotenv -e .env.local npx prisma migrate dev"
   },
   "dependencies": {
     "@ant-design/icons": "^5.3.7",

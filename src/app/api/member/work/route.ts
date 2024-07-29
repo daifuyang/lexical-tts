@@ -5,8 +5,10 @@ import tts from "@/lib/tts";
 import dayjs from "dayjs";
 import redis from "@/lib/redis";
 import { uploadFile } from "@/lib/qiniu";
-import { createTtsWork, updateTtsWork } from "@/model/ttsWork";
+import { createTtsWork, getTtsWorkFirst, updateTtsWork } from "@/model/ttsWork";
 import { getUserId } from "@/lib/user";
+import { now } from "@/lib/date";
+import { generateAudio } from "@/lib/ssml";
 
 const workFileDateKey = "tts:workFile:date:";
 
@@ -19,7 +21,7 @@ export async function Save(request: NextRequest, id: string = "") {
   const userId = getUserId(request);
 
   const json = await request.json();
-  const { title = "", speaker = "", editorState = "", ssml = "", duration = 0, status = 0 } = json;
+  const { title = "", voiceName = "", editorState = "", ssml = "", status = 0 } = json;
 
   if (!title) {
     return response.error("标题不能为空！");
@@ -29,64 +31,58 @@ export async function Save(request: NextRequest, id: string = "") {
     return response.error("内容不能为空！");
   }
 
+  // 判断是否存在生成，存在则自动下载已存在的，无需重复生成
+
+  const existWork: any = await getTtsWorkFirst({
+    editorState,
+    voiceName,
+    creatorId: Number(userId),
+    status: 1
+  });
+  if (existWork) {
+    existWork.prevPath = `https://cdn.vlog-v.com${existWork.audioUrl}`;
+    return response.success("保存成功！", existWork);
+  }
+
   // 统计字数
 
   // 判断vip
 
   // 其他逻辑
-  let filePath = "";
-  let filename = "";
+
+  let duration = 0;
+  let audioUrl = "";
+
   if (status === 1) {
-    const target = process.cwd() + "/output/";
-
-    if (!existsSync(target)) {
-      mkdirSync(target);
+    const generateRes = await generateAudio(editorState, voiceName);
+    if (generateRes.status === "error") {
+      return response.error("生成失败！");
     }
-
-    const currentDate = dayjs().format("YYYY-MM-DD");
-    const key = `${workFileDateKey}${currentDate}`;
-
-    const incrementId = await redis.incr(key);
-
-    // 增加文件安全显示，可加上加密转换逻辑
-    const name = `${currentDate}-${incrementId}`;
-
-    const localFile = target + name + ".mp3";
-
-    const res = await new tts(localFile).synthesizeText(ssml);
-
-    if (res.success === "ok") {
-      filename = name + ".mp3";
-
-      const key = `tts/${filename}`;
-
-      // 上传到七牛云
-      const uploadRes: any = await uploadFile(filename, key, localFile);
-
-      if (uploadRes.key) {
-        filePath = uploadRes.key;
-      }
-    }
+    audioUrl = "/" + generateRes.res.key;
   }
 
-  let work = null;
+  let work: any = null;
   const idInt = Number(id);
 
   const formData = {
     title,
-    speaker,
+    voiceName,
     editorState,
     ssml,
+    audioUrl,
     duration,
     status,
-    creatorId: userId
+    creatorId: Number(userId),
+    createdAt: now()
   };
 
   if (idInt > 0) {
     work = await updateTtsWork(idInt, formData);
+    work.prevPath = `https://cdn.vlog-v.com${audioUrl}`;
     return response.success("更新成功！", work);
   } else {
     work = await createTtsWork(formData);
+    work.prevPath = `https://cdn.vlog-v.com${audioUrl}`;
     return response.success("保存成功！", work);
   }
 }

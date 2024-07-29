@@ -124,28 +124,29 @@ model ttsVoiceCategory {
 
 // 配音作品表
 model TtsWork {
-  id          Int      @id @default(autoincrement())
+  id          Int    @id @default(autoincrement())
   title       String
-  speaker     String
+  voiceName   String @map("voice_name")
+  editorState String @map("editor_state") @db.Text
+  ssml        String @db.Text
+  audioUrl    String @map("audio_url")
   duration    Float
-  editorState String   @map("editor_state") @db.Text
-  ssml        String   @db.Text
-  creatorId   String   @map("creator_id")
-  status      Int      @default(1) @db.TinyInt
-  version     Int      @default(1)
-  createdAt   DateTime @default(now())
+  creatorId   Int    @map("creator_id")
+  status      Int    @default(1) @db.TinyInt
+  version     Int    @default(1)
+  createdAt   Int    @map("created_at")
 
   @@map("tts_work")
 }
 
 // 配音试听表
 model TtsSample {
-  id        Int      @id @default(autoincrement())
-  workId    Int      @map("work_id")
-  content   String // 试听内容
-  audioUrl  String   @map("audio_url")
-  creatorId String   @map("creator_id")
-  createdAt DateTime @default(now())
+  id        Int    @id @default(autoincrement())
+  voiceName String @map("voice_name")
+  content   String @db.Text // 试听内容  
+  audioUrl  String @map("audio_url")
+  creatorId Int    @map("creator_id")
+  createdAt Int    @map("created_at")
 
   @@map("tts_sample")
 }

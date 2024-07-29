@@ -1,4 +1,9 @@
+import dayjs from "dayjs";
+import { existsSync, mkdirSync } from "fs";
 import { convert, pinyin } from "pinyin-pro";
+import { v4 } from "uuid";
+import tts from "./tts";
+import { uploadFile } from "./qiniu";
 
 let existStartVoice = false; //存在结尾闭合标签
 const parseSSMLNode = (nodes: any = [], shortName: string) => {
@@ -17,7 +22,6 @@ const parseSSMLNode = (nodes: any = [], shortName: string) => {
         ssml += "</voice>";
         break;
       case "voiceNode":
-        
         let start = "";
         if (existStartVoice) {
           start = "</voice>";
@@ -111,4 +115,39 @@ export const getSsml = (nodes: any = [], shortName: string = "zh-CN-XiaoxiaoNeur
   ssml += parseSSMLNode(nodes, shortName);
   ssml += `</speak>`;
   return ssml;
+};
+
+// 生成音频
+export const generateAudio = async (editorState: string, voiceName: string, predix="") => {
+  const nodes = JSON.parse(editorState);
+  const ssml = getSsml(nodes, voiceName);
+  // 统计字数
+
+  // 判断vip
+
+  // 其他逻辑
+
+  const localDir = "tts";
+  const currentDate = dayjs().format("YYYY-MM-DD");
+  const keyDir = `${localDir}/${currentDate}/`;
+  const assetDir = process.cwd() + `/output/`; // 资源根路径
+  const target = assetDir + keyDir;
+  if (!existsSync(target)) {
+    mkdirSync(target, { recursive: true });
+  }
+
+  // 增加文件安全显示，可加上加密转换逻辑
+  const name = predix + v4();
+  const localFile = target + name + ".mp3";
+  const res = await new tts(localFile).synthesizeText(ssml);
+
+  if (res.success === "ok") {
+    const filename = name + ".mp3";
+    const key = keyDir + filename;
+
+    // 上传到七牛云
+    const uploadRes: any = await uploadFile(filename, key, localFile);
+    return { status: "ok", res: uploadRes, filename };
+  }
+  return { status: "error", res };
 };

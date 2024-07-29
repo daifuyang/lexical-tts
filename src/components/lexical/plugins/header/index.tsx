@@ -4,9 +4,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { CloudUploadOutlined, EditOutlined, LeftOutlined, UserOutlined } from "@ant-design/icons";
 import { Avatar, Button, Input, message } from "antd";
-import { $getFirstText } from "../../utils/node";
-import { addWork, updateWork } from "@/services/work";
-import { useAppSelector } from "@/redux/hook";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { saveWork } from "@/lib/lexical";
+import { downloadFile } from "@/lib/dowload";
+import { setIsSaved } from "@/redux/slice/voiceState";
 
 export default function Header() {
   const searchParams = useSearchParams();
@@ -15,32 +16,15 @@ export default function Header() {
   const router = useRouter();
   const [editor] = useLexicalComposerContext();
 
-  const [isSave, setIsSave] = useState(false);
+  const dispatch = useAppDispatch();
 
-  const work = useAppSelector((state) => state.lexicalState.work);
+  const work: any = useAppSelector((state) => state.lexicalState.work);
 
-  async function saveWork() {
-    const state = editor.getEditorState();
-    const json = state.toJSON();
-    const text = await $getFirstText(editor);
+  const voiceState = useAppSelector((state) => state.voiceState);
 
-    // 新增
-    let res: any = null;
-    const idInt = Number(id);
-    if (idInt > 0) {
-      res = await updateWork(idInt, { title: text, editorState: JSON.stringify(json) });
-      if (res.code === 1) {
-        setIsSave(true);
-        message.success("更新成功！");
-      }
-    } else {
-      res = await addWork({ title: text, editorState: JSON.stringify(json) });
-      if (res.code === 1) {
-        setIsSave(true);
-        router.replace(`/editor?id=${res.data.id}`);
-      }
-    }
-  }
+  const { globalVoice, isSaved } = voiceState;
+
+  const voiceName = globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"; // 当前主播
 
   return (
     <header className="bg-white">
@@ -48,18 +32,27 @@ export default function Header() {
         <div className="w-80 flex items-center">
           <h1 className="text-xl">{process.env.NEXT_PUBLIC_TITLE}</h1>
           <div className="w-px h-4 bg-gray-300 mx-2"></div>
-          <div className="flex items-center cursor-pointer text-slate-700  mr-5">
+          <div onClick={() => {
+            router.replace('/desktop')
+          }} className="flex items-center cursor-pointer text-slate-700  mr-5">
             <LeftOutlined />
             <span>返回首页</span>
           </div>
           <div
             onClick={async () => {
-              await saveWork();
+              const res = await saveWork(editor, id, { voiceName });
+              if (res.code === 1) {
+                message.success(res.msg);
+                dispatch(setIsSaved(true));
+                if (!id) {
+                  router.replace(`/editor?id=${res.data.id}`);
+                }
+              }
             }}
             className="flex items-center cursor-pointer text-slate-700"
           >
             <CloudUploadOutlined />
-            <span className="ml-2">音频{isSave ? "已保存" : "未保存"}</span>
+            <span className="ml-2">音频{isSaved ? "已保存" : "未保存"}</span>
           </div>
         </div>
         <div className="flex-1 flex justify-center items-center">
@@ -75,7 +68,23 @@ export default function Header() {
         </div>
         {/* 个人中心 */}
         <div className="w-80 flex items-center justify-end text-slate-700">
-          <Button className="mr-4" type="primary">
+          <Button
+            onClick={async () => {
+              const res = await saveWork(editor, id, { status: 1, voiceName });
+              if (res.code === 1) {
+                message.success("生成成功！");
+                dispatch(setIsSaved(true));
+                const { data } = res;
+                const filename = data.audioUrl.split("/").pop();
+                await downloadFile(data.prevPath, filename);
+                if (!id) {
+                  router.replace(`/editor?id=${data.id}`);
+                }
+              }
+            }}
+            className="mr-4"
+            type="primary"
+          >
             生成音频
           </Button>
           <Avatar size={34} icon={<UserOutlined />} />
