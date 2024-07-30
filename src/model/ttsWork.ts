@@ -4,11 +4,27 @@ import { Prisma, TtsWork } from "@prisma/client";
 
 const workIdKey = `tts:work:id:`;
 
+// 获取作品列表
+export async function getWorkList(
+  current: number,
+  pageSize: number,
+  where: Prisma.TtsWorkWhereInput,
+  orderBy?: Prisma.ttsWorkOrderByWithRelationInput | Prisma.ttsWorkOrderByWithRelationInput[],
+  tx = prisma
+) {
+  if (pageSize === 0) {
+    return await tx.ttsWork.findMany({
+      where,
+      orderBy
+    });
+  }
+}
+
 // 根据id获取作品集
 export async function getTtsWorkById(id: number, tx = prisma) {
-    const key = `${workIdKey}${id}`;
-    const cache = await redis.get(key);
-    let work: TtsWork | null = null;
+  const key = `${workIdKey}${id}`;
+  const cache = await redis.get(key);
+  let work: TtsWork | null = null;
   if (cache) {
     work = JSON.parse(cache);
   } else {
@@ -25,21 +41,21 @@ export async function getTtsWorkById(id: number, tx = prisma) {
 }
 
 // 新增作品
-export async function createTtsWork(data: Prisma.TtsWorkCreateInput,tx = prisma) {
-    return await tx.ttsWork.create({ data });
+export async function createTtsWork(data: Prisma.TtsWorkCreateInput, tx = prisma) {
+  return await tx.ttsWork.create({ data });
 }
 
 // 更新作品
 export async function updateTtsWork(id: number, data: Prisma.TtsWorkUpdateInput, tx = prisma) {
-    const work = await tx.ttsWork.update({
-      where: {
-        id
-      },
-      data
-    });
-    const key = `${workIdKey}${id}`;
-    redis.del(key);
-    return work
+  const work = await tx.ttsWork.update({
+    where: {
+      id
+    },
+    data
+  });
+  const key = `${workIdKey}${id}`;
+  redis.del(key);
+  return work;
 }
 
 // 根据条件查询作品

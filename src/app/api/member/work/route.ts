@@ -1,16 +1,16 @@
 import { NextRequest } from "next/server";
 import response from "@/lib/response";
-import { existsSync, mkdirSync } from "fs";
-import tts from "@/lib/tts";
-import dayjs from "dayjs";
-import redis from "@/lib/redis";
-import { uploadFile } from "@/lib/qiniu";
 import { createTtsWork, getTtsWorkFirst, updateTtsWork } from "@/model/ttsWork";
 import { getUserId } from "@/lib/user";
 import { now } from "@/lib/date";
 import { generateAudio } from "@/lib/ssml";
 
-const workFileDateKey = "tts:workFile:date:";
+// 货期作品列表
+export async function GET(request: NextRequest) {
+  const { searchParams } = request.nextUrl;
+  const current = parseInt(searchParams.get("current") || "1");
+  const pageSize = parseInt(searchParams.get("pageSize") || "10");
+}
 
 // 新增作品
 export async function POST(request: NextRequest) {

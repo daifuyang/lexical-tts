@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import { forEach } from "lodash";
 
 export function now() {
   return Math.floor(new Date().getTime() / 1000);

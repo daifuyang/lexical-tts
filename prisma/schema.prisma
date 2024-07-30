@@ -123,7 +123,7 @@ model ttsVoiceCategory {
 }
 
 // 配音作品表
-model TtsWork {
+model ttsWork {
   id          Int    @id @default(autoincrement())
   title       String
   voiceName   String @map("voice_name")
@@ -140,7 +140,7 @@ model TtsWork {
 }
 
 // 配音试听表
-model TtsSample {
+model ttsSample {
   id        Int    @id @default(autoincrement())
   voiceName String @map("voice_name")
   content   String @db.Text // 试听内容  

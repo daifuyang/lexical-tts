@@ -19,7 +19,7 @@
     "@heroicons/react": "^2.1.1",
     "@lexical/react": "0.16.1-nightly.20240701.0",
     "@lexical/utils": "0.16.1-nightly.20240701.0",
-    "@prisma/client": "^5.16.2",
+    "@prisma/client": "^5.17.0",
     "@reduxjs/toolkit": "^2.2.1",
     "@types/pinyin": "^2.10.2",
     "antd": "^5.17.3",
