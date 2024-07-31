@@ -75,8 +75,7 @@ export default function Header() {
                 message.success("生成成功！");
                 dispatch(setIsSaved(true));
                 const { data } = res;
-                const filename = data.audioUrl.split("/").pop();
-                await downloadFile(data.prevPath, filename);
+                await downloadFile(data?.prevPath);
                 if (!id) {
                   router.replace(`/editor?id=${data.id}`);
                 }

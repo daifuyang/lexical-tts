@@ -43,18 +43,18 @@ export async function saveWork(editor: LexicalEditor, id: string | null = "", da
   const state = editor.getEditorState();
   const json = state.toJSON();
   const total = calculateTextLength(json.root);
-  if(total === 0) {
+  if (total === 0) {
     message.error("请先输入需要配音的内容！");
-    return
+    return;
   }
-  const editorState = JSON.stringify(json.root.children);
+  const editorState = JSON.stringify(json);
   const text = await $getFirstText(editor);
   // 新增
   let res: any = null;
   if (id) {
-    res = await updateWork(Number(id), { ...data,title: text, editorState });
+    res = await updateWork(Number(id), { ...data, title: text, editorState });
   } else {
-    res = await addWork({ ...data,title: text, editorState });
+    res = await addWork({ ...data, title: text, editorState });
   }
   return res;
 }

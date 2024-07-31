@@ -34,7 +34,7 @@ import { VoiceNode } from "./nodes/voiceNode";
 import Header from "./plugins/header";
 
 import { useSearchParams } from 'next/navigation'
-import { fetchWorkDetail } from "@/redux/slice/lexicalState";
+import { fetchWorkDetail, setWork } from "@/redux/slice/lexicalState";
 
 const VoicePlugin = dynamic(() => import("./plugins/voicePlugin"), { ssr: false });
 
@@ -76,10 +76,18 @@ function App() {
  
   const id = searchParams.get('id')
 
+  const work: any = useAppSelector((state) => state.lexicalState.work);
+
   useEffect( () => {
     if(id) {
       dispatch(fetchWorkDetail(Number(id)))
+      return
     }
+    
+    if(work) {
+      dispatch(setWork(null))
+    }
+
   }, [id])
 
   return (

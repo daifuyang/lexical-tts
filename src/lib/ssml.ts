@@ -119,7 +119,10 @@ export const getSsml = (nodes: any = [], shortName: string = "zh-CN-XiaoxiaoNeur
 
 // 生成音频
 export const generateAudio = async (editorState: string, voiceName: string, predix="") => {
-  const nodes = JSON.parse(editorState);
+  let nodes = JSON.parse(editorState);
+  if(nodes?.root?.children != undefined) {
+    nodes = nodes.root.children;
+  }
   const ssml = getSsml(nodes, voiceName);
   // 统计字数
 

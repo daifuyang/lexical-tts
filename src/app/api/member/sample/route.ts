@@ -43,13 +43,13 @@ export async function POST(request: NextRequest) {
     return response.error("生成失败！");
   }
 
-  const { filename, res: uploadRes } = generateRes.res;
+  const { filename, res: uploadRes } = generateRes;
 
   // 入库
   await createSample({
     voiceName,
     content: editorState,
-    audioUrl: uploadRes.key,
+    audioUrl: "/" + uploadRes.key,
     creatorId: Number(userId),
     createdAt: now()
   });

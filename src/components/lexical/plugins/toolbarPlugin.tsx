@@ -14,11 +14,11 @@ import {
   CAN_UNDO_COMMAND,
   REDO_COMMAND,
   UNDO_COMMAND,
-  $isRangeSelection,
+  $isRangeSelection
 } from "lexical";
 import { useEffect, useRef, useState } from "react";
 import { Avatar, Spin, message } from "antd";
-import { useAppSelector } from "@/redux/hook";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { OPEN_PINYIN_POPUP_COMMAND } from "./pinyinPlugin";
 import { OPEN_SYMBOL_POPUP_COMMAND } from "./symbolPlugin";
 import { OPEN_SPEED_POPUP_COMMAND } from "./speedPlugin";
@@ -28,10 +28,12 @@ import { OPEN_VOICE_MODAL_COMMAND } from "./voicePlugin";
 import classNames from "classnames";
 import { $isAtNodeEnd } from "@lexical/selection";
 
-import { $getElementWrap, $getTextWrap } from "@/lib/lexical";
+import { $getElementWrap, $getTextWrap, saveWork } from "@/lib/lexical";
 import { $createSampleNode } from "../nodes/sampleNode";
 import { $isParagraphNode } from "lexical";
 import { getSample } from "@/services/sample";
+import { useRouter, useSearchParams } from "next/navigation";
+import { setIsSaved } from "@/redux/slice/voiceState";
 
 const LowPriority = 1;
 
@@ -55,24 +57,20 @@ function Divider() {
 export default function ToolbarPlugin(props: any) {
   const { total } = props;
 
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const [editor] = useLexicalComposerContext();
-
   const audioRef = useRef<HTMLAudioElement>(null);
-
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
-
   const [playing, setPlaying] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
-
   const [samplePlayList, setSamplePlayList] = useState<any>(null);
-
   const voiceState = useAppSelector((state) => state.voiceState);
-
   const { globalVoice, loading } = voiceState;
-
   const defaultVoiceLoading = loading.defaultVoice;
-
   const toolbarRef = useRef(null);
 
   const handleCanPlay = () => {
@@ -80,7 +78,7 @@ export default function ToolbarPlugin(props: any) {
       console.error("Error playing audio:", error);
     });
   };
-
+  
   const playAudio = () => {
     setPlaying(true);
     audioRef.current?.addEventListener("canplay", handleCanPlay);
@@ -102,7 +100,6 @@ export default function ToolbarPlugin(props: any) {
       if (res.code === 1) {
         const { prevPath } = res.data;
         setSamplePlayList(prevPath);
-
         if (onOk) {
           onOk();
         }
@@ -110,15 +107,27 @@ export default function ToolbarPlugin(props: any) {
     });
   };
 
-  const samplePlay = () => {
+  const samplePlay = async () => {
     if (playing) {
       pauseAudio();
       return;
     }
 
+    // 先保存项目
+
+    if (!id) {
+      const res = await saveWork(editor, id, { voiceName });
+      if (res.code === 1) {
+        message.success(res.msg);
+        dispatch(setIsSaved(true));
+        if (!id) {
+          router.replace(`/editor?id=${res.data.id}`);
+        }
+      }
+    }
+
     editor.update(() => {
       const selection = $getSelection();
-
       if (selection === null) {
         return;
       }
@@ -134,7 +143,7 @@ export default function ToolbarPlugin(props: any) {
         if (end) {
           const state = editor.getEditorState();
           const json: any = state.toJSON();
-          const editorState = JSON.stringify(json.root.children);
+          const editorState = JSON.stringify(json);
 
           fetchSample({ editorState, voiceName }, () => {
             playAudio();
@@ -166,7 +175,7 @@ export default function ToolbarPlugin(props: any) {
       });
 
       const editorNodes = findChildrenText(sampleNodes);
-      const editorState = JSON.stringify(editorNodes);
+      const editorState = JSON.stringify({root: {children: editorNodes}});
       fetchSample({ editorState, voiceName }, () => {
         playAudio();
       });

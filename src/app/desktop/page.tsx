@@ -1,5 +1,5 @@
 'use client'
-import { Avatar, Button, Input } from "antd";
+import { Button, Input } from "antd";
 import {
   SearchOutlined,
   PlusOutlined,

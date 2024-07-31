@@ -10,7 +10,8 @@ import {
   createCommand,
   LexicalCommand,
   LexicalNode,
-  ParagraphNode
+  ParagraphNode,
+  TextNode
 } from "lexical";
 import { useEffect } from "react";
 import { mergeRegister } from "@lexical/utils";
@@ -46,8 +47,8 @@ export function $setStyle(node: any, style = '') {
       node.setStyle(style);
     }else {
       const textNodes = node.getAllTextNodes()
-      textNodes.forEach( (text) => {
-        text.setStyle(style);
+      textNodes.forEach( (textNode: TextNode) => {
+        textNode.setStyle(style);
       } )
     }
 }

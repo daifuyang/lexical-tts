@@ -1,4 +1,6 @@
-export async function downloadFile(url: string, filename: string) {
+import dayjs from "dayjs";
+
+export async function downloadFile(url: string, filename: string = '') {
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -9,6 +11,11 @@ export async function downloadFile(url: string, filename: string) {
         
         const a = document.createElement('a');
         a.href = urlObject;
+
+        if (filename === '') {
+            filename = url.split("/").pop() || dayjs().format('YYYY-MM-DD_HH-mm-ss') + '.mp3';
+        }
+
         a.download = filename;
         document.body.appendChild(a);
         a.click();

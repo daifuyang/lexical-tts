@@ -88,6 +88,7 @@ export class VoiceNode extends ElementNode {
       textClassName: "voice-tag-text",
       tagText: `主播：${name}`,
       onTagClick: () => {
+        const voice = this.getVoice();
         editor.dispatchCommand(OPEN_VOICE_MODAL_COMMAND, { voice });
       },
       onClose: () => {
@@ -207,7 +208,13 @@ export class VoiceNode extends ElementNode {
 
   insertNewAfter(_: RangeSelection, restoreSelection = true): null | ElementNode {
     const voiceNode = $createVoiceNode(
-      this.__name, this.__voice, this.__style, this.__styleName, this.__rate, this.__volume, this.__pitch
+      this.__name,
+      this.__voice,
+      this.__style,
+      this.__styleName,
+      this.__rate,
+      this.__volume,
+      this.__pitch
     );
     this.insertAfter(voiceNode, restoreSelection);
     return voiceNode;
@@ -299,9 +306,7 @@ export function $isVoiceNode(node: LexicalNode | null | undefined): node is Voic
   return node instanceof VoiceNode;
 }
 
-export function $getVoiceAncestor(
-  node: LexicalNode,
-) {
+export function $getVoiceAncestor(node: LexicalNode) {
   let parent = node;
   while (parent !== null && parent.getParent() !== null && !$isVoiceNode(parent)) {
     parent = parent.getParentOrThrow();
