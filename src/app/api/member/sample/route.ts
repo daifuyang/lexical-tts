@@ -4,7 +4,6 @@ import path from "path";
 import { generateAudio } from "@/lib/ssml";
 import { createSample, getSampleFirst } from "@/model/ttsSample";
 import { now } from "@/lib/date";
-import { getUserId } from "@/lib/user";
 
 // 示例
 export async function POST(request: NextRequest) {
@@ -18,8 +17,6 @@ export async function POST(request: NextRequest) {
   if (!voiceName) {
     return response.error("配音名称不能为空！");
   }
-
-  const userId = getUserId(request);
 
   const sample = await getSampleFirst({
     voiceName,
@@ -38,12 +35,13 @@ export async function POST(request: NextRequest) {
   }
 
   const generateRes = await generateAudio(editorState, voiceName);
+  console.log('generateRes',generateRes );
 
   if (generateRes.status === "error") {
     return response.error("生成失败！");
   }
 
-  const { filename, res: uploadRes } = generateRes.res;
+  const { filename, res: uploadRes } = generateRes;
 
   // 入库
   await createSample({

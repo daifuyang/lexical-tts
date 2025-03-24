@@ -1,18 +1,15 @@
-import { getCurrentMember as member} from "@/services/member";
-import {getCurrentAdmin as admin } from "@/services/admin";
-import { NextRequest } from "next/server";
+import { getUserById } from "@/model/user";
+import { getSession } from "./session";
 
-export const getUserId = (request: NextRequest) => {
-  const userId = request.headers.get('x-userId') || "";
-  return userId;
-}
-
-export const getCurrentMember = async () => {
-  const user = await member();
-  return user;
-};
-
-export const getCurrentAdmin = async () => {
-  const user = await admin();
+export const getCurrentUser = async () => {
+  const session = await getSession();
+  if (!session) {
+    return null;
+  }
+  const userId = session.userId;
+  if (!userId) {
+    return null;
+  }
+  const user = await getUserById(Number(userId));
   return user;
 };

@@ -3,7 +3,8 @@ import { NextRequest } from "next/server";
 import api from "@/lib/response";
 
 // 更新一条
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { id } = params;
   const json = await request.json();
   let status = 1;

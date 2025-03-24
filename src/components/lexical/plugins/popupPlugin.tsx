@@ -10,7 +10,7 @@ import {
   SELECTION_CHANGE_COMMAND
 } from "lexical";
 import * as React from "react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, type JSX } from "react";
 import { createPortal } from "react-dom";
 import { getDOMRangeRect } from "../utils/dom";
 import { setPopupPosition } from "../utils/setPopupPosition";

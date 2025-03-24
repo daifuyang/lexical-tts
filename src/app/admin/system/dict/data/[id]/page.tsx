@@ -1,6 +1,6 @@
 "use client"
 
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState, use } from "react";
 import { ActionType, PageContainer, ProTable, ProColumns } from "@ant-design/pro-components";
 import { Divider, message, Popconfirm, Space } from "antd";
 import type { DictDataItem, DictItem } from "../../typings";
@@ -19,12 +19,13 @@ const statusKeyEnum: any = {
     enabled: 1,
 }
 
-export default function DictData({ params }: { params: { id: string } }) {
+export default function DictData(props: { params: Promise<{ id: string }> }) {
+    const params = use(props.params);
 
     const { id } = params;
     const [sysDictType, setSysDictType] = useState<DictItem>();
     const [loading, setLoading] = useState(false);
-    const actionRef = useRef<ActionType>();
+    const actionRef = useRef<ActionType>(undefined);
     const router = useRouter();
 
     // 定义 columns 的数组

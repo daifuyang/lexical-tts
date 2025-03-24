@@ -1,9 +1,7 @@
 "use client";
 
-import AuthLayout from "@/lib/layout/memberAuth";
+import Provider from "@/redux/provider";
 
 export default function Layout({ children }: any) {
-  return (
-      <AuthLayout>{children}</AuthLayout>
-  );
+  return <Provider>{children}</Provider>;
 }

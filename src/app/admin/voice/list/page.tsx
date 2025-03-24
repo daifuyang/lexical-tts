@@ -34,7 +34,7 @@ const statusEnum: any = {
 };
 
 export default function Page() {
-  const actionRef = useRef<ActionType>();
+  const actionRef = useRef<ActionType>(undefined);
 
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<any>({});

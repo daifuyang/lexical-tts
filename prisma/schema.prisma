@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,86 +7,66 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 后台管理员
-model umsAdmin {
-  id        Int     @id @default(autoincrement())
-  username  String  @db.VarChar(64)
-  password  String  @db.VarChar(64)
-  icon      String? @db.VarChar(500) // 头像
-  email     String? @db.VarChar(100) // 邮箱
-  nickname  String? @db.VarChar(200)
-  note      String? @db.VarChar(500)
-  createdAt Int     @map("created_at")
-  loginAt   Int     @map("login_at")
+model sysUser {
+  userId    Int     @id @default(autoincrement()) @map("user_id")
+  loginName String? @unique @map("login_name")
+  email     String? @unique
+  phone     String? @unique
+  password  String?
+  salt      String?
+  nickname  String?
+  realname  String?
+  gender    Int     @default(0) @db.TinyInt
+  birthday  Int?
+  userType  Int     @default(0) @map("user_type") @db.TinyInt
+  avatar    String?
+  loginIp   String? @map("login_ip")
+  loginAt   Int?    @map("login_at")
   status    Int     @default(1) @db.TinyInt
+  remark    String  @default("") @map("remark") @db.VarChar(500)
+  createdAt Int     @map("created_at")
+  updatedAt Int     @map("updated_at")
+  deletedAt Int     @default(0) @map("deleted_at")
 
-  @@map("ums_admin")
+  @@index([userId, loginName, phone, email])
+  @@map("sys_user")
 }
 
-// 前台用户表
-model umsMember {
-  id                    Int       @id @default(autoincrement())
-  username              String    @db.VarChar(64)
-  realname              String?   @db.VarChar(50)
-  password              String    @db.VarChar(64)
-  salt                  String    @db.VarChar(64)
-  nickname              String?   @db.VarChar(64)
-  phone                 String?   @db.VarChar(64)
-  status                Int       @default(1) @db.TinyInt
-  createdAt             Int       @map("created_at")
-  icon                  String?   @db.VarChar(500)
-  gender                Int       @default(1) @db.TinyInt
-  birthday              DateTime? @db.Date
-  city                  String?   @db.VarChar(64)
-  job                   String?   @db.VarChar(100)
-  personalizedSignature String?   @map("personalized_signature") @db.VarChar(200)
-  sourceType            Int?      @map("source_type") @db.Int
-
-  @@unique([username], name: "idx_username")
-  @@unique([phone], name: "idx_phone")
-  @@map("ums_member")
-}
-
-// 定义用户关联token表
-model umsToken {
+model sysUserToken {
   id           Int    @id @default(autoincrement())
-  userId       Int
-  userType     Int?   @db.TinyInt
-  accessToken  String @db.VarChar(255)
-  refreshToken String @db.VarChar(255)
-  expiry       Int
-  createdAt    Int    @map("created_at")
+  userId       Int    @map("user_id")
+  accessToken  String @unique @map("access_token")
+  expiresAt    Int    @map("expires_at")
+  refreshToken String @unique @map("refresh_token")
+  reExpiresAt  Int    @map("re_expires_at")
 
-  @@map("ums_token")
+  @@map("sys_user_token")
 }
 
-// tts项目相关
 model ttsProject {
   id        Int    @id @default(autoincrement())
-  memberId  Int    @map("member_id") // 创建人id 
-  title     String @db.VarChar(100) // 标题
+  memberId  Int    @map("member_id")
+  title     String @db.VarChar(100)
   content   String @db.Text
   createdAt Int    @map("created_at")
 
   @@map("tts_project")
 }
 
-// tts主播
 model ttsVoice {
   id              Int    @id @default(autoincrement())
-  name            String @db.VarChar(100) // 名称
+  name            String @db.VarChar(100)
   gender          Int    @db.TinyInt
   locale          String @db.VarChar(20)
   shortName       String @unique @db.VarChar(255)
-  sampleRateHertz Int?   @map("sample_rate_hertz") @db.Int
+  sampleRateHertz Int?   @map("sample_rate_hertz")
   voiceType       String @db.VarChar(20)
   status          Int    @default(1) @db.TinyInt
-  wordsPerMinute  Int?   @map("words_per_minute") @db.Int
+  wordsPerMinute  Int?   @map("words_per_minute")
 
   @@map("tts_voice")
 }
 
-// 主播风格
 model ttsVoiceStyle {
   id     Int    @id @default(autoincrement())
   style  String @unique @db.VarChar(150)
@@ -111,18 +85,16 @@ model ttsVoiceStyleRelation {
   @@map("tts_voice_style_relation")
 }
 
-// 主播分类
 model ttsVoiceCategory {
   id         Int    @id @default(autoincrement())
   name       String @db.VarChar(100)
   desc       String @db.VarChar(255)
-  sort_order Int?   @map("sort_order") @db.Int
+  sort_order Int?   @map("sort_order")
   status     Int    @default(1) @db.TinyInt
 
   @@map("tts_voice_category")
 }
 
-// 配音作品表
 model ttsWork {
   id          Int    @id @default(autoincrement())
   title       String
@@ -139,11 +111,10 @@ model ttsWork {
   @@map("tts_work")
 }
 
-// 配音试听表
 model ttsSample {
   id        Int    @id @default(autoincrement())
   voiceName String @map("voice_name")
-  content   String @db.Text // 试听内容  
+  content   String @db.Text
   audioUrl  String @map("audio_url")
   creatorId Int    @map("creator_id")
   createdAt Int    @map("created_at")
@@ -151,7 +122,6 @@ model ttsSample {
   @@map("tts_sample")
 }
 
-// 用户角色
 model umsMemberRole {
   id        Int @id @default(autoincrement())
   memberId  Int
@@ -181,7 +151,7 @@ model sysDictData {
   value     String  @db.VarChar(100)
   type      String  @db.VarChar(50)
   status    Int     @default(1) @db.TinyInt
-  sortOrder Int?    @map("sort_order") @db.Int
+  sortOrder Int?    @map("sort_order")
   remark    String? @db.VarChar(255)
   createdAt Int     @map("created_at")
   createdId Int

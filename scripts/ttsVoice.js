@@ -1,4 +1,4 @@
-const { now, prisma } = require("./utils/util");
+const { now, prisma } = require("./utils/utils");
 
 async function initVoice() {
   const first = await prisma.ttsVoiceStyle.findFirst();

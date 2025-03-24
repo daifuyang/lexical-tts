@@ -1,8 +1,8 @@
 import api from "@/lib/response";
 import prisma from "@/lib/prisma";
-import { getUmsToken } from "@/model/umsToken";
+import { getUmsToken } from "@/model/userToken";
 import { now } from "@/lib/date";
-import { getUmsAdmin } from "@/model/umsAdmin";
+import { getUmsAdmin } from "@/model/user";
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("Authorization");

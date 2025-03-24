@@ -1,6 +1,6 @@
 import { ModalForm, ProFormText, ProFormSwitch, ProFormTextArea, ProFormDigit } from '@ant-design/pro-components';
 import { Button, Form, message } from 'antd';
-import { cloneElement, useState } from 'react';
+import { cloneElement, useState, type JSX } from 'react';
 import type { DictDataItem } from '../../typings';
 import { addSystemDictData, updateSystemDictData } from '@/services/admin/systemDictData';
 

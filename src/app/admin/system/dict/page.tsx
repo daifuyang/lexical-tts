@@ -23,7 +23,7 @@ const statusKeyEnum: any = {
 export default function Dict() {
 
     const router = useRouter();
-    const actionRef = useRef<ActionType>();
+    const actionRef = useRef<ActionType>(undefined);
     // 定义 columns 的数组
     const columns: ProColumns<DictItem>[] = [
         {

@@ -10,7 +10,7 @@ import {
   SerializedLexicalNode,
   Spread
 } from "lexical";
-import { useState } from "react";
+import { useState, type JSX } from "react";
 import Pause from "./pauseComponent";
 import { UPDATE_PAUSE_COMMAND } from "../plugins/pausePlugin";
 

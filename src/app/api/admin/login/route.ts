@@ -4,9 +4,9 @@ import dayjs from "dayjs";
 import bcrypt from "bcrypt";
 import api from "@/lib/response";
 import prisma from "@/lib/prisma";
-import { getUmsAdmin } from "@/model/umsAdmin";
+import { getUmsAdmin } from "@/model/user";
 import { now } from "@/lib/date";
-import { createUmsToken } from "@/model/umsToken";
+import { createUmsToken } from "@/model/userToken";
 
 export async function POST(request: Request) {
   const data = await request.json();

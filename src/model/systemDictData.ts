@@ -3,8 +3,8 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
 // 获取字典数据总数
-export async function getSystemDictDataCount(type: string) {
-  const count = await prisma.sysDictData.count({
+export async function getSystemDictDataCount(type: string, tx = prisma) {
+  const count = await tx.sysDictData.count({
     where: {
       type
     }
@@ -22,8 +22,8 @@ export async function getSystemDictDataList({
     | Prisma.sysDictDataOrderByWithRelationInput
     | Prisma.sysDictDataOrderByWithRelationInput[]
     | undefined;
-}) {
-  const systemDict = await prisma.sysDictData.findMany({
+}, tx = prisma) {
+  const systemDict = await tx.sysDictData.findMany({
     where,
     orderBy
   });
@@ -38,16 +38,16 @@ export async function createSystemDictData({
   data
 }: {
   data: Prisma.XOR<Prisma.sysDictDataCreateInput, Prisma.sysDictDataUncheckedCreateInput>;
-}) {
-  const systemDict = await prisma.sysDictData.create({
+}, tx = prisma) {
+  const systemDict = await tx.sysDictData.create({
     data
   });
   return systemDict;
 }
 
 // 根据字典数据id获取数据
-export async function getSystemDictDataById(id: number) {
-  const systemDict = await prisma.sysDictData.findUnique({
+export async function getSystemDictDataById(id: number, tx = prisma) {
+  const systemDict = await tx.sysDictData.findUnique({
     where: {
       id
     }
@@ -58,9 +58,10 @@ export async function getSystemDictDataById(id: number) {
 // 更新系统字典数据
 export async function updateSystemDictData(
   id: number,
-  data:  Prisma.XOR<Prisma.sysDictDataUpdateInput, Prisma.sysDictDataUncheckedUpdateInput>
+  data:  Prisma.XOR<Prisma.sysDictDataUpdateInput, Prisma.sysDictDataUncheckedUpdateInput>,
+  tx = prisma
 ) {
-  const systemDict = await prisma.sysDictData.update({
+  const systemDict = await tx.sysDictData.update({
     where: {
       id
     },
@@ -70,8 +71,8 @@ export async function updateSystemDictData(
 }
 
 // 根据字典数据id删除删除
-export async function deleteSystemDictDataById(id: number) {
-  const systemDict = await prisma.sysDictData.delete({
+export async function deleteSystemDictDataById(id: number, tx = prisma) {
+  const systemDict = await tx.sysDictData.delete({
     where: {
       id
     }

@@ -7,7 +7,8 @@ import { PrismaClient } from "@prisma/client/extension";
 export const getCategories = async (
   current: number = 1,
   pageSize: number = 0,
-  where: Prisma.ttsVoiceCategoryWhereInput = {}
+  where: Prisma.ttsVoiceCategoryWhereInput = {},
+  tx = prisma
 ) => {
   const args: {
     where: any;
@@ -23,10 +24,10 @@ export const getCategories = async (
     args.take = pageSize;
   }
 
-  const categories = await prisma.ttsVoiceCategory.findMany(args);
+  const categories = await tx.ttsVoiceCategory.findMany(args);
   let result: ttsVoiceCategory[] | Pagination<ttsVoiceCategory> = categories;
   if (pageSize > 0) {
-    const total = await prisma.ttsVoiceCategory.count({ where });
+    const total = await tx.ttsVoiceCategory.count({ where });
     result = {
       total,
       data: categories,

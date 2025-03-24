@@ -5,7 +5,8 @@ import { getSystemDictDataCount } from "@/model/systemDictData";
 import { trim } from "lodash";
 import { now } from "@/lib/date";
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { id } = params;
   const data = await getSystemDictTypeById(Number(id));
   if (!data) {
@@ -14,7 +15,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   return api.success("获取成功！", data);
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { id } = params;
   const data = await getSystemDictTypeById(Number(id));
   if (!data) {
@@ -38,10 +40,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   })
 
   return api.success("更新成功！", res);
-
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { id } = params;
 
   // 查询

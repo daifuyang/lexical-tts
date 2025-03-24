@@ -1,6 +1,6 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $getSelection } from "lexical";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, type JSX } from "react";
 import { mergeRegister } from '@lexical/utils';
 import { useAppDispatch } from '@/redux/hook';
 import { closeFloat } from '@/redux/slice/initialState';

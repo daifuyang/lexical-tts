@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
-const { now, prisma } = require("./utils/util");
+const { now, prisma } = require("./utils/utils");
+const { migrateUser } = require("./user");
 const { initVoice } = require("./ttsVoice");
 
 async function main() {
@@ -7,24 +8,7 @@ async function main() {
 
   // 创建初始管理员
 
-  const admin = await prisma.umsAdmin.findFirst({
-    where: {
-      username: "admin"
-    }
-  });
-
-  if (!admin) {
-    const { DEFAULT_PASSWORD = "123456" } = process.env;
-    const password = bcrypt.hashSync(DEFAULT_PASSWORD, bcrypt.genSaltSync(10));
-    await prisma.umsAdmin.create({
-      data: {
-        username: "admin",
-        password,
-        loginAt: 0,
-        createdAt: now()
-      }
-    });
-  }
+  await migrateUser();
 
   // 创建系统默认字典
   const sysUserGender = await prisma.sysDictType.findFirst({

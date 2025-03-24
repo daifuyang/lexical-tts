@@ -1,7 +1,8 @@
 import api from "@/lib/response";
 import { deleteSystemDictDataById, getSystemDictDataById, updateSystemDictData } from "@/model/systemDictData";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     const { id } = params;
     const dictData = await getSystemDictDataById(Number(id));
     if(!dictData) {
@@ -10,7 +11,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
     return api.success("获取成功！", dictData);
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     const { id } = params;
     const dictData = await getSystemDictDataById(Number(id));
     if(!dictData) {
@@ -22,7 +24,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     return api.success("更新成功！", dictData);
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     const { id } = params;
     const dictData = await getSystemDictDataById(Number(id));
     if(!dictData) {

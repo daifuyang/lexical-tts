@@ -1,108 +1,115 @@
 "use client";
 
-import { FormEvent, ChangeEvent, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-
-import { message } from "antd";
-import { login } from "@/services/member";
+import { useActionState } from 'react';
+import { login } from "./actions";
+import BrandIntro from "./components/BrandIntro";
+import { UserIcon, LockIcon, EyeIcon, EyeOffIcon } from "./components/Icons";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import "./login.css";
 
 export default function Login() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [state, loginAction, pending] = useActionState(login, undefined );
 
-  const [formData, setFormData] = useState<any>({
-    account: "",
-    password: ""
-  });
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const res: any = await login(formData)
-    if (res.code === 1) {
-      const token = JSON.stringify(res.data);
-      localStorage.setItem("member_token", token);
-      message.success(res.msg);
-      return router.push("/desktop");
-    }
-    message.error(res.msg);
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
-    <div className="h-screen">
-      <div className="flex min-h-full flex-1 flex-col justify-center px-6 pt-12 pb-36 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-          <h1 className="text-center font-bold text-4xl">{process.env.NEXT_PUBLIC_TITLE}</h1>
-          {/* <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-            登录账号
-          </h2> */}
-        </div>
-
-        <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form className="space-y-6" onSubmit={onSubmit}>
-            <div>
-              <label
-                htmlFor="account"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                账号
-              </label>
-              <div className="mt-2">
-                <input
-                  id="account"
-                  name="account"
-                  type="text"
-                  onChange={handleChange}
-                  className="block w-full rounded-md border-0 px-3 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                />
+    <div className="login-container">
+      <div className="login-background" style={{ backgroundImage: `url('/assets/login-bg-white.svg')` }}>
+        <div className="login-wrapper">
+          {/* 左侧品牌介绍 */}
+          <div className="login-brand-section">
+            <BrandIntro />
+          </div>
+          
+          {/* 右侧登录表单 */}
+          <div className="login-form-section">
+            <div className="login-card">
+              <div className="login-logo">
+                <h1 className="login-title">{process.env.NEXT_PUBLIC_TITLE || "语音合成平台"}</h1>
               </div>
-            </div>
+              
+              {!state?.success && state?.message && (
+                <Alert variant="destructive" className="mb-4">
+                  <div className="flex items-center gap-2">
+                    <ExclamationTriangleIcon className="h-4 w-4" />
+                    <AlertDescription>
+                      {state.message}
+                    </AlertDescription>
+                  </div>
+                </Alert>
+              )}
 
-            <div>
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
-                  密码
-                </label>
-                <div className="text-sm">
-                  <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">
-                    忘记密码？
-                  </a>
+              <form className="login-form" action={loginAction}>
+                <div className="input-group">
+                  <label htmlFor="account">账号</label>
+                  <div className="input-with-icon">
+                    <span className="input-icon">
+                      <UserIcon />
+                    </span>
+                    <input
+                      id="account"
+                      name="account"
+                      type="text"
+                      placeholder="请输入您的账号"
+                      className="login-input"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="mt-2">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  onChange={handleChange}
-                  className="block w-full rounded-md border-0 px-3 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                />
+
+                <div className="input-group">
+                  <div className="label-row">
+                    <label htmlFor="password">密码</label>
+                    <a href="#" className="login-link forgot-password">忘记密码？</a>
+                  </div>
+                  <div className="input-with-icon">
+                    <span className="input-icon">
+                      <LockIcon />
+                    </span>
+                    <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="请输入您的密码"
+                      autoComplete="current-password"
+                      className="login-input"
+                      required
+                    />
+                    <button 
+                      type="button" 
+                      className="password-toggle" 
+                      onClick={togglePasswordVisibility}
+                    >
+                      {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="remember-me">
+                  <input type="checkbox" id="remember" name="remember" />
+                  <label htmlFor="remember">记住我</label>
+                </div>
+
+                <button type="submit" disabled={pending} className="login-button">
+                  登录
+                </button>
+              </form>
+
+              <div className="login-footer">
+                <p>
+                  还没有账号？
+                  <a href="#" className="login-link">立即注册享受10次免费体验</a>
+                </p>
               </div>
             </div>
-
-            <div>
-              <button
-                type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                登录
-              </button>
-            </div>
-          </form>
-
-          <p className="mt-10 text-right text-sm text-gray-500">
-            还没有账号？
-            <a href="#" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
-              立即注册享受10次免费体验
-            </a>
-          </p>
+          </div>
         </div>
       </div>
     </div>
