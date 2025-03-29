@@ -185,15 +185,6 @@ export default function Page() {
         editable={{
           type: "multiple"
         }}
-        rowKey="id"
-        search={{
-          labelWidth: "auto"
-        }}
-        options={{
-          setting: {
-            listsHeight: 400
-          }
-        }}
         headerTitle="主播列表"
         toolBarRender={() => [
           <Button

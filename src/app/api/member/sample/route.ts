@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
   await createSample({
     voiceName,
     content: editorState,
-    audioUrl: uploadRes.key,
+    audioUrl: "/" + uploadRes.key,
     creatorId: Number(userId),
     createdAt: now()
   });

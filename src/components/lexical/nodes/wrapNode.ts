@@ -6,7 +6,7 @@ import {
   ElementNode,
   LexicalNode,
   SerializedElementNode,
-  Spread,
+  Spread
 } from "lexical";
 import { $createSpeedNode, $isSpeedNode, SpeedNode } from "./speedNode";
 import { $createVoiceNode, $isVoiceNode, VoiceNode } from "./voiceNode";
@@ -72,11 +72,9 @@ export function $createWrapNode(): WrapNode {
   return $applyNodeReplacement(new WrapNode());
 }
 
-
-
 // 获取包裹节点的所有子节点
 export function $getWrapChildren(node: SpeedNode | VoiceNode) {
-  const wrap = node.getChildren();
+  const wrap: any = node.getChildren();
   const nodes = wrap[0].getChildren();
   return nodes;
 }
@@ -223,7 +221,7 @@ export function $insertWrapNode(parentNode: ElementNode) {
     });
     const ancestor = $getElementWrap(speedNode);
     if (ancestor) {
-      const childrenNodes = $getWrapChildren(ancestor);
+      const childrenNodes = $getWrapChildren(ancestor as any);
       $insertSpeedNode(childrenNodes);
     }
   } else if (parentType === "voiceNode") {
@@ -254,23 +252,22 @@ export function $insertWrapNode(parentNode: ElementNode) {
 
       // 重新包裹计算
       let prevSpeedWrap: any = null;
-      childrenNodes.forEach((node) => {
+      childrenNodes.forEach((node: any) => {
         const element = $getTextWrap(node);
         const wrap = $getElementWrap(element);
         const parent = element;
 
-        if($isVoiceNode(node)) {
+        if ($isVoiceNode(node)) {
           ancestorWrapNode.insertBefore(node);
           prevSpeedWrap = null;
-        }else {
-          if(prevSpeedWrap == null) {
-            const {speedNode, wrapNode} = $createSpeedWrapNode(parentSpeed);
+        } else {
+          if (prevSpeedWrap == null) {
+            const { speedNode, wrapNode } = $createSpeedWrapNode(parentSpeed);
             ancestorWrapNode.insertBefore(speedNode);
-            prevSpeedWrap = wrapNode
+            prevSpeedWrap = wrapNode;
           }
           prevSpeedWrap.append(node);
         }
-       
       });
 
       ancestorWrapNode.remove();
@@ -302,7 +299,9 @@ export function $insertWrapNode(parentNode: ElementNode) {
           prevSpeedWrap.append(parent);
 
           const newWrap = $getElementWrap(node);
-          wrapNode.append(newWrap);
+          if (newWrap) {
+            wrapNode.append(newWrap);
+          }
         } else {
           wrapNode.append(parent);
         }

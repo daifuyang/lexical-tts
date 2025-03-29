@@ -2,12 +2,8 @@
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
-  $getSelection,
-  $isElementNode,
-  $isRangeSelection,
   COMMAND_PRIORITY_EDITOR,
   createCommand,
-  ElementNode,
   LexicalCommand
 } from "lexical";
 
@@ -63,8 +59,11 @@ export default function SpeedPlugin(props: any) {
       editor.registerCommand(
         REMOVE_SPEED_COMMAND,
         (key) => {
-          $removeSpeed(key);
-          return true;
+          if (key) {
+            $removeSpeed(key);  
+            return true;  
+          }
+          return false;
         },
         COMMAND_PRIORITY_EDITOR
       ),

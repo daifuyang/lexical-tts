@@ -1,4 +1,4 @@
-import { $isParagraphNode, $isRootNode, BaseSelection, LexicalNode } from "lexical";
+import { $isParagraphNode, $isRootNode, BaseSelection, LexicalNode, RangeSelection } from "lexical";
 
 export function selectNode(element: Element) {
   // 创建一个新的 Range 对象
@@ -11,9 +11,9 @@ export function selectNode(element: Element) {
   selection?.addRange(range); // 添加新的选区
 }
 
-export function $getTopNodes(selection: BaseSelection) {
-    const anchor = selection?.anchor;
-    const focus = selection?.focus;
+export function $getTopNodes(selection: RangeSelection) {
+    const anchor = selection.anchor;
+    const focus = selection.focus;
     const isBefore = anchor.isBefore(focus);
     const firstPoint = isBefore ? anchor : focus;
     const lastPoint = isBefore ? focus : anchor;

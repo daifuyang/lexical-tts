@@ -1,6 +1,6 @@
 import { memberRequest } from "@/utils/request";
 // 新建作品
-export function getSample(data) {
+export function getSample(data: any) {
     // return new Promise((resolve) => {
     //     resolve({
     //         code: 1,

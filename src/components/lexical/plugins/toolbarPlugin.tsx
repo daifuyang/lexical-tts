@@ -19,7 +19,7 @@ import {
 } from "lexical";
 import { useEffect, useRef, useState } from "react";
 import { Avatar, Spin, message } from "antd";
-import { useAppSelector } from "@/redux/hook";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { OPEN_PINYIN_POPUP_COMMAND } from "./pinyinPlugin";
 import { OPEN_SYMBOL_POPUP_COMMAND } from "./symbolPlugin";
 import { OPEN_SPEED_POPUP_COMMAND } from "./speedPlugin";
@@ -43,10 +43,9 @@ function Divider() {
 export default function ToolbarPlugin(props: any) {
   const { total } = props;
 
+  const dispatch = useAppDispatch();
   const [editor] = useLexicalComposerContext();
-
   const audioRef = useRef<HTMLAudioElement>(null);
-
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -64,11 +63,8 @@ export default function ToolbarPlugin(props: any) {
   const [playList, setPlayList] = useState<any>({});
 
   const voiceState = useAppSelector((state) => state.voiceState);
-
   const { globalVoice, loading } = voiceState;
-
   const defaultVoiceLoading = loading.defaultVoice;
-
   const toolbarRef = useRef(null);
 
   function preloadData<T>(data: T[], index: number, size: number): T[] {
@@ -141,11 +137,10 @@ export default function ToolbarPlugin(props: any) {
     if (!playing) {
       pauseAudio();
       return;
-    } 
+    }
     const currentSrc = playList[playIndex];
     if (currentSrc && currentSrc !== audio.src) {
-
-      if(playing) {
+      if (playing) {
         pauseAudio();
       }
 
@@ -293,19 +288,18 @@ export default function ToolbarPlugin(props: any) {
     setPlaying(!playing);
     if (!playing) {
       editor.update(() => {
-       
         const root = $getRoot();
 
         let nodeKey = null;
         const selection = $getSelection();
         if (!selection) {
-            root.selectStart();
+          return;
         }
-          const nodes = selection.getNodes();
-          if (nodes.length > 0) {
-            nodeKey = nodes[0].getKey();
-          }
-        
+
+        const nodes = selection.getNodes();
+        if (nodes.length > 0) {
+          nodeKey = nodes[0].getKey();
+        }
 
         const paragraphNodes = recursionNodes(root.getChildren());
         let sentenceNodes = [];
@@ -334,7 +328,6 @@ export default function ToolbarPlugin(props: any) {
           const currentPlayIndex = keyMap[nodeKey];
           setPlayIndex(currentPlayIndex);
         }
-
       });
     }
   };

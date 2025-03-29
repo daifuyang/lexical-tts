@@ -37,8 +37,6 @@ import Header from "./plugins/header";
 
 import { useSearchParams } from "next/navigation";
 import { fetchWorkDetail } from "@/redux/slice/lexicalState";
-import { CustomParagraphNode } from "./nodes/customParagraphNode";
-import { ParagraphNode } from "lexical";
 
 const VoicePlugin = dynamic(() => import("./plugins/voicePlugin"), { ssr: false });
 

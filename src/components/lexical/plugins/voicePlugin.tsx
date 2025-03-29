@@ -27,7 +27,7 @@ export const INSERT_VOICE_COMMAND: LexicalCommand<InsertVoicePayload> = createCo
 export const OPEN_VOICE_MODAL_COMMAND: LexicalCommand<OpenVoicePayload | undefined> = createCommand(
   "OPEN_VOICE_MODAL_COMMAND"
 );
-export const REMOVE_VOICE_COMMAND: LexicalCommand<OpenVoicePayload | undefined> = createCommand(
+export const REMOVE_VOICE_COMMAND: LexicalCommand<string> = createCommand(
   "REMOVE_VOICE_COMMAND"
 );
 
@@ -94,7 +94,7 @@ export default function VoicePlugin() {
         (payload) => {
           const voiceNode = $getNodeByKey(payload);
           if(voiceNode) {
-          const children = $getWrapChildren(voiceNode);
+          const children = $getWrapChildren(voiceNode as VoiceNode);
           children.forEach((node: any) => {
             voiceNode.insertBefore(node);  
           })

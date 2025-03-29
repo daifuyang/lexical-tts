@@ -100,6 +100,7 @@ model TtsWork {
   status      Int    @default(1) @db.TinyInt
   version     Int    @default(1)
   createdAt   Int    @map("created_at")
+  deletedAt   Int?   @map("deleted_at")
 
   @@map("tts_work")
 }

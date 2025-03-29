@@ -1,8 +1,9 @@
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
-import { Prisma } from "@prisma/client";
+import { Prisma, ttsVoice } from "@prisma/client";
 
 const voiceIdKey = `tts:voice:id:`;
+const voiceShortNameKey = `tts:voice:shortName:`;
 
 // 获取总数
 export async function getVoiceTotal(tx = prisma) {
@@ -43,6 +44,26 @@ export async function getVoiceById(id: number, tx = prisma) {
     voice = await tx.ttsVoice.findUnique({
       where: {
         id
+      }
+    });
+    if (voice) {
+      redis.set(key, JSON.stringify(voice));
+    }
+  }
+  return voice;
+}
+
+// 根据shortName获取主播
+export async function getVoiceByShortName(shortName: string, tx = prisma) {
+  const key = `${voiceShortNameKey}${shortName}`;
+  const cache = await redis.get(key);
+  let voice: ttsVoice | null = null;
+  if (cache) {
+    voice = JSON.parse(cache);
+  } else {
+    voice = await tx.ttsVoice.findUnique({
+      where: {
+        shortName
       }
     });
     if (voice) {

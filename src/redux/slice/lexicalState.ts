@@ -2,13 +2,16 @@ import { getWorkDetail } from "@/services/work";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 // 创建获取工作空间信息
-export const fetchWorkDetail = createAsyncThunk<any, number>("data/fetchWorkDetail", async (id, thunkAPI) => {
-  const res: any = await getWorkDetail(id);
-  if (res.code !== 1) {
-    return thunkAPI.rejectWithValue(res);
+export const fetchWorkDetail = createAsyncThunk<any, number>(
+  "data/fetchWorkDetail",
+  async (id, thunkAPI) => {
+    const res: any = await getWorkDetail(id);
+    if (res.code !== 1) {
+      return thunkAPI.rejectWithValue(res);
+    }
+    return res.data;
   }
-  return res.data;
-});
+);
 
 const initialState: {
   playingNodeKey?: any;
@@ -17,10 +20,10 @@ const initialState: {
     name: string;
   } | null; // 项目数据
   loading: {
-    work: boolean,
+    work: boolean;
   };
   error: {
-    work: any
+    work: any;
   };
 } = {
   playingNodeKey: null,
@@ -37,6 +40,9 @@ export const lexicalStateSlice = createSlice({
   reducers: {
     setPlayingNodeKey: (state, action) => {
       state.playingNodeKey = action.payload;
+    },
+    setWork: (state, action) => {
+      state.work = action.payload;
     }
   },
   extraReducers: (builder) => {
@@ -46,7 +52,7 @@ export const lexicalStateSlice = createSlice({
       })
       .addCase(fetchWorkDetail.fulfilled, (state, action) => {
         state.loading.work = false;
-        state.work = action.payload
+        state.work = action.payload;
       })
       .addCase(fetchWorkDetail.rejected, (state, action) => {
         state.error.work = action.payload;
@@ -54,6 +60,6 @@ export const lexicalStateSlice = createSlice({
   }
 });
 
-export const { setPlayingNodeKey } = lexicalStateSlice.actions;
+export const { setPlayingNodeKey, setWork } = lexicalStateSlice.actions;
 
 export default lexicalStateSlice.reducer;
