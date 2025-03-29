@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model sysUser {
+model SysUser {
   userId    Int     @id @default(autoincrement()) @map("user_id")
   loginName String? @unique @map("login_name")
   email     String? @unique
@@ -32,7 +32,7 @@ model sysUser {
   @@map("sys_user")
 }
 
-model sysUserToken {
+model SysUserToken {
   id           Int    @id @default(autoincrement())
   userId       Int    @map("user_id")
   accessToken  String @unique @map("access_token")
@@ -43,17 +43,8 @@ model sysUserToken {
   @@map("sys_user_token")
 }
 
-model ttsProject {
-  id        Int    @id @default(autoincrement())
-  memberId  Int    @map("member_id")
-  title     String @db.VarChar(100)
-  content   String @db.Text
-  createdAt Int    @map("created_at")
-
-  @@map("tts_project")
-}
-
-model ttsVoice {
+// 语音主播
+model TtsVoice {
   id              Int    @id @default(autoincrement())
   name            String @db.VarChar(100)
   gender          Int    @db.TinyInt
@@ -67,7 +58,8 @@ model ttsVoice {
   @@map("tts_voice")
 }
 
-model ttsVoiceStyle {
+// 主播风格
+model TtsVoiceStyle {
   id     Int    @id @default(autoincrement())
   style  String @unique @db.VarChar(150)
   name   String @db.VarChar(100)
@@ -77,7 +69,7 @@ model ttsVoiceStyle {
   @@map("tts_voice_style")
 }
 
-model ttsVoiceStyleRelation {
+model TtsVoiceStyleRelation {
   id      Int    @id @default(autoincrement())
   voiceId Int
   style   String
@@ -85,7 +77,8 @@ model ttsVoiceStyleRelation {
   @@map("tts_voice_style_relation")
 }
 
-model ttsVoiceCategory {
+// 主播分类
+model TtsVoiceCategory {
   id         Int    @id @default(autoincrement())
   name       String @db.VarChar(100)
   desc       String @db.VarChar(255)
@@ -95,7 +88,7 @@ model ttsVoiceCategory {
   @@map("tts_voice_category")
 }
 
-model ttsWork {
+model TtsWork {
   id          Int    @id @default(autoincrement())
   title       String
   voiceName   String @map("voice_name")
@@ -111,7 +104,7 @@ model ttsWork {
   @@map("tts_work")
 }
 
-model ttsSample {
+model TtsSample {
   id        Int    @id @default(autoincrement())
   voiceName String @map("voice_name")
   content   String @db.Text
@@ -122,17 +115,7 @@ model ttsSample {
   @@map("tts_sample")
 }
 
-model umsMemberRole {
-  id        Int @id @default(autoincrement())
-  memberId  Int
-  roleId    Int
-  createdAt Int @map("created_at")
-  updatedAt Int @map("updated_at")
-
-  @@map("ums_member_role")
-}
-
-model sysDictType {
+model SysDictType {
   id        Int     @id @default(autoincrement())
   name      String  @db.VarChar(50)
   type      String  @unique @db.VarChar(50)
@@ -145,7 +128,7 @@ model sysDictType {
   @@map("sys_dict_type")
 }
 
-model sysDictData {
+model SysDictData {
   id        Int     @id @default(autoincrement())
   label     String  @db.VarChar(100)
   value     String  @db.VarChar(100)

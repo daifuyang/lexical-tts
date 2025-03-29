@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { Pagination } from "@/lib/response";
-import { Prisma, PrismaClient, sysDictType } from "@prisma/client";
+import { Prisma, PrismaClient, SysDictType } from "@prisma/client";
 import { formatFields } from "@/lib/date";
 import redis from "@/lib/redis";
 
@@ -21,14 +21,14 @@ export async function getSystemDictTypeList({
 }: {
   current: number;
   pageSize: number;
-  where?: Prisma.sysDictTypeWhereInput;
+  where?: Prisma.SysDictTypeWhereInput;
   orderBy?:
-    | Prisma.ttsVoiceOrderByWithRelationInput
-    | Prisma.ttsVoiceOrderByWithRelationInput[]
+    | Prisma.SysDictTypeOrderByWithRelationInput
+    | Prisma.SysDictTypeOrderByWithRelationInput[]
     | undefined;
   tx?: PrismaClient;
 }) {
-  let data: sysDictType[] | Pagination<sysDictType> | null;
+  let data: SysDictType[] | Pagination<SysDictType> | null;
   if (pageSize === 0) {
     data = await tx.sysDictType.findMany({
       where,
@@ -91,7 +91,7 @@ export async function getSystemDictTypeByType(type: string, tx = prisma) {
 
 // 创建系统字典
 export async function createSystemDictType(
-  data: Prisma.XOR<Prisma.sysDictTypeCreateInput, Prisma.sysDictTypeUncheckedCreateInput>,
+  data: Prisma.XOR<Prisma.SysDictTypeCreateInput, Prisma.SysDictTypeUncheckedCreateInput>,
   tx = prisma
 ) {
   const systemDict = await tx.sysDictType.create({
@@ -103,7 +103,7 @@ export async function createSystemDictType(
 // 更新修改系统字典
 export async function updateSystemDictTypeById(
   id: number,
-  data: Prisma.XOR<Prisma.sysDictTypeUpdateInput, Prisma.sysDictTypeUncheckedUpdateInput>,
+  data: Prisma.XOR<Prisma.SysDictTypeUpdateInput, Prisma.SysDictTypeUncheckedUpdateInput>,
   tx: PrismaClient = prisma
 ) {
   const systemDict = await tx.sysDictType.update({

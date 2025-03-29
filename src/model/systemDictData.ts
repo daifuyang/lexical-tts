@@ -17,10 +17,10 @@ export async function getSystemDictDataList({
   where,
   orderBy
 }: {
-  where: Prisma.sysDictDataWhereInput;
+  where: Prisma.SysDictDataWhereInput;
   orderBy?:
-    | Prisma.sysDictDataOrderByWithRelationInput
-    | Prisma.sysDictDataOrderByWithRelationInput[]
+    | Prisma.SysDictDataOrderByWithRelationInput
+    | Prisma.SysDictDataOrderByWithRelationInput[]
     | undefined;
 }, tx = prisma) {
   const systemDict = await tx.sysDictData.findMany({
@@ -37,7 +37,7 @@ export async function getSystemDictDataList({
 export async function createSystemDictData({
   data
 }: {
-  data: Prisma.XOR<Prisma.sysDictDataCreateInput, Prisma.sysDictDataUncheckedCreateInput>;
+  data: Prisma.XOR<Prisma.SysDictDataCreateInput, Prisma.SysDictDataUncheckedCreateInput>;
 }, tx = prisma) {
   const systemDict = await tx.sysDictData.create({
     data
@@ -58,7 +58,7 @@ export async function getSystemDictDataById(id: number, tx = prisma) {
 // 更新系统字典数据
 export async function updateSystemDictData(
   id: number,
-  data:  Prisma.XOR<Prisma.sysDictDataUpdateInput, Prisma.sysDictDataUncheckedUpdateInput>,
+  data:  Prisma.XOR<Prisma.SysDictDataUpdateInput, Prisma.SysDictDataUncheckedUpdateInput>,
   tx = prisma
 ) {
   const systemDict = await tx.sysDictData.update({

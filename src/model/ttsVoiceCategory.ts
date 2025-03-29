@@ -1,13 +1,13 @@
 import prisma from "@/lib/prisma";
 import { Pagination } from "@/lib/response";
-import { Prisma, ttsVoiceCategory } from "@prisma/client";
+import { Prisma, TtsVoiceCategory } from "@prisma/client";
 import { PrismaClient } from "@prisma/client/extension";
 
 // 获取列表
 export const getCategories = async (
   current: number = 1,
   pageSize: number = 0,
-  where: Prisma.ttsVoiceCategoryWhereInput = {},
+  where: Prisma.TtsVoiceCategoryWhereInput = {},
   tx = prisma
 ) => {
   const args: {
@@ -25,7 +25,7 @@ export const getCategories = async (
   }
 
   const categories = await tx.ttsVoiceCategory.findMany(args);
-  let result: ttsVoiceCategory[] | Pagination<ttsVoiceCategory> = categories;
+  let result: TtsVoiceCategory[] | Pagination<TtsVoiceCategory> = categories;
   if (pageSize > 0) {
     const total = await tx.ttsVoiceCategory.count({ where });
     result = {

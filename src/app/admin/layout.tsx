@@ -1,5 +1,4 @@
 "use client";
-import AuthLayout from "@/lib/layout/adminAuth";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import dayjs from 'dayjs';
@@ -38,8 +37,6 @@ export default function Layout(props: any) {
   }
 
   return (
-    <AuthLayout>
       <AdminLayout>{children}</AdminLayout>
-    </AuthLayout>
   );
 }

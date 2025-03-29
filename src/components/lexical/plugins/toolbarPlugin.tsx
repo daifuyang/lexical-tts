@@ -8,13 +8,14 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
 import {
-  $isTextNode,
   $getSelection,
+  $isTextNode,
   CAN_REDO_COMMAND,
   CAN_UNDO_COMMAND,
   REDO_COMMAND,
   UNDO_COMMAND,
-  $isRangeSelection,
+  $getRoot,
+  ParagraphNode
 } from "lexical";
 import { useEffect, useRef, useState } from "react";
 import { Avatar, Spin, message } from "antd";
@@ -26,27 +27,14 @@ import { INSERT_PAUSE_COMMAND } from "./pausePlugin";
 import { OPEN_VOICE_MODAL_COMMAND } from "./voicePlugin";
 
 import classNames from "classnames";
-import { $isAtNodeEnd } from "@lexical/selection";
-
-import { $getElementWrap, $getTextWrap } from "@/lib/lexical";
-import { $createSampleNode } from "../nodes/sampleNode";
 import { $isParagraphNode } from "lexical";
 import { getSample } from "@/services/sample";
+import { $isPinyinNode } from "@/components/lexical/nodes/pinyinNode";
+import { $isSymbolNode } from "../nodes/symbolNode";
+import { splitTextByPunctuation } from "../utils/text";
+import { $createAudioNode, $isAudioNode } from "../nodes/audioNode";
 
 const LowPriority = 1;
-
-function findChildrenText(nodes: any) {
-  return nodes.map((node: any) => {
-    const result = node.exportJSON();
-    if (!$isTextNode(node)) {
-      if (node.getChildren().length > 0) {
-        const children = findChildrenText(node.getChildren());
-        result.children = children;
-      }
-    }
-    return result;
-  });
-}
 
 function Divider() {
   return <div className="divider" />;
@@ -62,10 +50,18 @@ export default function ToolbarPlugin(props: any) {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
-  const [playing, setPlaying] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
 
-  const [samplePlayList, setSamplePlayList] = useState<any>(null);
+  // 播放状态
+  const [playing, setPlaying] = useState(false);
+
+  // 播放索引
+  const [playIndex, setPlayIndex] = useState(0);
+
+  // 定义试听格式化状态
+  const [playEditorState, setPlayEditorState] = useState<any>(null);
+
+  const [playList, setPlayList] = useState<any>({});
 
   const voiceState = useAppSelector((state) => state.voiceState);
 
@@ -75,102 +71,272 @@ export default function ToolbarPlugin(props: any) {
 
   const toolbarRef = useRef(null);
 
-  const handleCanPlay = () => {
-    audioRef.current?.play().catch((error) => {
-      console.error("Error playing audio:", error);
-    });
-  };
+  function preloadData<T>(data: T[], index: number, size: number): T[] {
+    /**
+     * 预加载数据
+     * @param data - 输入的数组
+     * @param index - 当前起始索引
+     * @param size - 需要加载的数据量
+     * @returns 返回从指定索引开始的指定数量的数据
+     */
+    if (!Array.isArray(data)) {
+      throw new Error("The first argument must be an array.");
+    }
+    if (index < 0 || size <= 0) {
+      throw new Error("Index must be non-negative and size must be positive.");
+    }
 
-  const playAudio = () => {
-    setPlaying(true);
-    audioRef.current?.addEventListener("canplay", handleCanPlay);
-    audioRef.current?.load();
-  };
+    const end = index + size; // 计算结束位置
 
-  const pauseAudio = () => {
-    audioRef.current?.pause();
-  };
+    return data.slice(index, end); // 使用 slice 方法提取数据
+  }
 
-  const handlePause = () => {
-    setPlaying(false);
-  };
+  // 收集播放请求
+  const handlePLayList = async () => {
+    if (playEditorState?.length > 0) {
+      editor.update(() => {
+        const preloadNodes = preloadData(playEditorState, playIndex, 3);
 
-  const fetchSample = ({ editorState, voiceName }: any, onOk?: () => void) => {
-    setSampleLoading(true);
-    getSample({ editorState, voiceName }).then((res: any) => {
-      setSampleLoading(false);
-      if (res.code === 1) {
-        const { prevPath } = res.data;
-        setSamplePlayList(prevPath);
+        console.log("preloadNodes", preloadNodes, playIndex);
 
-        if (onOk) {
-          onOk();
+        for (let index = 0; index < preloadNodes.length; index++) {
+          const page = playIndex + index;
+
+          if (playList[page]) {
+            continue;
+          }
+
+          const node: any = preloadNodes[index];
+          const paragraph = new ParagraphNode().exportJSON();
+          node.forEach((children: any) => {
+            paragraph.children.push(children.exportJSON());
+          });
+          const editorState = JSON.stringify([paragraph]);
+
+          getSample({ editorState, voiceName: "zh-CN-XiaoxiaoNeural" }).then((res: any) => {
+            if (res.code === 1) {
+              setPlayList((prevList: any) => {
+                return {
+                  ...prevList,
+                  [page]: res.data.prevPath
+                };
+              });
+            }
+          });
         }
-      }
-    });
+      });
+    }
   };
 
-  const samplePlay = () => {
-    if (playing) {
-      pauseAudio();
+  useEffect(() => {
+    handlePLayList();
+  }, [playEditorState, playIndex, globalVoice]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) {
       return;
     }
 
-    editor.update(() => {
-      const selection = $getSelection();
+    if (!playing) {
+      pauseAudio();
+      return;
+    } 
+    const currentSrc = playList[playIndex];
+    if (currentSrc && currentSrc !== audio.src) {
 
-      if (selection === null) {
-        return;
+      if(playing) {
+        pauseAudio();
       }
 
-      if (!$isRangeSelection(selection)) {
-        return;
-      }
+      audio.src = currentSrc;
+      playAudio();
 
-      const anchorAndFocus = selection.getStartEndPoints();
-
-      if (anchorAndFocus) {
-        const end = $isAtNodeEnd(anchorAndFocus[0]);
-        if (end) {
-          const state = editor.getEditorState();
-          const json: any = state.toJSON();
-          const editorState = JSON.stringify(json.root.children);
-
-          fetchSample({ editorState, voiceName }, () => {
-            playAudio();
-          });
-          return;
-        }
-      }
-
-      const nodes = selection.extract();
-      let sampleNodes: any = [];
-      let prevSampleNode: any = null;
-      nodes.forEach((node, i) => {
-        const element = $getTextWrap(node);
-        const wrap = $getElementWrap(element);
-        const parent = element;
-
-        if ($isParagraphNode(node)) {
-          prevSampleNode = null;
-        } else {
-          if (prevSampleNode === null) {
-            prevSampleNode = $createSampleNode();
-            parent.insertBefore(prevSampleNode);
-            sampleNodes.push(prevSampleNode);
-          }
-          if ($isTextNode(node)) {
-            prevSampleNode.append(wrap || element);
-          }
+      editor.update(() => {
+        const currentPlay = playEditorState[playIndex];
+        for (const node of currentPlay) {
+          node.setStyle("color:green");
         }
       });
+    }
 
-      const editorNodes = findChildrenText(sampleNodes);
-      const editorState = JSON.stringify(editorNodes);
-      fetchSample({ editorState, voiceName }, () => {
-        playAudio();
+    // 增加对音频播放结束的监听
+    const handleAudioEnded = () => {
+      const playLength = playEditorState.length;
+      editor.update(() => {
+        const currentPlay = playEditorState[playIndex];
+        for (const node of currentPlay) {
+          node.setStyle("");
+        }
       });
-    });
+      const nextIndex = playIndex + 1;
+      if (nextIndex < playLength) {
+        setPlayIndex(nextIndex);
+      } else {
+        setPlaying(false);
+        setPlayIndex(0);
+      }
+    };
+    audioRef.current?.addEventListener("ended", handleAudioEnded);
+    // 清理事件监听器
+    return () => {
+      audioRef.current?.removeEventListener("ended", handleAudioEnded);
+    };
+  }, [playIndex, playList, playing]);
+
+  const playAudio = () => {
+    // 判定audioRef是否在播放
+    if (audioRef.current?.paused) {
+      try {
+        audioRef.current?.play();
+      } catch (error) {
+        console.error("Error playing audio:", error);
+      }
+    }
+  };
+
+  const pauseAudio = () => {
+    if (!audioRef.current?.paused) {
+      audioRef.current?.pause();
+    }
+  };
+
+  // 点击试听，重新处理节点。
+  const recursionNodes = (nodes: any) => {
+    const newNodes: any = [];
+    for (const node of nodes) {
+      const newChildNodes: any = [];
+      if ($isParagraphNode(node)) {
+        const children = node.getChildren();
+        const paragraphChildNodes = recursionNodes(children);
+        newChildNodes.push({
+          type: "paragraph",
+          node,
+          children: paragraphChildNodes
+        });
+      } else if ($isAudioNode(node)) {
+        newChildNodes.push(node);
+      } else if ($isTextNode(node)) {
+        // 如果顶层节点为段落，则直接分词
+        const textContent = node.getTextContent();
+        // 分词
+        const texts = splitTextByPunctuation(textContent);
+        let offest = -1;
+        let splitOffsets = [];
+        for (const text of texts) {
+          const index = textContent.indexOf(text);
+          if (index !== -1) {
+            offest = index;
+            splitOffsets.push(offest);
+          }
+        }
+        if (splitOffsets.length > 0) {
+          const splitNodes = node.splitText(...splitOffsets);
+          if (splitNodes.length > 0) {
+            for (const node of splitNodes) {
+              node.setMode("token");
+              newChildNodes.push(node);
+            }
+          }
+        }
+      } else if ($isPinyinNode(node)) {
+        newChildNodes.push(node);
+      } else if ($isSymbolNode(node)) {
+        newChildNodes.push(node);
+      }
+      newNodes.push(...newChildNodes);
+    }
+    return newNodes;
+  };
+
+  /**
+   * 判断一个字符串是否是一句话（以标点符号结尾）。
+   * @param text 输入字符串
+   * @returns 是否是一句话
+   */
+  function isCompleteSentence(text: string): boolean {
+    if (!text) return false;
+    // 定义正则表达式匹配标点符号结尾
+    const sentenceEndings = /[。？！.!?]$/;
+    return sentenceEndings.test(text);
+  }
+
+  const mergeSentenceNodes = (nodes: any) => {
+    const mergedResult: any = [];
+    let currentSentence = "";
+    let sentenceNodes = [];
+    for (let index = 0; index < nodes.length; index++) {
+      const node = nodes[index];
+      if ($isTextNode(node)) {
+        sentenceNodes.push(node);
+        const text = node.getTextContent();
+        currentSentence += text;
+        const end = index === nodes.length - 1;
+        if (isCompleteSentence(currentSentence) || end) {
+          mergedResult.push(sentenceNodes);
+          currentSentence = "";
+          sentenceNodes = [];
+        }
+      } else if ($isPinyinNode(node)) {
+        sentenceNodes.push(node);
+        currentSentence += node.getTextContent();
+      } else if ($isSymbolNode(node)) {
+        sentenceNodes.push(node);
+        currentSentence += node.getTextContent();
+      }
+    }
+    return mergedResult;
+  };
+
+  // 试听
+  const samplePlay = () => {
+    setPlaying(!playing);
+    if (!playing) {
+      editor.update(() => {
+       
+        const root = $getRoot();
+
+        let nodeKey = null;
+        const selection = $getSelection();
+        if (!selection) {
+            root.selectStart();
+        }
+          const nodes = selection.getNodes();
+          if (nodes.length > 0) {
+            nodeKey = nodes[0].getKey();
+          }
+        
+
+        const paragraphNodes = recursionNodes(root.getChildren());
+        let sentenceNodes = [];
+        let keyMap: any = {};
+        let index = 0;
+        for (const nodes of paragraphNodes) {
+          // 段落
+          const sentenceNode = mergeSentenceNodes(nodes.children);
+          for (const nodes of sentenceNode) {
+            for (const node of nodes) {
+              const key = node.getKey();
+              keyMap[key] = index;
+            }
+            index++;
+            sentenceNodes.push(nodes);
+          }
+        }
+
+        setPlayEditorState(sentenceNodes);
+        const currentPlay = sentenceNodes[playIndex];
+        for (const node of currentPlay) {
+          node.setStyle("");
+        }
+
+        if (nodeKey) {
+          const currentPlayIndex = keyMap[nodeKey];
+          setPlayIndex(currentPlayIndex);
+        }
+
+      });
+    }
   };
 
   useEffect(() => {
@@ -196,26 +362,16 @@ export default function ToolbarPlugin(props: any) {
 
   const voiceName = globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"; // 当前主播
 
-  useEffect(() => {
-    if (samplePlayList) {
-      playAudio();
-    }
-
-    // 清除事件监听器
-    return () => {
-      audioRef.current?.removeEventListener("canplay", handleCanPlay);
-    };
-  }, [samplePlayList]);
-
   return (
     <>
       <audio
-        // controls
+        /*        style={{width: 200}}
+        controls */
         ref={audioRef}
-        onPause={handlePause}
-        autoPlay
+        // onPause={handlePause}
+        // autoPlay
       >
-        <source src={samplePlayList} type="audio/mpeg" />
+        <source type="audio/mpeg" />
         Your browser does not support this audio format.
       </audio>
       <div className="toolbar" ref={toolbarRef}>

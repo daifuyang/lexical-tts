@@ -13,8 +13,8 @@ export async function getVoiceTotal(tx = prisma) {
 export async function getVoiceLst(
   current: number,
   pageSize: number,
-  where: Prisma.ttsVoiceWhereInput,
-  orderBy?: Prisma.ttsVoiceOrderByWithRelationInput | Prisma.ttsVoiceOrderByWithRelationInput[],
+  where: Prisma.TtsVoiceWhereInput,
+  orderBy?: Prisma.TtsVoiceOrderByWithRelationInput | Prisma.TtsVoiceOrderByWithRelationInput[],
   tx = prisma
 ) {
   if (pageSize === 0) {

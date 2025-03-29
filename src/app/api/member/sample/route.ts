@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
     return response.error("配音名称不能为空！");
   }
 
+  const userId = 1;
+
   const sample = await getSampleFirst({
     voiceName,
     content: editorState,
@@ -33,6 +35,8 @@ export async function POST(request: NextRequest) {
       prevPath: `https://cdn.vlog-v.com/${filePath}`
     });
   }
+
+  console.log('editorState',editorState );
 
   const generateRes = await generateAudio(editorState, voiceName);
   console.log('generateRes',generateRes );
