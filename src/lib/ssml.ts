@@ -140,7 +140,10 @@ export const generateAudio = async (editorState: string, voiceName: string, pred
   // 增加文件安全显示，可加上加密转换逻辑
   const name = predix + v4();
   const localFile = target + name + ".mp3";
-  const res = await new tts(localFile).synthesizeText(ssml);
+  const ttsInstance = new tts(localFile);
+  const res = await ttsInstance.synthesizeText(ssml);
+  const billingChars = calculateBilling(ssml);
+  console.log("billingChars", billingChars);
 
   if (res.success === "ok") {
     const filename = name + ".mp3";
@@ -152,3 +155,18 @@ export const generateAudio = async (editorState: string, voiceName: string, pred
   }
   return { status: "error", res };
 };
+
+// 计费字符统计
+export function calculateBilling(ssml: string): number {
+  // 移除不计费标签
+  const filtered = ssml.replace(/<\/?(speak|voice)[^>]*>/g, '');
+  
+  // 统计CJK字符（每个算2个字符）
+  const cjkRegex = /[\u4E00-\u9FFF\u3400-\u4DBF\u{20000}-\u{2A6DF}]/gu;
+  const cjkCount = [...filtered.matchAll(cjkRegex)].length * 2;
+  
+  // 统计其他字符（包括SSML标签）
+  const otherChars = filtered.replace(cjkRegex, '').length;
+  
+  return cjkCount + otherChars;
+}

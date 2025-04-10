@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSession } from "./lib/session";
 
-const publicRoutes = ["/", "/login", "/signup"];
+const publicRoutes = ["/", "/login", "/signup","/h5/pay"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -21,5 +21,5 @@ export async function middleware(request: NextRequest) {
 
 // Routes Middleware should not run on
 export const config = {
-  matcher: ["/((?!favicon.ico|api|_next/static|_next/image|assets|fonts|.*\\.png$).*)"]
+  matcher: ["/((?!favicon.ico|_next/static|_next/image|assets|fonts|.*\\.png$).*)"]
 };

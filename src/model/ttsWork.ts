@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
 import { Prisma, TtsWork } from "@prisma/client";
-import { getVoiceById, getVoiceByShortName } from "./ttsVoice";
+import { getVoiceByShortName } from "./ttsVoice";
 import { now } from "@/lib/date";
 
 const workIdKey = `tts:work:id:`;

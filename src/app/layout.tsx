@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { ConfigProvider } from "antd";
-import zhCNIntl from 'antd/lib/locale/zh_CN';
+import zhCNIntl from "antd/lib/locale/zh_CN";
+import ReduxProvider from "@/redux/provider";
+import { MembershipModal } from "@/components/membership/MembershipModal";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -17,11 +19,14 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body>
-        <AntdRegistry>
-          <ConfigProvider locale={zhCNIntl}>
-          {children}
-          </ConfigProvider>
+        <ReduxProvider>
+          <AntdRegistry>
+            <ConfigProvider locale={zhCNIntl}>
+              {children}
+              <MembershipModal />
+            </ConfigProvider>
           </AntdRegistry>
+        </ReduxProvider>
       </body>
     </html>
   );

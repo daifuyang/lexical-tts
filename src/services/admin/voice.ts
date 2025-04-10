@@ -1,4 +1,4 @@
-import { adminRequest } from "@/utils/request";
+import { adminRequest } from "@/lib/request";
 
 // 获取主播列表
 export function voiceList(params: any) {

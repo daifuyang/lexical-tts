@@ -8,25 +8,26 @@ datasource db {
 }
 
 model SysUser {
-  userId    Int     @id @default(autoincrement()) @map("user_id")
-  loginName String? @unique @map("login_name")
-  email     String? @unique
-  phone     String? @unique
-  password  String?
-  salt      String?
-  nickname  String?
-  realname  String?
-  gender    Int     @default(0) @db.TinyInt
-  birthday  Int?
-  userType  Int     @default(0) @map("user_type") @db.TinyInt
-  avatar    String?
-  loginIp   String? @map("login_ip")
-  loginAt   Int?    @map("login_at")
-  status    Int     @default(1) @db.TinyInt
-  remark    String  @default("") @map("remark") @db.VarChar(500)
-  createdAt Int     @map("created_at")
-  updatedAt Int     @map("updated_at")
-  deletedAt Int     @default(0) @map("deleted_at")
+  userId     Int          @id @default(autoincrement()) @map("user_id")
+  loginName  String?      @unique @map("login_name")
+  email      String?      @unique
+  phone      String?      @unique
+  password   String?
+  salt       String?
+  nickname   String?
+  realname   String?
+  gender     Int          @default(0) @db.TinyInt
+  birthday   Int?
+  userType   Int          @default(0) @map("user_type") @db.TinyInt
+  avatar     String?
+  loginIp    String?      @map("login_ip")
+  loginAt    Int?         @map("login_at")
+  status     Int          @default(1) @db.TinyInt
+  remark     String       @default("") @map("remark") @db.VarChar(500)
+  createdAt  Int          @map("created_at")
+  updatedAt  Int          @map("updated_at")
+  deletedAt  Int          @default(0) @map("deleted_at")
+  Membership Membership[]
 
   @@index([userId, loginName, phone, email])
   @@map("sys_user")
@@ -41,6 +42,31 @@ model SysUserToken {
   reExpiresAt  Int    @map("re_expires_at")
 
   @@map("sys_user_token")
+}
+
+enum MembershipType {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+// 会员表
+model Membership {
+  memberId   String         @id @default(cuid()) @map("member_id")
+  userId     Int            @map("user_id")
+  type       MembershipType
+  startDate  Int            @map("start_date")
+  endDate    Int            @map("end_date")
+  totalChars Int            @map("total_chars")
+  usedChars  Int            @default(0) @map("used_chars")
+  orderId    String?        @map("order_id") // 支付系统关联ID
+  createdAt  Int            @map("created_at")
+  updatedAt  Int            @map("updated_at")
+  user       SysUser        @relation(fields: [userId], references: [userId])
+
+  @@index([userId, type])
+  @@index([endDate])
+  @@map("membership")
 }
 
 // 语音主播
@@ -106,12 +132,15 @@ model TtsWork {
 }
 
 model TtsSample {
-  id        Int    @id @default(autoincrement())
-  voiceName String @map("voice_name")
-  content   String @db.Text
-  audioUrl  String @map("audio_url")
-  creatorId Int    @map("creator_id")
-  createdAt Int    @map("created_at")
+  id         Int    @id @default(autoincrement())
+  voiceName  String @map("voice_name")
+  voiceStyle String @default("") @map("voice_style")
+  content    String @db.Text
+  ssml       String @db.Text
+  count      Int    @default(0)
+  audioUrl   String @map("audio_url")
+  creatorId  Int    @map("creator_id")
+  createdAt  Int    @map("created_at")
 
   @@map("tts_sample")
 }
@@ -142,4 +171,32 @@ model SysDictData {
   updatedAt Int     @map("updated_at")
 
   @@map("sys_dict_data")
+}
+
+enum PaymentType {
+  WECHAT
+  ALIPAY 
+}
+
+model PaymentOrder {
+  id              String   @id @default(cuid())
+  orderNo         String   @unique @map("order_no")
+  userId          Int      @map("user_id")
+  amount          Int
+  status          String   @default("pending")
+  paymentType     PaymentType   @map("payment_type")
+  payTime         Int?     @map("pay_time")
+  transactionId   String?  @map("transaction_id")
+  productType     String   @map("product_type")
+  productId       String?  @map("product_id")
+  createdAt       Int      @map("created_at")
+  updatedAt       Int      @map("updated_at")
+  expiresAt       Int?     @map("expires_at")
+  notifyData      String?  @map("notify_data") @db.Text
+  codeUrl         String?  @map("code_url") @db.VarChar(255)
+  qrcodeCodeUrl   String?  @map("qrcode_code_url") @db.Text
+
+  @@index([userId, status])
+  @@index([orderNo])
+  @@map("payment_order")
 }

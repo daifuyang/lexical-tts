@@ -91,10 +91,7 @@ export default function ToolbarPlugin(props: any) {
   const handlePLayList = async () => {
     if (playEditorState?.length > 0) {
       editor.update(() => {
-        const preloadNodes = preloadData(playEditorState, playIndex, 3);
-
-        console.log("preloadNodes", preloadNodes, playIndex);
-
+        const preloadNodes = preloadData(playEditorState, playIndex, 1);
         for (let index = 0; index < preloadNodes.length; index++) {
           const page = playIndex + index;
 

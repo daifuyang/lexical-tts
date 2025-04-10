@@ -14,12 +14,13 @@ class tts {
   }
 
   async synthesizeText(text: string): Promise<any> {
+    // 记录计费字符数
     return new Promise<any>((resolve, reject) => {
       this.synthesizer.speakSsmlAsync(
         text,
         (result) => {
           if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
-            console.log("Synthesis finished.", JSON.stringify(result));
+            // console.log("Synthesis finished.", JSON.stringify(result));
             resolve({ success: "ok" });
           } else {
             console.error(

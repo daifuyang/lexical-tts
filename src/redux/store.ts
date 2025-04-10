@@ -3,13 +3,15 @@ import initialState from "./slice/initialState";
 import userState from "./slice/userState";
 import voiceState from "./slice/voiceState";
 import lexicalState from "./slice/lexicalState";
+import modalState from "./slice/modalState";
 
 export const store = configureStore({
   reducer: {
     initialState,
     userState,
     voiceState,
-    lexicalState
+    lexicalState,
+    modalState
   }
 });
 

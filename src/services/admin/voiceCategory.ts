@@ -1,4 +1,4 @@
-import { adminRequest } from "@/utils/request";
+import { adminRequest } from "@/lib/request";
 
 // 创建单个主播分类
 export function createVoiceCategory(data: any) {

@@ -7,7 +7,7 @@ import {
   getWorkTotal,
   updateTtsWork
 } from "@/model/ttsWork";
-import { getUserId } from "@/lib/user";
+import { getCurrentUser } from "@/lib/user";
 import { now } from "@/lib/date";
 import { generateAudio } from "@/lib/ssml";
 import { getSampleFirst } from "@/model/ttsSample";
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const current = parseInt(searchParams.get("current") || "1");
   const pageSize = parseInt(searchParams.get("pageSize") || "10");
-  const userId = getUserId(request);
+  const { userId } = await getCurrentUser();
   const list = await getWorkList(current, pageSize, { creatorId: Number(userId), deletedAt: null });
   if (pageSize > 0) {
     const total = await getWorkTotal({ creatorId: Number(userId), deletedAt: null });
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function Save(request: NextRequest, id: string = "") {
-  const userId = getUserId(request);
+  const { userId } = await getCurrentUser();
 
   const json = await request.json();
   const { title = "", voiceName = "", editorState = "", ssml = "", status = 0 } = json;
@@ -57,35 +57,21 @@ export async function Save(request: NextRequest, id: string = "") {
 
   // 其他逻辑
 
-
   let existPrevPath = null;
-  // 判断是否存在试听，存在测下载试听的，无需重复生成
-  const existSample = await getSampleFirst({
-    content: editorState,
-    voiceName,
-    creatorId: Number(userId)
-  });
-  if (existSample) {
-    existPrevPath = `https://cdn.vlog-v.com${existSample.audioUrl}`;
-  }
 
-  if (!existPrevPath) {
-    // 判断是否存在生成，存在则自动下载已存在的，无需重复生成
-    const existWork: any = await getTtsWorkFirst({
-      editorState,
-      voiceName,
-      creatorId: Number(userId),
-      status: 1
-    });
-    if (existWork) {
-      existPrevPath = `https://cdn.vlog-v.com${existWork.audioUrl}`;
-    }
+  // 判断是否存在生成，存在则自动下载已存在的，无需重复生成
+  const existWork: any = await getTtsWorkFirst({
+    editorState,
+    voiceName,
+    creatorId: Number(userId),
+    status: 1
+  });
+  if (existWork) {
+    existPrevPath = `https://cdn.vlog-v.com${existWork.audioUrl}`;
   }
 
   let duration = 0;
-
-  let audioUrl = '';
-
+  let audioUrl = "";
   if (status === 1 && !existPrevPath) {
     const generateRes = await generateAudio(editorState, voiceName);
     if (generateRes.status === "error") {
@@ -111,17 +97,17 @@ export async function Save(request: NextRequest, id: string = "") {
 
   if (idInt > 0) {
     work = await updateTtsWork(idInt, formData);
-    if(existPrevPath) {
+    if (existPrevPath) {
       work.prevPath = existPrevPath;
-    }else {
+    } else {
       work.prevPath = `https://cdn.vlog-v.com${audioUrl}`;
     }
     return response.success("更新成功！", work);
   } else {
     work = await createTtsWork(formData);
-    if(existPrevPath) {
+    if (existPrevPath) {
       work.prevPath = existPrevPath;
-    }else {
+    } else {
       work.prevPath = `https://cdn.vlog-v.com${audioUrl}`;
     }
     return response.success("保存成功！", work);

@@ -47,7 +47,7 @@ export async function saveWork(editor: LexicalEditor, id: string | null = "", da
     message.error("请先输入需要配音的内容！");
     return;
   }
-  const editorState = JSON.stringify(json);
+  const editorState = JSON.stringify(json.root.children);
   const text = await $getFirstText(editor);
   // 新增
   let res: any = null;

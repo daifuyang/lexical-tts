@@ -12,3 +12,8 @@ package-lock.json
 .flaskenv*
 !.env.project
 !.env.vault
+
+cert/
+
+src/app/admin.zip
+

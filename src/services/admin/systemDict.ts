@@ -1,4 +1,4 @@
-import { adminRequest } from "@/utils/request";
+import { adminRequest } from "@/lib/request";
 
 // 获取系统字典类型列表
 export function getSystemDictList(params: any = {}) {

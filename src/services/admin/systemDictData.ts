@@ -1,4 +1,4 @@
-import { adminRequest } from "@/utils/request";
+import { adminRequest } from "@/lib/request";
 
 // 获取系统字典数据列表
 export async function getSystemDictDataList(params: any) {

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { handleCreateWork } from "../actions";
 import { FileTextIcon, ClockIcon, UserIcon, TrendingUpIcon, ZapIcon, StarIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -48,11 +48,14 @@ export async function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold">欢迎回来，用户名！</h1>
             <p className="mt-2 text-blue-100">今天是个创作的好日子，让我们开始吧！</p>
-            <Link href="/editor" >
-            <button className="mt-4 rounded-lg bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors">
-              开始创作
+            <form action={handleCreateWork}>
+              <button 
+                type="submit"
+                className="mt-4 rounded-lg bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors"
+              >
+                开始创作
               </button>
-            </Link>
+            </form>
           </div>
           <div className="hidden md:block">
             {/* 这里可以放置一个SVG插图 */}

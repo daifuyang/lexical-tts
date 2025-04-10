@@ -1,4 +1,4 @@
-import { memberRequest } from "@/utils/request";
+import request from "@/lib/request";
 // 新建作品
 export function getSample(data: any) {
     // return new Promise((resolve) => {
@@ -12,5 +12,5 @@ export function getSample(data: any) {
     //         }
     //       });
     //   });
-    return memberRequest.post("/api/member/sample", data);
+    return request.post("/api/member/sample", data);
 }

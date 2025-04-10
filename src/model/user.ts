@@ -6,7 +6,7 @@ import { SysUser, Prisma } from "@prisma/client";
 
 const userIdKey = "user:id:";
 // 根据id获取用户
-export const getUserById = async (userId: number, tx = prisma) => {
+export const getUserById = async (userId: number, tx = prisma):Promise<SysUser> => {
   const cache = await redis.get(`${userIdKey}${userId}`);
   let user: SysUser | null = null;
   if (cache) {
@@ -26,7 +26,7 @@ export const getUserById = async (userId: number, tx = prisma) => {
     }
   }
 
-  return user;
+  return user as SysUser;
 };
 
 // 获取用户总数
