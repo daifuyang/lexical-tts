@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";
 import { subscribe } from "@/services/member";
+import { handlePaymentResponse } from "@/lib/qrcode";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { closeMembershipModal } from "@/redux/slice/modalState";
@@ -17,12 +18,14 @@ import {
   DollarOutlined,
   SmileOutlined,
   WechatOutlined,
-  AlipayCircleOutlined
+  AlipayCircleOutlined,
+  ReloadOutlined
 } from "@ant-design/icons";
 import { Alert } from "@/components/ui/alert";
 
 interface MembershipPlan {
   type: string;
+  display?: string;
   chars: string;
   price: string;
   originalPrice?: string;
@@ -33,6 +36,7 @@ interface MembershipPlan {
 
 interface TopUpPack {
   type: string;
+  display?: string;
   chars: string;
   price: string;
   note?: string;
@@ -40,7 +44,8 @@ interface TopUpPack {
 
 const membershipPlans: MembershipPlan[] = [
   {
-    type: "月度会员",
+    type: "MONTHLY",
+    display: "月度会员",
     chars: "50,000字符/月",
     price: "￥10/月",
     originalPrice: "￥10/月",
@@ -48,7 +53,8 @@ const membershipPlans: MembershipPlan[] = [
     discount: "0%"
   },
   {
-    type: "季度会员",
+    type: "QUARTERLY",
+    display: "季度会员",
     chars: "180,000字符/季度",
     price: "￥27/季度",
     originalPrice: "￥30/季度",
@@ -57,7 +63,8 @@ const membershipPlans: MembershipPlan[] = [
     popular: true
   },
   {
-    type: "年度会员",
+    type: "YEARLY",
+    display: "年度会员",
     chars: "800,000字符/年",
     price: "￥96/年",
     originalPrice: "￥120/年",
@@ -68,39 +75,50 @@ const membershipPlans: MembershipPlan[] = [
 
 const topUpPacks: TopUpPack[] = [
   {
-    type: "小包",
+    type: "SMALL",
+    display: "小包",
     chars: "10,000字符",
     price: "￥2"
   },
   {
-    type: "中包",
+    type: "MEDIUM",
+    display: "中包",
     chars: "50,000字符",
     price: "￥9",
     note: "比单独购买月度会员稍便宜"
   },
   {
-    type: "大包",
+    type: "LARGE",
+    display: "大包",
     chars: "100,000字符",
     price: "￥17",
     note: "进一步优惠"
   },
   {
-    type: "超大包",
+    type: "XLARGE",
+    display: "超大包",
     chars: "500,000字符",
     price: "￥80",
     note: "适合高需求用户"
   }
 ];
 
+// 类型到显示名称的映射
+const typeToDisplay: Record<string, string> = {
+  "MONTHLY": "月度会员",
+  "QUARTERLY": "季度会员",
+  "YEARLY": "年度会员"
+};
+
 // 图标映射
 const planIcons = {
-  "月度会员": <ClockCircleOutlined className="text-blue-500" />,
-  "季度会员": <GiftOutlined className="text-purple-500" />,
-  "年度会员": <SafetyCertificateOutlined className="text-green-500" />,
-  "小包": <SmileOutlined className="text-yellow-500" />,
-  "中包": <SmileOutlined className="text-orange-500" />,
-  "大包": <SmileOutlined className="text-red-500" />,
-  "超大包": <SmileOutlined className="text-pink-500" />
+  "MONTHLY": <ClockCircleOutlined className="text-blue-500" />,
+  "QUARTERLY": <GiftOutlined className="text-purple-500" />,
+  "YEARLY": <SafetyCertificateOutlined className="text-green-500" />,
+  "SMALL": <SmileOutlined className="text-yellow-500" />,
+  "MEDIUM": <SmileOutlined className="text-orange-500" />,
+  "LARGE": <SmileOutlined className="text-red-500" />,
+  "XLARGE": <SmileOutlined className="text-pink-500" />
 };
 
 export function MembershipModal() {
@@ -112,6 +130,7 @@ export function MembershipModal() {
   const [selectedPayment, setSelectedPayment] = useState<"wechat" | "alipay" | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isQRCodeLoading, setIsQRCodeLoading] = useState(false);
   const [paymentStep, setPaymentStep] = useState<"selectPlan" | "selectPayment" | "scanQRCode" | "completed">("selectPlan");
   const [paymentCompleted, setPaymentCompleted] = useState(false);
 
@@ -124,18 +143,47 @@ export function MembershipModal() {
     if (!selectedPlan) return;
     
     setIsSubmitting(true);
+    setIsQRCodeLoading(true);
     try {
       const response = await subscribe({
         planId: selectedPlan.type,
         paymentMethod: payment
       });
       setSelectedPayment(payment);
-      setQrCodeUrl(response.qrCodeUrl);
+      
+      // 使用QR码工具将codeUrl转换为二维码数据URL
+      const qrCodeDataUrl = await handlePaymentResponse(response);
+      setQrCodeUrl(qrCodeDataUrl);
+      
       setPaymentStep("scanQRCode");
     } catch (error) {
       console.error("订阅失败:", error);
     } finally {
       setIsSubmitting(false);
+      setIsQRCodeLoading(false);
+    }
+  };
+
+  // 强制刷新二维码，生成新订单
+  const refreshQRCode = async () => {
+    if (!selectedPlan || !selectedPayment) return;
+    
+    setIsQRCodeLoading(true);
+    try {
+      // 添加强制刷新参数，不使用缓存订单
+      const response = await subscribe({
+        planId: selectedPlan.type,
+        paymentMethod: selectedPayment,
+        forceRefresh: true
+      });
+      
+      // 使用QR码工具将codeUrl转换为二维码数据URL
+      const qrCodeDataUrl = await handlePaymentResponse(response);
+      setQrCodeUrl(qrCodeDataUrl);
+    } catch (error) {
+      console.error("刷新二维码失败:", error);
+    } finally {
+      setIsQRCodeLoading(false);
     }
   };
 
@@ -235,7 +283,7 @@ export function MembershipModal() {
                             <div className="flex justify-between items-start mb-2">
                               <div className="flex items-center">
                                 {planIcons[plan.type as keyof typeof planIcons]}
-                                <h4 className="font-bold text-xl ml-2">{plan.type}</h4>
+                                <h4 className="font-bold text-xl ml-2">{plan.display || typeToDisplay[plan.type]}</h4>
                               </div>
                               {plan.discount !== "0%" && (
                                 <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full ml-2">
@@ -306,7 +354,7 @@ export function MembershipModal() {
                           <div>
                             <div className="flex items-center mb-2">
                               {planIcons[pack.type as keyof typeof planIcons]}
-                              <h4 className="font-bold text-lg ml-2">{pack.type}</h4>
+                              <h4 className="font-bold text-lg ml-2">{pack.display || pack.type}</h4>
                             </div>
                             <p className="text-primary text-xl font-bold my-2">{pack.price}</p>
                           </div>
@@ -389,7 +437,10 @@ export function MembershipModal() {
                         {planIcons[selectedPlan.type as keyof typeof planIcons]}
                       </div>
                       <div>
-                        <h4 className="font-bold text-lg">{selectedPlan.type}</h4>
+                        <h4 className="font-bold text-lg">
+                          {selectedPlan.display || 
+                           (typeToDisplay[selectedPlan.type as keyof typeof typeToDisplay] || selectedPlan.type)}
+                        </h4>
                         <p className="text-gray-600">{selectedPlan.chars}</p>
                       </div>
                       <div className="ml-auto">
@@ -405,7 +456,11 @@ export function MembershipModal() {
                         onClick={() => handlePaymentSelect('wechat')}
                         disabled={isSubmitting}
                       >
-                        <WechatOutlined className="text-2xl text-green-500" />
+                        {isSubmitting && selectedPayment === 'wechat' ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        ) : (
+                          <WechatOutlined className="text-2xl text-green-500" />
+                        )}
                         <span className="text-lg">微信支付</span>
                       </Button>
                       <Button
@@ -414,7 +469,11 @@ export function MembershipModal() {
                         onClick={() => handlePaymentSelect('alipay')}
                         disabled={isSubmitting}
                       >
-                        <AlipayCircleOutlined className="text-2xl text-blue-500" />
+                        {isSubmitting && selectedPayment === 'alipay' ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        ) : (
+                          <AlipayCircleOutlined className="text-2xl text-blue-500" />
+                        )}
                         <span className="text-lg">支付宝</span>
                       </Button>
                     </div>
@@ -437,7 +496,10 @@ export function MembershipModal() {
                     <div className="space-y-3 mb-6">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">套餐类型</span>
-                        <span className="font-medium">{selectedPlan.type}</span>
+                        <span className="font-medium">
+                          {selectedPlan.display || 
+                           (typeToDisplay[selectedPlan.type as keyof typeof typeToDisplay] || selectedPlan.type)}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">字符数量</span>
@@ -457,20 +519,48 @@ export function MembershipModal() {
                   </Card>
                 </div>
               </>
-            ) : paymentStep === "scanQRCode" && qrCodeUrl ? (
+            ) : paymentStep === "scanQRCode" ? (
               <>
                 <div className="flex-1">
                   <Card className="p-6 flex flex-col items-center">
                     <h3 className="text-xl font-semibold mb-6">扫码支付</h3>
-                    <div className="bg-white p-6 rounded-lg shadow-md mb-6 border">
-                      <img 
-                        src={qrCodeUrl} 
-                        alt="支付二维码" 
-                        className="w-64 h-64 object-contain"
-                      />
-                    </div>
-                    <p className="text-center text-gray-600 mb-8">
+                    {isQRCodeLoading ? (
+                      <div className="bg-white p-6 rounded-lg shadow-md mb-6 border flex flex-col items-center justify-center w-64 h-64">
+                        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <p className="text-gray-500">二维码加载中...</p>
+                      </div>
+                    ) : qrCodeUrl ? (
+                      <div className="bg-white p-6 rounded-lg shadow-md mb-6 border relative">
+                        <img 
+                          src={qrCodeUrl} 
+                          alt="支付二维码" 
+                          className="w-64 h-64 object-contain"
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="absolute bottom-2 right-2 px-2 py-1 h-8"
+                          onClick={refreshQRCode}
+                          disabled={isQRCodeLoading}
+                          title="刷新二维码"
+                        >
+                          {isQRCodeLoading ? (
+                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <ReloadOutlined className="text-sm" />
+                          )}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="bg-white p-6 rounded-lg shadow-md mb-6 border flex items-center justify-center w-64 h-64">
+                        <p className="text-red-500">二维码生成失败，请重试</p>
+                      </div>
+                    )}
+                    <p className="text-center text-gray-600 mb-3">
                       请使用{selectedPayment === 'wechat' ? '微信' : '支付宝'}扫描上方二维码完成支付
+                    </p>
+                    <p className="text-center text-xs text-gray-500 mb-8">
+                      若扫码无响应，请点击右下角刷新按钮重新生成二维码
                     </p>
                     
                     <div className="flex gap-4">
@@ -495,7 +585,11 @@ export function MembershipModal() {
                     <div className="space-y-3 mb-6">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">套餐类型</span>
-                        <span className="font-medium">{selectedPlan?.type}</span>
+                        <span className="font-medium">
+                          {selectedPlan?.display || 
+                           (selectedPlan?.type && typeToDisplay[selectedPlan.type as keyof typeof typeToDisplay]) || 
+                           selectedPlan?.type}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">字符数量</span>
@@ -513,7 +607,7 @@ export function MembershipModal() {
                         支付遇到问题？
                       </h4>
                       <p className="text-sm text-yellow-700">
-                        如果您在支付过程中遇到任何问题，请尝试刷新页面或联系客服获取帮助。
+                        如果您在支付过程中遇到任何问题，请点击二维码右下角的刷新按钮重新生成二维码，或联系客服获取帮助。
                       </p>
                     </div>
                   </Card>

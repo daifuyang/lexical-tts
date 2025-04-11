@@ -1,33 +1,42 @@
-import api from "@/lib/response";
-import prisma from "@/lib/prisma";
-import { now } from "@/lib/date";
+import { getCurrentUser } from "@/lib/user";
+import { getMembershipFirst } from "@/model/membership";
+import { NextResponse } from "next/server";
 
-export async function GET(request: Request) {
-  const authHeader = request.headers.get("Authorization");
-  const accessToken = authHeader && authHeader.split(" ")[1];
-  if (!accessToken) {
-    return api.error("非法访问！");
-  }
-  // 验证token
-  const usereToken = await prisma.umsToken.findFirst({
-    where: {
-      accessToken,
-      expiry: {
-        gt: now() // 没有失效
-      }
+export async function GET() {
+  try {
+    const user = await getCurrentUser();
+    if (!user.userId) {
+      return NextResponse.json({ error: "未登录" }, { status: 401 });
     }
-  });
 
-  if (usereToken?.userId) {
-    const user: any = await prisma.umsMember.findUnique({
-      where: {
-        id: usereToken?.userId
-      }
+    // 获取会员信息
+    const membership = await getMembershipFirst({ 
+      userId: user.userId 
     });
 
-    delete user.password;
+    // 转换时间戳为ISO格式
+    const formatDate = (timestamp: number) => 
+      new Date(timestamp * 1000).toISOString();
 
-    return api.success("获取成功！", user);
+    return NextResponse.json({
+      userType: user.userType,
+      nickname: user.nickname,
+      avatar: user.avatar,
+      createdAt: formatDate(user.createdAt),
+      membership: membership ? {
+        type: membership.type,
+        status: membership.endDate > Math.floor(Date.now() / 1000) 
+          ? "ACTIVE" : "EXPIRED",
+        expiresAt: formatDate(membership.endDate),
+        totalChars: membership.totalChars,
+        usedChars: membership.usedChars
+      } : null
+    });
+  } catch (error) {
+    console.error("获取用户信息失败:", error);
+    return NextResponse.json(
+      { error: "服务器错误" },
+      { status: 500 }
+    );
   }
-  return api.error("用户不存在！");
 }

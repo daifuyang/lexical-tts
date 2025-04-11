@@ -24,7 +24,6 @@ import SymbolPlugin from "./plugins/symbolPlugin";
 import { SymbolNode } from "./nodes/symbolNode";
 import { SampleNode } from "./nodes/sampleNode";
 import { WrapNode } from "./nodes/wrapNode";
-import TreeViewPlugin from "./plugins/treeViewPlugin";
 import PausePlugin from "./plugins/pausePlugin";
 import { PauseNode } from "./nodes/pauseNode";
 import { AudioNode } from "./nodes/audioNode";
@@ -46,7 +45,7 @@ function Placeholder() {
   );
 }
 
-const editorConfig = {
+export const editorConfig = {
   namespace: "ttsEditor",
   nodes: [
     PinyinNode,

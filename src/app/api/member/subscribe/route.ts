@@ -4,43 +4,31 @@ import { getCurrentUser } from "@/lib/user";
 import { MembershipType, PaymentType } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { wechatPay } from "@/lib/pay";
-import QRCode from "qrcode";
-
-// Generate QR code as base64 image
-async function generateQRCodeBase64(text: string): Promise<string> {
-  try {
-    return await QRCode.toDataURL(text, {
-      errorCorrectionLevel: 'H',
-      margin: 1,
-      width: 300,
-    });
-  } catch (error) {
-    console.error('Failed to generate QR code:', error);
-    throw error;
-  }
-}
+import { getPaymentPlan, membershipPlans, topUpPacks } from "@/model/paymentConfig";
 
 export async function POST(request: NextRequest) {
   const json = await request.json();
-  const { planId, paymentMethod } = json;
+  const { planId, paymentMethod, forceRefresh } = json;
 
   if (!planId) {
     return response.error("会员类型不能为空！");
   }
 
-  // Map Chinese plan names to enum values
-  const membershipTypeMap: Record<string, MembershipType> = {
-    月度会员: "MONTHLY",
-    季度会员: "QUARTERLY",
-    年度会员: "YEARLY"
-  };
-
-  const membershipType = membershipTypeMap[planId];
+  // Get payment type
   const paymentType = paymentMethod?.toUpperCase() as PaymentType;
-
-  if (!membershipType) {
-    return response.error("会员类型不能为空！");
+  if (!paymentType) {
+    return response.error("支付方式不能为空！");
   }
+
+  // Get payment plan
+  const paymentPlan = getPaymentPlan(planId);
+  if (!paymentPlan) {
+    return response.error("无效的套餐类型");
+  }
+
+  // Determine product type
+  const isMembership = membershipPlans.some(p => p.type === planId);
+  const productType = isMembership ? "MEMBERSHIP" : "TOPUP";
 
   if (!paymentType) {
     return response.error("支付方式不能为空！");
@@ -51,33 +39,27 @@ export async function POST(request: NextRequest) {
     return response.error("未登录", 401);
   }
 
-  // Validate membership type
-  if (!Object.values(MembershipType).includes(membershipType)) {
-    return response.error("无效的会员类型");
-  }
-
-  // Validate payment type
-  if (!Object.values(PaymentType).includes(paymentType)) {
-    return response.error("无效的支付方式");
-  }
-
-  // Calculate price and duration
-  const { amount } = calculateMembershipDetails(membershipType);
+  // Get amount from payment plan
+  const amount = paymentPlan.amount;
   const now = Math.floor(Date.now() / 1000);
 
   try {
-    // Check for existing order
-    const existingOrder = await prisma.paymentOrder.findFirst({
-      where: {
-        userId: user.userId,
-        productType: "MEMBERSHIP",
-        status: "pending"
-      },
-      orderBy: { createdAt: "desc" }
-    });
+    // Check for existing order with the same planId, unless forceRefresh is true
+    let existingOrder = null;
+    if (!forceRefresh) {
+      existingOrder = await prisma.paymentOrder.findFirst({
+        where: {
+          userId: user.userId,
+          productType,
+          productId: planId, // Use planId as productId to differentiate between plans
+          status: "pending"
+        },
+        orderBy: { createdAt: "desc" }
+      });
+    }
 
     // If order exists and has not expired, reuse it
-    if (existingOrder && existingOrder.expiresAt && existingOrder.expiresAt > now) {
+    if (!forceRefresh && existingOrder && existingOrder.expiresAt && existingOrder.expiresAt > now) {
       // Use type assertion to access the new fields
 
       
@@ -87,10 +69,10 @@ export async function POST(request: NextRequest) {
           orderId: existingOrder.id,
           amount: existingOrder.amount,
           paymentType: existingOrder.paymentType,
-          membershipType,
+          planType: planId,
           paymentInfo: {
             codeUrl: existingOrder.codeUrl,
-            qrcodeCodeUrl: existingOrder.qrcodeCodeUrl,
+            // qrcodeCodeUrl: existingOrder.qrcodeCodeUrl,
             expiresAt: existingOrder.expiresAt
           }
         });
@@ -100,7 +82,7 @@ export async function POST(request: NextRequest) {
         orderId: existingOrder.id,
         amount: existingOrder.amount,
         paymentType: existingOrder.paymentType,
-        membershipType
+          planType: planId
       });
     }
 
@@ -110,8 +92,12 @@ export async function POST(request: NextRequest) {
 
     // Initiate WeChat Pay for native payment
     if (paymentType === "WECHAT") {
+      // Get Chinese display name for the membership type
+      const displayName = paymentPlan.display || 
+        (isMembership ? "会员" : "补充包");
+      
       const paymentOrder = {
-        description: `${membershipType}会员订阅`,
+        description: `${displayName}${isMembership ? "订阅" : "充值"}`,
         out_trade_no: orderNo,
         amount: {
           total: amount
@@ -123,7 +109,7 @@ export async function POST(request: NextRequest) {
       const codeUrl = paymentResult.code_url;
       
       // Generate QR code as a base64 data URL
-      const qrcodeCodeUrl = await generateQRCodeBase64(codeUrl);
+      // const qrcodeCodeUrl = await generateQRCodeBase64(codeUrl);
 
       // Only create order after WeChat payment is successfully created
       // Use type assertion to include the new fields
@@ -132,13 +118,14 @@ export async function POST(request: NextRequest) {
         userId: user.userId,
         amount,
         paymentType,
-        productType: "MEMBERSHIP",
+        productType,
+        productId: planId, // Store planId in productId field
         status: "pending",
         createdAt: now,
         updatedAt: now,
         expiresAt,
         codeUrl,
-        qrcodeCodeUrl // Store the QR code image URL
+        // qrcodeCodeUrl // Store the QR code image URL
       };
 
       const order = await prisma.paymentOrder.create({
@@ -149,23 +136,67 @@ export async function POST(request: NextRequest) {
         orderId: order.id,
         amount,
         paymentType,
-        membershipType,
+          planType: planId,
         paymentInfo: {
           codeUrl: codeUrl,
-          qrcodeCodeUrl: qrcodeCodeUrl,
+          // qrcodeCodeUrl: qrcodeCodeUrl,
           expiresAt
         }
       });
     }
 
-    // For non-WeChat payments, create order first
+    // Handle Alipay payment
+/*     if (paymentType === "ALIPAY") {
+      const displayName = paymentPlan.display || 
+        (isMembership ? "会员" : "补充包");
+      
+      const paymentOrder = {
+        out_trade_no: orderNo,
+        total_amount: amount,
+        subject: `${displayName}${isMembership ? "订阅" : "充值"}`,
+        time_expire: new Date(expiresAt * 1000).toISOString()
+      };
+
+      const paymentResult = await alipay.createOrder(paymentOrder);
+      const qrCodeUrl = paymentResult.qr_code;
+
+      const order = await prisma.paymentOrder.create({
+        data: {
+          orderNo,
+          userId: user.userId,
+          amount,
+          paymentType,
+          productType,
+          productId: planId,
+          status: "pending",
+          createdAt: now,
+          updatedAt: now,
+          expiresAt,
+          codeUrl: qrCodeUrl
+        }
+      });
+
+      return response.success("订单创建成功", {
+        orderId: order.id,
+        amount,
+        paymentType,
+        planType: planId,
+        paymentInfo: {
+          codeUrl: qrCodeUrl,
+          expiresAt
+        }
+      });
+    } */
+
+    // For other payment methods, create order first
     const order = await prisma.paymentOrder.create({
       data: {
         orderNo,
         userId: user.userId,
         amount,
         paymentType,
-        productType: "MEMBERSHIP",
+        productType,
+        productId: planId, // Store planId in productId field
         status: "pending",
         createdAt: now,
         updatedAt: now,
@@ -177,7 +208,7 @@ export async function POST(request: NextRequest) {
       orderId: order.id,
       amount,
       paymentType,
-      membershipType
+      planType: planId
     });
   } catch (error) {
     console.error("[MEMBERSHIP_SUBSCRIBE_ERROR]", error);
@@ -185,27 +216,69 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function calculateMembershipDetails(type: MembershipType) {
-  switch (type) {
-    case "MONTHLY":
-      return {
-        amount: 1000, // ¥10 in cents
-        durationDays: 30,
-        chars: 50000
-      };
-    case "QUARTERLY":
-      return {
-        amount: 2700, // ¥27 in cents
-        durationDays: 90,
-        chars: 180000
-      };
-    case "YEARLY":
-      return {
-        amount: 9600, // ¥96 in cents
-        durationDays: 365,
-        chars: 800000
-      };
-    default:
-      throw new Error("无效的会员类型");
+// 支付回调处理
+export async function PUT(request: NextRequest) {
+  const json = await request.json();
+  const { orderId, transactionId, paymentStatus } = json;
+
+  if (!orderId || !transactionId || !paymentStatus) {
+    return response.error("缺少必要参数");
+  }
+
+  try {
+    // 更新订单状态
+    const updatedOrder = await prisma.paymentOrder.update({
+      where: { id: orderId },
+      data: {
+        status: paymentStatus === 'SUCCESS' ? 'completed' : 'failed',
+        transactionId,
+        updatedAt: Math.floor(Date.now() / 1000),
+        payTime: paymentStatus === 'SUCCESS' ? Math.floor(Date.now() / 1000) : undefined
+      }
+    });
+
+    // 如果是会员套餐且支付成功，创建会员记录
+    if (paymentStatus === 'SUCCESS' && updatedOrder.productType === 'MEMBERSHIP') {
+      const paymentPlan = getPaymentPlan(updatedOrder.productId!);
+      if (paymentPlan) {
+        const now = Math.floor(Date.now() / 1000);
+        const durationDays = paymentPlan.durationDays || 30;
+        const endDate = now + durationDays * 24 * 60 * 60;
+
+        await prisma.membership.create({
+          data: {
+            userId: updatedOrder.userId,
+            type: updatedOrder.productId as MembershipType,
+            startDate: now,
+            endDate,
+            totalChars: parseInt(paymentPlan.chars.replace(/,/g, '')),
+            usedChars: 0,
+            orderId: updatedOrder.id,
+            createdAt: now,
+            updatedAt: now
+          }
+        });
+      }
+    }
+
+    // 如果是补充包且支付成功，增加用户字符数
+    if (paymentStatus === 'SUCCESS' && updatedOrder.productType === 'TOPUP') {
+      const paymentPlan = getPaymentPlan(updatedOrder.productId!);
+      if (paymentPlan) {
+        await prisma.user.update({
+          where: { userId: updatedOrder.userId },
+          data: {
+            availableChars: {
+              increment: parseInt(paymentPlan.chars.replace(/,/g, ''))
+            }
+          }
+        });
+      }
+    }
+
+    return response.success("订单状态更新成功");
+  } catch (error) {
+    console.error("[PAYMENT_CALLBACK_ERROR]", error);
+    return response.error("订单状态更新失败");
   }
 }

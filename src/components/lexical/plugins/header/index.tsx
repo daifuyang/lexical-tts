@@ -8,6 +8,9 @@ import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { saveWork } from "@/lib/lexical";
 import { downloadFile } from "@/lib/dowload";
 import { setIsSaved } from "@/redux/slice/voiceState";
+import { $getRoot, createEditor } from "lexical";
+import { editorConfig } from "../..";
+import { mergeSentenceNodes, recursionNodes } from "@/lib/sample";
 
 export default function Header() {
   const searchParams = useSearchParams();
@@ -32,9 +35,12 @@ export default function Header() {
         <div className="w-80 flex items-center">
           <h1 className="text-xl">{process.env.NEXT_PUBLIC_TITLE}</h1>
           <div className="w-px h-4 bg-gray-300 mx-2"></div>
-          <div onClick={() => {
-            router.replace('/desktop')
-          }} className="flex items-center cursor-pointer text-slate-700  mr-5">
+          <div
+            onClick={() => {
+              router.replace("/desktop");
+            }}
+            className="flex items-center cursor-pointer text-slate-700  mr-5"
+          >
             <LeftOutlined />
             <span>返回首页</span>
           </div>
@@ -70,6 +76,34 @@ export default function Header() {
         <div className="w-80 flex items-center justify-end text-slate-700">
           <Button
             onClick={async () => {
+              const newEditor = createEditor({
+                ...editorConfig,
+                editorState: editor.getEditorState()
+              });
+
+              newEditor.update(() => {
+                const root = $getRoot();
+
+                const paragraphNodes = recursionNodes(root.getChildren());
+                let sentenceNodes = [];
+                let keyMap: any = {};
+                let index = 0;
+                for (const nodes of paragraphNodes) {
+                  // 段落
+                  const sentenceNode = mergeSentenceNodes(nodes.children);
+                  for (const nodes of sentenceNode) {
+                    for (const node of nodes) {
+                      const key = node.getKey();
+                      keyMap[key] = index;
+                    }
+                    index++;
+                    sentenceNodes.push(nodes);
+                  }
+                }
+                console.log("sentenceNodes", sentenceNodes);
+              });
+
+              return;
               const res = await saveWork(editor, id, { status: 1, voiceName });
               if (res.code === 1) {
                 message.success("生成成功！");

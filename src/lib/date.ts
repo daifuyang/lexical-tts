@@ -28,3 +28,7 @@ export function formatFields(data: DataItem[], mappings: Mapping[]) {
     });
   });
 }
+
+export const formatDateTime = (timestamp: number) => {
+  return dayjs(timestamp * 1000).format("YYYY-MM-DD HH:mm:ss");
+};
