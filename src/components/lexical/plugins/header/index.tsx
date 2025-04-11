@@ -101,6 +101,16 @@ export default function Header() {
                   }
                 }
                 console.log("sentenceNodes", sentenceNodes);
+
+                for (let index = 0; index < sentenceNodes.length; index++) {
+                  const node: any = sentenceNodes[index];
+                  const paragraph = {
+                    type: "paragraph",
+                    children: node.map((children: any) => children.exportJSON())
+                  };
+                  const editorState = JSON.stringify([paragraph]);
+                  console.log('editorState', editorState);
+                }
               });
 
               return;

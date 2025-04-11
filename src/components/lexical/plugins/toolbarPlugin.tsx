@@ -11,8 +11,9 @@ import {
   $isTextNode,
   CAN_REDO_COMMAND,
   CAN_UNDO_COMMAND,
+  EditorState,
   REDO_COMMAND,
-  UNDO_COMMAND,
+  UNDO_COMMAND
 } from "lexical";
 import { useEffect, useState, useRef } from "react";
 import { Avatar, Spin } from "antd";
@@ -42,10 +43,14 @@ export default function ToolbarPlugin(props: any) {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
+  const [open, setOpen] = useState(false);
+
   const voiceState = useAppSelector((state) => state.voiceState);
   const { globalVoice, loading } = voiceState;
   const defaultVoiceLoading = loading.defaultVoice;
   const toolbarRef = useRef(null);
+
+  const [previewState, setPreviewState] = useState<EditorState>(null);
 
   useEffect(() => {
     return mergeRegister(
@@ -64,7 +69,10 @@ export default function ToolbarPlugin(props: any) {
           return false;
         },
         LowPriority
-      )
+      ),
+      editor.registerUpdateListener(({ editorState }) => {
+        setPreviewState(editorState);
+      })
     );
   }, [editor]);
 
@@ -72,13 +80,25 @@ export default function ToolbarPlugin(props: any) {
 
   return (
     <>
+      { open && <PreviewDialog open={open} onOpenChange={(open) => {
+        setOpen(open);
+      } } editorState={previewState?.clone()} />}
+
       <div className="toolbar" ref={toolbarRef}>
-        <PreviewDialog editorState={editor.getEditorState().clone()} total={total}>
-          <div className="toolbar-item toolbar-play">
-            <img src="/assets/toolbar/play.svg" />
-            <span>试听</span>
-          </div>
-        </PreviewDialog>
+        <div onClick={ () => {
+
+          editor.update(() => {
+            const state = editor.getEditorState().toJSON();
+          });
+
+          setOpen(true);
+
+
+
+        } } className="toolbar-item toolbar-play">
+          <img src="/assets/toolbar/play.svg" />
+          <span>试听</span>
+        </div>
 
         <div
           onMouseDown={(e) => {
