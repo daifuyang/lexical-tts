@@ -7,6 +7,7 @@
  */
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
+import { createWork } from "@/redux/slice/workState";
 import {
   $isTextNode,
   CAN_REDO_COMMAND,
@@ -28,6 +29,7 @@ import { OPEN_VOICE_MODAL_COMMAND } from "./voicePlugin";
 import classNames from "classnames";
 import { getSample } from "@/services/sample";
 import { mergeSentenceNodes, recursionNodes } from "@/lib/sample";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const LowPriority = 1;
 
@@ -50,7 +52,11 @@ export default function ToolbarPlugin(props: any) {
   const defaultVoiceLoading = loading.defaultVoice;
   const toolbarRef = useRef(null);
 
-  const [previewState, setPreviewState] = useState<EditorState>(null);
+  const router = useRouter();
+  const pathname = usePathname(); // 获取当前路径
+  const searchParams = useSearchParams(); // 获取当前查询参数
+
+  const [previewState, setPreviewState] = useState<EditorState | null>(null);
 
   useEffect(() => {
     return mergeRegister(
@@ -76,26 +82,38 @@ export default function ToolbarPlugin(props: any) {
     );
   }, [editor]);
 
-  const voiceName = globalVoice?.shortName || "zh-CN-XiaoxiaoNeural"; // 当前主播
-
   return (
     <>
-      { open && <PreviewDialog open={open} onOpenChange={(open) => {
-        setOpen(open);
-      } } editorState={previewState?.clone()} />}
+      {open && previewState && (
+        <PreviewDialog open={open} onOpenChange={setOpen} editorState={previewState.clone()} />
+      )}
 
       <div className="toolbar" ref={toolbarRef}>
-        <div onClick={ () => {
+        <div
+          onClick={async () => {
 
-          editor.update(() => {
-            const state = editor.getEditorState().toJSON();
-          });
+            // 已经包含id的则无需创建
+            if (searchParams.get("id")) {
+              setOpen(true);
+              return;
+            }
 
-          setOpen(true);
+            const work = await dispatch(createWork({
+              editor,
+              voiceName: globalVoice?.shortName,
+              defaultTitle: "试听作品"
+            })).unwrap();
 
-
-
-        } } className="toolbar-item toolbar-play">
+            if (work) {
+              const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
+              params.set("id", work.id); // 设置或更新 id 参数
+              // 使用 replace 方法更新URL而不刷新页面
+              router.replace(`${pathname}?${params.toString()}`);
+              setOpen(true);
+            }
+          }}
+          className="toolbar-item toolbar-play"
+        >
           <img src="/assets/toolbar/play.svg" />
           <span>试听</span>
         </div>

@@ -5,7 +5,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 export const fetchWorkDetail = createAsyncThunk<any, number>(
   "data/fetchWorkDetail",
   async (id, thunkAPI) => {
-    const res: any = await getWorkDetail(id);
+    const res: any = await getWorkDetail(id.toString());
     if (res.code !== 1) {
       return thunkAPI.rejectWithValue(res);
     }

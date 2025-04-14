@@ -8,26 +8,27 @@ datasource db {
 }
 
 model SysUser {
-  userId     Int          @id @default(autoincrement()) @map("user_id")
-  loginName  String?      @unique @map("login_name")
-  email      String?      @unique
-  phone      String?      @unique
-  password   String?
-  salt       String?
-  nickname   String?
-  realname   String?
-  gender     Int          @default(0) @db.TinyInt
-  birthday   Int?
-  userType   Int          @default(0) @map("user_type") @db.TinyInt
-  avatar     String?
-  loginIp    String?      @map("login_ip")
-  loginAt    Int?         @map("login_at")
-  status     Int          @default(1) @db.TinyInt
-  remark     String       @default("") @map("remark") @db.VarChar(500)
-  createdAt  Int          @map("created_at")
-  updatedAt  Int          @map("updated_at")
-  deletedAt  Int          @default(0) @map("deleted_at")
-  Membership Membership[]
+  userId      Int           @id @default(autoincrement()) @map("user_id")
+  loginName   String?       @unique @map("login_name")
+  email       String?       @unique
+  phone       String?       @unique
+  password    String?
+  salt        String?
+  nickname    String?
+  realname    String?
+  gender      Int           @default(0) @db.TinyInt
+  birthday    Int?
+  userType    Int           @default(0) @map("user_type") @db.TinyInt
+  avatar      String?
+  loginIp     String?       @map("login_ip")
+  loginAt     Int?          @map("login_at")
+  status      Int           @default(1) @db.TinyInt
+  remark      String        @default("") @map("remark") @db.VarChar(500)
+  createdAt   Int           @map("created_at")
+  updatedAt   Int           @map("updated_at")
+  deletedAt   Int           @default(0) @map("deleted_at")
+  Membership  Membership[]
+  TtsUsageLog TtsUsageLog[]
 
   @@index([userId, loginName, phone, email])
   @@map("sys_user")
@@ -52,17 +53,18 @@ enum MembershipType {
 
 // 会员表
 model Membership {
-  memberId   String         @id @default(cuid()) @map("member_id")
-  userId     Int            @map("user_id")
-  type       MembershipType
-  startDate  Int            @map("start_date")
-  endDate    Int            @map("end_date")
-  totalChars Int            @map("total_chars")
-  usedChars  Int            @default(0) @map("used_chars")
-  orderId    String?        @map("order_id") // 支付系统关联ID
-  createdAt  Int            @map("created_at")
-  updatedAt  Int            @map("updated_at")
-  user       SysUser        @relation(fields: [userId], references: [userId])
+  memberId       String         @id @default(cuid()) @map("member_id")
+  userId         Int            @map("user_id")
+  type           MembershipType
+  startDate      Int            @map("start_date")
+  endDate        Int            @map("end_date")
+  totalChars     Int            @map("total_chars") // 总字数
+  usedChars      Int            @default(0) @map("used_chars") // 已使用字数
+  totalRemaining Int            @default(0) @map("total_remaining") // 总剩余字数
+  orderId        String?        @map("order_id") // 支付系统关联ID
+  createdAt      Int            @map("created_at")
+  updatedAt      Int            @map("updated_at")
+  user           SysUser        @relation(fields: [userId], references: [userId])
 
   @@index([userId, type])
   @@index([endDate])
@@ -115,32 +117,34 @@ model TtsVoiceCategory {
 }
 
 model TtsWork {
-  id          Int    @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   title       String
-  voiceName   String @map("voice_name")
-  editorState String @map("editor_state") @db.Text
-  ssml        String @db.Text
-  audioUrl    String @map("audio_url")
+  voiceName   String        @map("voice_name")
+  editorState String        @map("editor_state") @db.Text
+  content     String        @map("content") @db.Text // 按照段落的配音内容
+  audioUrl    String        @map("audio_url")
   duration    Float
-  creatorId   Int    @map("creator_id")
-  status      Int    @default(1) @db.TinyInt
-  version     Int    @default(1)
-  createdAt   Int    @map("created_at")
-  deletedAt   Int?   @map("deleted_at")
+  creatorId   Int           @map("creator_id")
+  status      Int           @default(1) @db.TinyInt
+  version     Int           @default(1)
+  createdAt   Int           @map("created_at")
+  deletedAt   Int?          @map("deleted_at")
+  TtsUsageLog TtsUsageLog[]
 
   @@map("tts_work")
 }
 
 model TtsSample {
-  id         Int    @id @default(autoincrement())
-  voiceName  String @map("voice_name")
-  voiceStyle String @default("") @map("voice_style")
-  content    String @db.Text
-  ssml       String @db.Text
-  count      Int    @default(0)
-  audioUrl   String @map("audio_url")
-  creatorId  Int    @map("creator_id")
-  createdAt  Int    @map("created_at")
+  id          Int           @id @default(autoincrement())
+  voiceName   String        @map("voice_name")
+  voiceStyle  String        @default("") @map("voice_style")
+  content     String        @db.Text
+  ssml        String        @db.Text
+  count       Int           @default(0)
+  audioUrl    String        @map("audio_url")
+  creatorId   Int           @map("creator_id")
+  createdAt   Int           @map("created_at")
+  TtsUsageLog TtsUsageLog[]
 
   @@map("tts_sample")
 }
@@ -175,28 +179,50 @@ model SysDictData {
 
 enum PaymentType {
   WECHAT
-  ALIPAY 
+  ALIPAY
 }
 
 model PaymentOrder {
-  id              String   @id @default(cuid())
-  orderNo         String   @unique @map("order_no")
-  userId          Int      @map("user_id")
-  amount          Int
-  status          String   @default("pending")
-  paymentType     PaymentType   @map("payment_type")
-  payTime         Int?     @map("pay_time")
-  transactionId   String?  @map("transaction_id")
-  productType     String   @map("product_type")
-  productId       String?  @map("product_id")
-  createdAt       Int      @map("created_at")
-  updatedAt       Int      @map("updated_at")
-  expiresAt       Int?     @map("expires_at")
-  notifyData      String?  @map("notify_data") @db.Text
-  codeUrl         String?  @map("code_url") @db.VarChar(255)
-  qrcodeCodeUrl   String?  @map("qrcode_code_url") @db.Text
+  id            String      @id @default(cuid())
+  orderNo       String      @unique @map("order_no")
+  userId        Int         @map("user_id")
+  amount        Int
+  status        String      @default("pending")
+  paymentType   PaymentType @map("payment_type")
+  payTime       Int?        @map("pay_time")
+  transactionId String?     @map("transaction_id")
+  productType   String      @map("product_type")
+  productId     String?     @map("product_id")
+  createdAt     Int         @map("created_at")
+  updatedAt     Int         @map("updated_at")
+  expiresAt     Int?        @map("expires_at")
+  notifyData    String?     @map("notify_data") @db.Text
+  codeUrl       String?     @map("code_url") @db.VarChar(255)
+  qrcodeCodeUrl String?     @map("qrcode_code_url") @db.Text
 
   @@index([userId, status])
   @@index([orderNo])
   @@map("payment_order")
+}
+
+model TtsUsageLog {
+  id         String @id @default(cuid())
+  userId     Int    @map("user_id")
+  workId     Int?   @map("work_id")
+  voiceName  String @map("voice_name")
+  voiceStyle String @default("") @map("voice_style")
+  sampleId   Int?   @map("sample_id")
+  ssml       String @db.Text
+  charsUsed  Int    @map("chars_used")
+  charsLeft  Int    @map("chars_left")
+  totalUsed  Int    @default(0) @map("total_used")
+  createdAt  Int    @map("created_at")
+
+  user   SysUser    @relation(fields: [userId], references: [userId])
+  work   TtsWork?   @relation(fields: [workId], references: [id])
+  sample TtsSample? @relation(fields: [sampleId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("tts_usage_log")
 }

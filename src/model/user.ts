@@ -6,7 +6,7 @@ import { SysUser, Prisma } from "@prisma/client";
 
 const userIdKey = "user:id:";
 // 根据id获取用户
-export const getUserById = async (userId: number, tx = prisma):Promise<SysUser> => {
+export const getUserById = async (userId: number, tx = prisma): Promise<SysUser | null> => {
   const cache = await redis.get(`${userIdKey}${userId}`);
   let user: SysUser | null = null;
   if (cache) {
@@ -25,8 +25,7 @@ export const getUserById = async (userId: number, tx = prisma):Promise<SysUser> 
       redis.set(`${userIdKey}${{ userId }}`, serializeData(user));
     }
   }
-
-  return user as SysUser;
+  return user;
 };
 
 // 获取用户总数
@@ -61,7 +60,7 @@ export const getUserList = async (
 
   args.where = {
     ...where,
-    deletedAt: 0,
+    deletedAt: 0
   };
 
   args.orderBy = {
@@ -74,8 +73,8 @@ export const getUserList = async (
 };
 
 // 根据条件获取单个用户
-export const getUser = (where: Prisma.SysUserWhereUniqueInput, tx = prisma) => {
-  return tx.sysUser.findUnique({
+export const getUser = async (where: Prisma.SysUserWhereUniqueInput, tx = prisma) => {
+  return await tx.sysUser.findUnique({
     where
   });
 };

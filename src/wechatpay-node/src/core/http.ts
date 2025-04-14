@@ -83,6 +83,9 @@ export class HttpClient implements IHttpClient {
         ...config,
         timeout: config.timeout ?? 10000
       });
+      if (response.data === undefined) {
+        throw new Error('WeChatPay API returned no data');
+      }
       return response.data;
     } catch (error) {
       console.error('HTTP Request Failed:', error);

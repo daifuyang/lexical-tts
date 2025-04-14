@@ -1,19 +1,25 @@
+import React from "react";
 import { mergeSentenceNodes, recursionNodes } from "@/lib/sample";
-import { useAppSelector } from "@/redux/hook";
+import { useAppSelector, useAppDispatch } from "@/redux/hook";
+import { fetchUsageStats } from "@/redux/slice/memberState";
 import { getSample } from "@/services/sample";
+import { formatNumber } from "@/lib/utils";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $getRoot, $getSelection, EditorState } from "lexical";
-import { Ref, useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface PlayPluginProps {
   playing: boolean;
   onChange: (playing: boolean) => void;
 }
-export function PlayPlugin(props: PlayPluginProps): JSX.Element | null {
+export function PlayPlugin(props: PlayPluginProps): React.ReactNode {
   const [editor] = useLexicalComposerContext();
   const { playing, onChange } = props;
 
+  const dispatch = useAppDispatch();
   const voiceState = useAppSelector((state) => state.voiceState);
+  const memberState = useAppSelector((state) => state.memberState);
   const voiceName = voiceState.globalVoice?.shortName || "zh-CN-XiaoxiaoNeural";
 
   const [playIndex, setPlayIndex] = useState(0);
@@ -23,6 +29,10 @@ export function PlayPlugin(props: PlayPluginProps): JSX.Element | null {
   const [playEditorState, setPlayEditorState] = useState<any[]>([]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
+
+    const searchParams = useSearchParams();
+  
+    const workId = searchParams.get("id");
 
   const playAudio = () => {
     if (audioRef.current?.paused) {
@@ -82,12 +92,13 @@ export function PlayPlugin(props: PlayPluginProps): JSX.Element | null {
           };
           const editorState = JSON.stringify([paragraph]);
 
-          getSample({ editorState, voiceName }).then((res: any) => {
+          getSample({ workId, editorState, voiceName }).then((res: any) => {
             if (res.code === 1) {
               setPlayList((prevList) => ({
                 ...prevList,
                 [page]: res.data.prevPath
               }));
+              dispatch(fetchUsageStats(Number(workId)));
             }
           });
         }
@@ -110,11 +121,14 @@ export function PlayPlugin(props: PlayPluginProps): JSX.Element | null {
 
     const currentSrc = playList[playIndex];
     if (currentSrc && currentSrc !== audio.src) {
-      if (playing) {
-        pauseAudio();
+
+      // 获取当前音频播放状态
+      if (!audio.paused) {
+        audio.pause();
       }
 
       audio.src = currentSrc;
+      
       playAudio();
 
       editor.update(() => {
@@ -148,14 +162,6 @@ export function PlayPlugin(props: PlayPluginProps): JSX.Element | null {
     };
   }, [playIndex, playList, playing]);
 
-  useEffect(() => {
-    if (playing) {
-      playAudio();
-    } else {
-      pauseAudio();
-    }
-  }, [playing]);
-
   const updateIndex = useCallback(() => {
     editor.getEditorState().read(() => {
       if (editor.isComposing()) {
@@ -172,14 +178,16 @@ export function PlayPlugin(props: PlayPluginProps): JSX.Element | null {
       }
 
       const index = nodeMap[nodeKey];
-      if (index !== undefined && index !== playIndex) {
+      
+      if (index !== undefined) {
         editor.update(() => {
           // 清空上一次的
           const prevPlay = playEditorState[playIndex];
-          for (const node of prevPlay) {
-            node.setStyle("");
+          if (prevPlay) {
+            for (const node of prevPlay) {
+              node.setStyle("");
+            }
           }
-
           const currentPlay = playEditorState[index];
           for (const node of currentPlay) {
             node.setStyle("color:green");
@@ -200,9 +208,17 @@ export function PlayPlugin(props: PlayPluginProps): JSX.Element | null {
   }, [updateIndex]);
 
   return (
-    <audio ref={audioRef} className="w-full">
-      <source type="audio/mpeg" />
-      Your browser does not support this audio format.
-    </audio>
+    <div className="flex flex-col gap-2">
+      <audio ref={audioRef} className="w-full">
+        <source type="audio/mpeg" />
+        Your browser does not support this audio format.
+      </audio>
+      {memberState.usageStats && (
+        <div className="absolute bottom-20 right-4 text-sm text-gray-500 bg-white/80 px-2 py-1 rounded">
+          <div>已用: {formatNumber(memberState.usageStats.totalUsed)}</div>
+          <div>剩余: {formatNumber(memberState.usageStats.remaining)}</div>
+        </div>
+      )}
+    </div>
   );
 }

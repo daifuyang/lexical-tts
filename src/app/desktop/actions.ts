@@ -5,7 +5,7 @@ import { createTtsWork } from "@/model/ttsWork";
 import { now } from "@/lib/date";
 import { getCurrentUser } from "@/lib/user";
 
-export async function createDraftWork() {
+export async function handleCreateWork() {
     const user = await getCurrentUser();
     if (!user) {
         return null;
@@ -15,7 +15,7 @@ export async function createDraftWork() {
         title: "未命名作品",
         voiceName: "",
         editorState: "",
-        ssml: "",
+        content: "",
         audioUrl: "",
         duration: 0,
         status: 0, // 0 means draft
@@ -23,10 +23,5 @@ export async function createDraftWork() {
         createdAt: now()
     });
 
-    return work.id;
-}
-
-export async function handleCreateWork() {
-    const workId = await createDraftWork();
-    redirect(`/editor?id=${workId}`);
+    redirect(`/editor?id=${work.id}`);
 }

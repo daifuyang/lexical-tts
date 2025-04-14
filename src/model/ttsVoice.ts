@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
-import { Prisma, ttsVoice } from "@prisma/client";
+import { Prisma, TtsVoice } from "@prisma/client";
 
 const voiceIdKey = `tts:voice:id:`;
 const voiceShortNameKey = `tts:voice:shortName:`;
@@ -54,10 +54,10 @@ export async function getVoiceById(id: number, tx = prisma) {
 }
 
 // 根据shortName获取主播
-export async function getVoiceByShortName(shortName: string, tx = prisma) {
+export async function getVoiceByShortName(shortName: string, tx = prisma): Promise<TtsVoice | null> {
   const key = `${voiceShortNameKey}${shortName}`;
   const cache = await redis.get(key);
-  let voice: ttsVoice | null = null;
+  let voice: TtsVoice | null = null;
   if (cache) {
     voice = JSON.parse(cache);
   } else {

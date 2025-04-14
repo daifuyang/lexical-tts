@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CreateWorkButton } from "./components/create-work-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { AudioPlayer } from "@/components/AudioPlayer";
@@ -56,7 +57,11 @@ export default function WorksPage() {
       setLoading(true);
 
       // 获取已完成作品
-      const completedResponse = await getWorkList(page, pagination.pageSize, { status: 1 });
+      const completedResponse = await getWorkList({
+        page,
+        pageSize: pagination.pageSize,
+        status: 1
+      });
       if (completedResponse.code === 1) {
         setWorks(completedResponse.data.data || []);
         setPagination((prev) => ({
@@ -69,7 +74,11 @@ export default function WorksPage() {
       }
 
       // 获取草稿作品
-      const draftsResponse = await getWorkList(1, 10, { status: 0 });
+      const draftsResponse = await getWorkList({
+        page: 1,
+        pageSize: 10,
+        status: 0
+      });
       if (draftsResponse?.code === 1) {
         setDrafts(draftsResponse.data.data || []);
       } else {
@@ -124,12 +133,7 @@ export default function WorksPage() {
           ? "您还没有创建任何已完成的作品。点击下方按钮开始创建您的第一个作品。"
           : "您还没有保存任何草稿。草稿可以帮助您保存未完成的工作。"}
       </p>
-      <Link href="/editor">
-        <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-          <Plus className="h-4 w-4 mr-2" />
-          创建新作品
-        </Button>
-      </Link>
+      <CreateWorkButton />
     </div>
   );
 
@@ -143,12 +147,7 @@ export default function WorksPage() {
             <p className="text-sm text-gray-500">管理您创建的所有配音作品和草稿</p>
           </div>
           <div className="mt-4 md:mt-0">
-            <Link href="/editor">
-              <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                <Plus className="h-4 w-4 mr-2" />
-                创建新作品
-              </Button>
-            </Link>
+            <CreateWorkButton />
           </div>
         </div>
 

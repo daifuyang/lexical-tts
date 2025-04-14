@@ -13,6 +13,6 @@ export async function POST(request: Request) {
 
   const filename = target + name;
 
-  const res = await new tts(filename).synthesizeText(ssml);
+  const res = await new tts(filename).speakSsmlAsync(ssml);
   return api.success("生成成功！", res);
 }

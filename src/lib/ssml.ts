@@ -4,6 +4,7 @@ import { convert, pinyin } from "pinyin-pro";
 import { v4 } from "uuid";
 import tts from "./tts";
 import { uploadFile } from "./qiniu";
+import { getVoiceByShortName } from "@/model/ttsVoice";
 
 let existStartVoice = false; //存在结尾闭合标签
 const parseSSMLNode = (nodes: any = [], shortName: string) => {
@@ -118,10 +119,18 @@ export const getSsml = (nodes: any = [], shortName: string = "zh-CN-XiaoxiaoNeur
 };
 
 // 生成音频
-export const generateAudio = async (editorState: string, voiceName: string, predix="") => {
-
+export const generateAudio = async (editorState: string, voiceName: string, predix = "") => {
   const nodes = JSON.parse(editorState);
-  const ssml = getSsml(nodes, voiceName);
+  let ssml = "";
+  let type = "";
+  if (!hasSpecialNodes(nodes)) {
+    type = "text";
+    ssml = concatAllText(nodes);
+  } else {
+    type = "ssml";
+    ssml = getSsml(nodes, voiceName);
+  }
+
   // 统计字数
 
   // 判断vip
@@ -140,10 +149,16 @@ export const generateAudio = async (editorState: string, voiceName: string, pred
   // 增加文件安全显示，可加上加密转换逻辑
   const name = predix + v4();
   const localFile = target + name + ".mp3";
-  const ttsInstance = new tts(localFile);
-  const res = await ttsInstance.synthesizeText(ssml);
-  const billingChars = calculateBilling(ssml);
-  console.log("billingChars", billingChars);
+  let res: any = null;
+  if (type === "text") {
+    const voice = await getVoiceByShortName(voiceName);
+    if (!voice) {
+      return { status: "error", res: "找不到语音" };
+    }
+    res = await new tts(localFile, voice.locale, voiceName).speakTextAsync(ssml);
+  } else {
+    res = await new tts(localFile).speakSsmlAsync(ssml);
+  }
 
   if (res.success === "ok") {
     const filename = name + ".mp3";
@@ -151,22 +166,51 @@ export const generateAudio = async (editorState: string, voiceName: string, pred
 
     // 上传到七牛云
     const uploadRes: any = await uploadFile(filename, key, localFile);
-    return { status: "ok", res: uploadRes, filename };
+    return { status: "ok", res: uploadRes, filename, type, ssml };
   }
   return { status: "error", res };
 };
 
 // 计费字符统计
+export function hasSpecialNodes(nodes: any = []): boolean {
+  for (const node of nodes) {
+    switch (node.type) {
+      case "pinyinNode":
+      case "symbolNode":
+      case "speedNode":
+        return true;
+      default:
+        if (node.children && hasSpecialNodes(node.children)) {
+          return true;
+        }
+    }
+  }
+  return false;
+}
+
+export function concatAllText(nodes: any = []): string {
+  let result = "";
+  for (const node of nodes) {
+    if (node.text) {
+      result += node.text;
+    }
+    if (node.children) {
+      result += concatAllText(node.children);
+    }
+  }
+  return result;
+}
+
 export function calculateBilling(ssml: string): number {
   // 移除不计费标签
-  const filtered = ssml.replace(/<\/?(speak|voice)[^>]*>/g, '');
-  
+  const filtered = ssml.replace(/<\/?(speak|voice)[^>]*>/g, "");
+
   // 统计CJK字符（每个算2个字符）
   const cjkRegex = /[\u4E00-\u9FFF\u3400-\u4DBF\u{20000}-\u{2A6DF}]/gu;
   const cjkCount = [...filtered.matchAll(cjkRegex)].length * 2;
-  
+
   // 统计其他字符（包括SSML标签）
-  const otherChars = filtered.replace(cjkRegex, '').length;
-  
+  const otherChars = filtered.replace(cjkRegex, "").length;
+
   return cjkCount + otherChars;
 }

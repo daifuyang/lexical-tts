@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
 import response from "@/lib/response";
 import { getCurrentUser } from "@/lib/user";
-import { MembershipType, PaymentType } from "@prisma/client";
-import prisma from "@/lib/prisma";
+import { PaymentType, MembershipType } from "@prisma/client";
 import { wechatPay } from "@/lib/pay";
 import { getPaymentPlan, membershipPlans, topUpPacks } from "@/model/paymentConfig";
+import { createPaymentOrder, findPendingOrder, updatePaymentOrder } from "@/model/paymentOrder";
+import { createMembership, getMembershipFirst, updateMembership } from "@/model/membership";
+import { updateUser } from "@/model/user";
 
 export async function POST(request: NextRequest) {
   const json = await request.json();
@@ -47,14 +49,11 @@ export async function POST(request: NextRequest) {
     // Check for existing order with the same planId, unless forceRefresh is true
     let existingOrder = null;
     if (!forceRefresh) {
-      existingOrder = await prisma.paymentOrder.findFirst({
-        where: {
-          userId: user.userId,
-          productType,
-          productId: planId, // Use planId as productId to differentiate between plans
-          status: "pending"
-        },
-        orderBy: { createdAt: "desc" }
+      existingOrder = await findPendingOrder({
+        userId: user.userId,
+        productType,
+        productId: planId,
+        status: "pending"
       });
     }
 
@@ -128,9 +127,7 @@ export async function POST(request: NextRequest) {
         // qrcodeCodeUrl // Store the QR code image URL
       };
 
-      const order = await prisma.paymentOrder.create({
-        data: orderData
-      });
+      const order = await createPaymentOrder(orderData);
 
       return response.success("订单创建成功", {
         orderId: order.id,
@@ -145,63 +142,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Handle Alipay payment
-/*     if (paymentType === "ALIPAY") {
-      const displayName = paymentPlan.display || 
-        (isMembership ? "会员" : "补充包");
-      
-      const paymentOrder = {
-        out_trade_no: orderNo,
-        total_amount: amount,
-        subject: `${displayName}${isMembership ? "订阅" : "充值"}`,
-        time_expire: new Date(expiresAt * 1000).toISOString()
-      };
-
-      const paymentResult = await alipay.createOrder(paymentOrder);
-      const qrCodeUrl = paymentResult.qr_code;
-
-      const order = await prisma.paymentOrder.create({
-        data: {
-          orderNo,
-          userId: user.userId,
-          amount,
-          paymentType,
-          productType,
-          productId: planId,
-          status: "pending",
-          createdAt: now,
-          updatedAt: now,
-          expiresAt,
-          codeUrl: qrCodeUrl
-        }
-      });
-
-      return response.success("订单创建成功", {
-        orderId: order.id,
-        amount,
-        paymentType,
-        planType: planId,
-        paymentInfo: {
-          codeUrl: qrCodeUrl,
-          expiresAt
-        }
-      });
-    } */
-
     // For other payment methods, create order first
-    const order = await prisma.paymentOrder.create({
-      data: {
-        orderNo,
-        userId: user.userId,
-        amount,
-        paymentType,
-        productType,
-        productId: planId, // Store planId in productId field
-        status: "pending",
-        createdAt: now,
-        updatedAt: now,
-        expiresAt
-      }
+    const order = await createPaymentOrder({
+      orderNo,
+      userId: user.userId,
+      amount,
+      paymentType,
+      productType,
+      productId: planId,
+      status: "pending",
+      createdAt: now,
+      updatedAt: now,
+      expiresAt
     });
 
     return response.success("订单创建成功", {
@@ -227,14 +179,11 @@ export async function PUT(request: NextRequest) {
 
   try {
     // 更新订单状态
-    const updatedOrder = await prisma.paymentOrder.update({
-      where: { id: orderId },
-      data: {
-        status: paymentStatus === 'SUCCESS' ? 'completed' : 'failed',
-        transactionId,
-        updatedAt: Math.floor(Date.now() / 1000),
-        payTime: paymentStatus === 'SUCCESS' ? Math.floor(Date.now() / 1000) : undefined
-      }
+    const updatedOrder = await updatePaymentOrder(orderId, {
+      status: paymentStatus === 'SUCCESS' ? 'completed' : 'failed',
+      transactionId,
+      updatedAt: Math.floor(Date.now() / 1000),
+      payTime: paymentStatus === 'SUCCESS' ? Math.floor(Date.now() / 1000) : undefined
     });
 
     // 如果是会员套餐且支付成功，创建会员记录
@@ -245,18 +194,16 @@ export async function PUT(request: NextRequest) {
         const durationDays = paymentPlan.durationDays || 30;
         const endDate = now + durationDays * 24 * 60 * 60;
 
-        await prisma.membership.create({
-          data: {
-            userId: updatedOrder.userId,
-            type: updatedOrder.productId as MembershipType,
-            startDate: now,
-            endDate,
-            totalChars: parseInt(paymentPlan.chars.replace(/,/g, '')),
-            usedChars: 0,
-            orderId: updatedOrder.id,
-            createdAt: now,
-            updatedAt: now
-          }
+        await createMembership({
+          user: { connect: { userId: updatedOrder.userId } },
+          type: updatedOrder.productId as MembershipType,
+          startDate: now,
+          endDate,
+          totalChars: parseInt(paymentPlan.chars.replace(/,/g, '')),
+          usedChars: 0,
+          orderId: updatedOrder.id,
+          createdAt: now,
+          updatedAt: now
         });
       }
     }
@@ -265,14 +212,22 @@ export async function PUT(request: NextRequest) {
     if (paymentStatus === 'SUCCESS' && updatedOrder.productType === 'TOPUP') {
       const paymentPlan = getPaymentPlan(updatedOrder.productId!);
       if (paymentPlan) {
-        await prisma.user.update({
-          where: { userId: updatedOrder.userId },
-          data: {
-            availableChars: {
-              increment: parseInt(paymentPlan.chars.replace(/,/g, ''))
-            }
-          }
+        const chars = parseInt(paymentPlan.chars.replace(/,/g, ''));
+        const now = Math.floor(Date.now() / 1000);
+        
+        // 查找用户现有的会员记录
+        const membership = await getMembershipFirst({
+          userId: updatedOrder.userId
         });
+
+        if (membership) {
+          // 更新现有会员记录的字符数
+          await updateMembership(membership.memberId, {
+            totalChars: { increment: chars },
+            totalRemaining: { increment: chars },
+            updatedAt: now
+          });
+        }
       }
     }
 

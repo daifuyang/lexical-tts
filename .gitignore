@@ -1,7 +1,6 @@
 .next/
 .vscode/
 node_modules/
-prisma/migrations
 .DS_Store
 output/
 

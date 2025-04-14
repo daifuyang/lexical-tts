@@ -1,10 +1,6 @@
-import { $isCodeHighlightNode } from "@lexical/code";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $getSelection,
-  $isParagraphNode,
-  $isRangeSelection,
-  $isTextNode,
   COMMAND_PRIORITY_LOW,
   LexicalEditor,
   SELECTION_CHANGE_COMMAND

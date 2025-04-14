@@ -1,5 +1,25 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
 
+export interface Response<T = any> {
+  code?: number;
+  data?: T;
+  msg?: string;
+  [key: string]: any; // Allow additional properties
+}
+
+declare module "axios" {
+  interface AxiosInstance {
+    request<T = any>(config: AxiosRequestConfig): Promise<Response<T>>;
+    get<T = any>(url: string, config?: AxiosRequestConfig): Promise<Response<T>>;
+    delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<Response<T>>;
+    head<T = any>(url: string, config?: AxiosRequestConfig): Promise<Response<T>>;
+    options<T = any>(url: string, config?: AxiosRequestConfig): Promise<Response<T>>;
+    post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<Response<T>>;
+    put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<Response<T>>;
+    patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<Response<T>>;
+  }
+}
+
 let baseURL = "/";
 if (typeof window === "undefined") {
   baseURL = `http://localhost:${process.env.PORT}`;
@@ -30,12 +50,23 @@ request.interceptors.request.use(
 // 添加响应拦截器
 request.interceptors.response.use(
   (response: AxiosResponse) => {
-    // 对响应数据做些什么
+    // 确保返回Response<T>结构
     return response.data;
   },
   (error: AxiosError) => {
-    // 对响应错误做些什么
-    return Promise.reject(error);
+    // 统一错误处理
+    if (error.response) {
+      return Promise.reject({
+        code: error.response.status,
+        data: error.response.data,
+        msg: error.message
+      });
+    }
+    return Promise.reject({
+      code: 0,
+      data: null,
+      msg: error.message
+    });
   }
 );
 

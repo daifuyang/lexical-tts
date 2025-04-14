@@ -10,13 +10,8 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
-import { $getSelection, $getRoot, EditorState } from "lexical";
-import { getSample } from "@/services/sample";
-import { mergeSentenceNodes, recursionNodes } from "@/lib/sample";
-import { useAppSelector } from "@/redux/hook";
-import { message } from "antd";
+import { EditorState } from "lexical";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { editorConfig } from "../lexical";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
@@ -47,7 +42,7 @@ export function PreviewDialog({ children, open, onOpenChange, editorState }: Pre
           editorState
         }}
       >
-        <DialogContent className="h-[80vh] w-[80vw] max-w-[1200px]">
+        <DialogContent className="flex flex-col h-[80vh] w-[80vw] max-w-[1200px]">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">音频预览</DialogTitle>
           </DialogHeader>

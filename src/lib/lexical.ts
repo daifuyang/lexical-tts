@@ -3,7 +3,7 @@ import { $isSymbolNode } from "@/components/lexical/nodes/symbolNode";
 import { $isWrapNode } from "@/components/lexical/nodes/wrapNode";
 import { $getFirstText } from "@/components/lexical/utils/node";
 import { calculateTextLength } from "@/components/lexical/utils/util";
-import { addWork, updateWork } from "@/services/work";
+import { createWork, updateWork } from "@/services/work";
 import { message } from "antd";
 import { LexicalEditor, LexicalNode } from "lexical";
 
@@ -39,22 +39,14 @@ export function $getElementWrap(node: LexicalNode) {
 }
 
 // 保存项目
-export async function saveWork(editor: LexicalEditor, id: string | null = "", data: any = {}) {
-  const state = editor.getEditorState();
-  const json = state.toJSON();
-  const total = calculateTextLength(json.root);
-  if (total === 0) {
-    message.error("请先输入需要配音的内容！");
-    return;
-  }
-  const editorState = JSON.stringify(json.root.children);
-  const text = await $getFirstText(editor);
+export async function saveWork(contents: [], id: string | null = "", data: any = {}) {
+  const text = "测试"
   // 新增
   let res: any = null;
   if (id) {
-    res = await updateWork(Number(id), { ...data, title: text, editorState });
+    res = await updateWork(id, { ...data, title: text, contents });
   } else {
-    res = await addWork({ ...data, title: text, editorState });
+    res = await createWork({ ...data, title: text, contents });
   }
   return res;
 }

@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ type:
   const { type } = params;
   const { searchParams } = request.nextUrl;
 
-  const where: Prisma.sysDictDataWhereInput = {
+  const where: Prisma.SysDictDataWhereInput = {
     type
   };
 

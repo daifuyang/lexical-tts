@@ -55,7 +55,7 @@ export default function VoicePlugin() {
 
           const {voice, type} = payload
 
-          const selection = $getSelection();
+          /* const selection = $getSelection();
           if (!$isRangeSelection(selection)) {
             return false;
           }
@@ -64,7 +64,7 @@ export default function VoicePlugin() {
           if (!text) {
             message.error("请先选中文字!");
             return false;
-          }
+          } */
           setVoiceType(type);
             setOpen(true);
           return true;

@@ -13,5 +13,5 @@ export const getCurrentUser = async (): Promise<SysUser> => {
     return defaultUser;
   }
   const user = await getUserById(Number(userId));
-  return user;
+  return user as SysUser;
 };

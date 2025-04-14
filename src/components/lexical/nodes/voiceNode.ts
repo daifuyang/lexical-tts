@@ -156,11 +156,6 @@ export class VoiceNode extends ElementNode {
     return self.__name;
   }
 
-  setStyle(style: string): void {
-    const self = this.getWritable();
-    self.__style = style;
-  }
-
   getStyle(): string {
     const self = this.getLatest();
     return self.__style;

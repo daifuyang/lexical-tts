@@ -59,7 +59,11 @@ export async function createMembership(data: Prisma.MembershipCreateInput, tx = 
 }
 
 // 更新会员
-export async function updateMembership(memberId: string, data: Prisma.MembershipUpdateInput, tx = prisma) {
+export async function updateMembership(
+  memberId: string,
+  data: Prisma.MembershipUpdateInput,
+  tx = prisma
+) {
   const membership = await tx.membership.update({
     where: {
       memberId
@@ -83,6 +87,20 @@ export async function deleteMembership(memberId: string, tx = prisma) {
   const membership = await tx.membership.delete({
     where: {
       memberId
+    }
+  });
+  const key = `${membershipIdKey}${memberId}`;
+  redis.del(key);
+  return membership;
+}
+
+// 扣除会员字数
+export async function deductChars(memberId: string, chars: number, tx = prisma) {
+  const membership = await tx.membership.update({
+    where: { memberId },
+    data: {
+      usedChars: { increment: chars },
+      totalRemaining: { decrement: chars }
     }
   });
   const key = `${membershipIdKey}${memberId}`;

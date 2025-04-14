@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { CloudUploadOutlined, EditOutlined, LeftOutlined, UserOutlined } from "@ant-design/icons";
@@ -46,7 +45,7 @@ export default function Header() {
           </div>
           <div
             onClick={async () => {
-              const res = await saveWork(editor, id, { voiceName });
+              const res = await saveWork([], id, { voiceName });
               if (res.code === 1) {
                 message.success(res.msg);
                 dispatch(setIsSaved(true));
@@ -76,11 +75,14 @@ export default function Header() {
         <div className="w-80 flex items-center justify-end text-slate-700">
           <Button
             onClick={async () => {
+              const editorState = editor.getEditorState();
+
               const newEditor = createEditor({
                 ...editorConfig,
-                editorState: editor.getEditorState()
+                editorState
               });
 
+              const contents: any = [];
               newEditor.update(() => {
                 const root = $getRoot();
 
@@ -100,7 +102,6 @@ export default function Header() {
                     sentenceNodes.push(nodes);
                   }
                 }
-                console.log("sentenceNodes", sentenceNodes);
 
                 for (let index = 0; index < sentenceNodes.length; index++) {
                   const node: any = sentenceNodes[index];
@@ -109,12 +110,15 @@ export default function Header() {
                     children: node.map((children: any) => children.exportJSON())
                   };
                   const editorState = JSON.stringify([paragraph]);
-                  console.log('editorState', editorState);
+                  contents.push(editorState);
                 }
               });
 
-              return;
-              const res = await saveWork(editor, id, { status: 1, voiceName });
+              const res = await saveWork(contents, id, {
+                status: 1,
+                voiceName,
+                editorState: JSON.stringify(editorState)
+              });
               if (res.code === 1) {
                 message.success("生成成功！");
                 dispatch(setIsSaved(true));

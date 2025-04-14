@@ -43,12 +43,14 @@ const planIcons = {
 const formatDate = (timestamp: number) => 
   new Date(timestamp * 1000).toISOString();
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProfilePage() {
   let profileData: ProfileData | null = null;
   try {
     const user = await getCurrentUser();
     if (!user.userId) {
-      return null;
+      return null; 
     }
 
     // 获取会员信息

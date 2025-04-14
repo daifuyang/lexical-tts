@@ -39,7 +39,7 @@ export const getCategories = async (
 };
 
 // 更新分类
-export async function updateCategory(id: number, data: Prisma.ttsVoiceCategoryUpdateInput, tx: PrismaClient = prisma) {
+export async function updateCategory(id: number, data: Prisma.TtsVoiceCategoryUpdateInput, tx: PrismaClient = prisma) {
   return tx.ttsVoiceCategory.update({
     where: { id },
     data

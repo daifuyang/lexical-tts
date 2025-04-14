@@ -1,14 +1,41 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $getSelection, ParagraphNode } from "lexical";
+import { $getSelection } from "lexical";
 import { useCallback, useEffect, type JSX } from "react";
 import { mergeRegister } from "@lexical/utils";
 import { useAppDispatch } from "@/redux/hook";
 import { closeFloat } from "@/redux/slice/initialState";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { getWorkDetail } from "@/services/work";
 
 export default function InitPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
-
+  const router = useRouter();
   const dispatch = useAppDispatch();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const loadWork = async () => {
+      const id = searchParams.get("id");
+      if (!id) {
+        router.replace("/editor");
+        return;
+      }
+      try {
+        const res = await getWorkDetail(id);
+        if (res.code === 1 && res.data?.editorState) {
+          const editorState = editor.parseEditorState(res.data.editorState);
+          editor.setEditorState(editorState);
+        } else {
+          router.replace("/editor");
+        }
+      } catch (error) {
+        console.error("Failed to load work:", error);
+        router.replace("/editor");
+      }
+    };
+
+    loadWork();
+  }, [editor, router]);
 
   const updateInit = useCallback(() => {
     editor.getEditorState().read(() => {
@@ -41,18 +68,7 @@ export default function InitPlugin(): JSX.Element | null {
     return mergeRegister(
       editor.registerUpdateListener(({ editorState }) => {
         updateInit();
-      }),
-      /* editor.registerNodeTransform(ParagraphNode, (paragraph) => {
-        const nodes = paragraph.getAllTextNodes();
-        for (let i = 0; i < nodes.length; i++) {
-          const node = nodes[i];
-          const text = node.getTextContent();
-          if (text.indexOf("科技趣闻") > 0) {
-            console.log("text", text);
-            break;
-          }
-        }
-      }) */
+      })
     );
   }, [editor, updateInit]);
 
