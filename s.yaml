@@ -14,9 +14,9 @@ resources:
     component: fc3
     actions:
       pre-deploy:
-        - run: export PATH=/usr/local/versions/node/v20.8.1/bin:$PATH && npm install
+        - run: npm install
           path: ./
-        - run: export PATH=/usr/local/versions/node/v20.8.1/bin:$PATH && npm run build
+        - run: npm run build
           path: ./
         - run: cp -r public .next/standalone/public
           path: ./
